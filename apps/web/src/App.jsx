@@ -1,7 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useBreakpoint } from './tools/vacation/hooks/useBreakpoint';
-import { ACCESS_REQUIRED_EVENT } from './access';
+import { AUTH_PROBLEM_EVENT, waitForPendingRequests } from './access';
+import { loadAuth, googleLoginEnabled, getSession, onSessionChange, signOut } from './auth';
 import AccessGate from './shell/AccessGate';
+import { SignIn, NoAccess } from './shell/SignIn';
 
 const Dashboard = lazy(() => import('./dashboard/Dashboard.jsx'));
 const VacationTool = lazy(() => import('./tools/vacation/App.jsx'));
@@ -28,7 +31,65 @@ function navigate(id) {
   window.location.hash = `#/${id}`;
 }
 
+/* Sign-in state: 'loading' until /api/config answers, then 'signedOut',
+ * 'denied' (signed in, not on the allowed list), 'ready' or 'signingOut'. Without Google
+ * login the app is 'ready' straight away, and a 401 means the access code. */
 export default function App() {
+  const [auth, setAuth] = useState({ phase: 'loading' });
+  const [needCode, setNeedCode] = useState(false);
+
+  useEffect(() => {
+    let unsubscribe = () => {};
+    loadAuth().then(async () => {
+      if (!googleLoginEnabled()) return setAuth({ phase: 'ready' });
+      const session = await getSession();
+      setAuth(session ? { phase: 'ready', email: session.user?.email } : { phase: 'signedOut' });
+      unsubscribe = onSessionChange(s =>
+        setAuth(prev => (s
+          ? (prev.phase === 'denied' ? prev : { phase: 'ready', email: s.user?.email })
+          : { phase: 'signedOut' })));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // The API turned a request down: sign in again, explain, or ask for the code.
+  useEffect(() => {
+    const onProblem = e => {
+      const { status, error } = e.detail || {};
+      if (!googleLoginEnabled()) { if (status === 401) setNeedCode(true); return; }
+      setAuth(status === 403 ? { phase: 'denied', message: error } : { phase: 'signedOut' });
+    };
+    window.addEventListener(AUTH_PROBLEM_EVENT, onProblem);
+    return () => window.removeEventListener(AUTH_PROBLEM_EVENT, onProblem);
+  }, []);
+
+  // Sign out in an order that loses nothing and leaves nothing behind: close
+  // the workspace first (its tools flush pending saves while the session is
+  // still valid), let those requests finish, then clear the browser's cached
+  // data and the session.
+  const handleSignOut = async () => {
+    flushSync(() => setAuth({ phase: 'signingOut' }));
+    await new Promise(r => setTimeout(r, 0));
+    await waitForPendingRequests();
+    await signOut();
+    setAuth({ phase: 'signedOut' });
+  };
+
+  if (auth.phase === 'loading' || auth.phase === 'signingOut') {
+    return <div className="h-screen" style={{ background: 'var(--topbar-bg)' }} aria-busy="true" />;
+  }
+  if (auth.phase === 'signedOut') return <SignIn />;
+  if (auth.phase === 'denied') return <NoAccess message={auth.message} />;
+  return (
+    <Workspace
+      email={auth.email}
+      onSignOut={handleSignOut}
+      needCode={needCode}
+    />
+  );
+}
+
+function Workspace({ email, onSignOut, needCode }) {
   const [section, setSection] = useState(sectionFromHash);
   const { isMobile } = useBreakpoint();
 
@@ -36,14 +97,6 @@ export default function App() {
     const onHash = () => setSection(sectionFromHash());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-
-  // The API asked for an access code (401) — show the unlock prompt.
-  const [needCode, setNeedCode] = useState(false);
-  useEffect(() => {
-    const onRequired = () => setNeedCode(true);
-    window.addEventListener(ACCESS_REQUIRED_EVENT, onRequired);
-    return () => window.removeEventListener(ACCESS_REQUIRED_EVENT, onRequired);
   }, []);
 
   const rail = isMobile;
@@ -85,8 +138,21 @@ export default function App() {
           </button>
         ))}
 
-        <div className={`mt-auto pb-4 text-[10px] opacity-40 ${rail ? 'text-center' : 'px-4'}`}>
-          {!rail && 'shifts · vacations · boards'}
+        <div className={`mt-auto flex flex-col gap-2 pb-4 ${rail ? 'items-center' : 'px-4'}`}>
+          {email && (
+            <>
+              {!rail && <span className="truncate text-[11px] opacity-60" title={email}>{email}</span>}
+              <button
+                onClick={onSignOut}
+                className={`rounded-lg text-xs font-bold opacity-70 hover:opacity-100 ${rail ? 'px-1 py-1' : 'px-2 py-1.5 text-left'}`}
+                style={{ background: 'rgba(255,255,255,0.08)' }}
+                title="Sign out"
+              >
+                {rail ? '⎋' : 'Sign out'}
+              </button>
+            </>
+          )}
+          {!rail && <span className="text-[10px] opacity-40">shifts · vacations · boards</span>}
         </div>
       </nav>
 

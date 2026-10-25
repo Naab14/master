@@ -123,24 +123,6 @@ function sectionsFor(pathname) {
 }
 
 // ---------------------------------------------------------------------------
-// Access code
-// ---------------------------------------------------------------------------
-
-/**
- * When APP_ACCESS_CODE is set, every API request must send it in the
- * x-access-code header; when it isn't, the API is open. Returns null when
- * allowed, or { status, body }.
- */
-function checkAccess(headers) {
-  const expected = process.env.APP_ACCESS_CODE || '';
-  if (!expected) return null;
-  const given = String(headers['x-access-code'] || '');
-  const a = crypto.createHash('sha256').update(given).digest();
-  const b = crypto.createHash('sha256').update(expected).digest();
-  return crypto.timingSafeEqual(a, b) ? null : { status: 401, body: { error: 'access code required' } };
-}
-
-// ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
 
@@ -328,4 +310,4 @@ function route(method, pathname, body, s) {
   return out(404, { error: 'not found' });
 }
 
-module.exports = { route, sectionsFor, normalizeSection, checkAccess };
+module.exports = { route, sectionsFor, normalizeSection };

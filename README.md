@@ -38,10 +38,15 @@ in two places:
   fresh data.
 - **Self-hosted** (`backend/server.js`): data in `backend/data/db.json`.
 
-Optionally set `APP_ACCESS_CODE` to require an access code on every API
-request. Without it the API is open to anyone with the URL. With it, the web
-app asks for the code once per device, and the iOS app has a field for it in
-Settings.
+**Sign-in** (`backend/auth.js`):
+
+- **Google login** turns on when `ALLOWED_EMAILS` is set. The web app shows
+  "Sign in with Google" (Supabase Auth), and the API accepts only confirmed
+  emails on that list.
+- **Access code:** `APP_ACCESS_CODE`, if set, is accepted as well. The iOS app
+  uses it (field in Settings) until it gets Google sign-in. With Google login
+  off, the web app asks for the code instead.
+- With neither set, the API is open to anyone with the URL.
 
 ## Running
 
@@ -55,8 +60,15 @@ Settings.
    - `SUPABASE_URL`: `https://<project-ref>.supabase.co`
    - `SUPABASE_SERVICE_ROLE_KEY`: the project's secret key (Supabase →
      Project Settings → API Keys). Server-side only; never put it in the web app.
-   - `APP_ACCESS_CODE` (optional): a code people must type to open the app
-4. Redeploy and open the site.
+   - For Google login: `SUPABASE_PUBLISHABLE_KEY` (Supabase → API Keys) and
+     `ALLOWED_EMAILS` (comma-separated Google accounts allowed in)
+   - `APP_ACCESS_CODE` (optional): a code accepted instead of a login
+4. For Google login, create an OAuth client in Google Cloud (Web application,
+   authorized redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`)
+   and enable the Google provider in Supabase → Authentication → Sign In /
+   Providers with its client ID and secret. In Authentication → URL
+   Configuration, set the Site URL to your Vercel address.
+5. Redeploy and open the site.
 
 ### Self-hosted backend + web app
 
