@@ -161,6 +161,25 @@ export default function BoardsTool() {
           ) : (
             <>
               <header className="flex flex-wrap items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
+                {/* Phones: the board list sidebar is hidden, so pick boards here */}
+                <div className="flex w-full items-center gap-2 sm:hidden">
+                  <select
+                    value={board.id}
+                    onChange={e => { setBoardId(e.target.value); setSearch(''); }}
+                    className="min-w-0 flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold"
+                    style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+                    aria-label="Board"
+                  >
+                    {data.boards.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                  <button
+                    className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-bold text-white"
+                    style={{ background: 'var(--accent)' }}
+                    onClick={e => openPopover(e, <NewBoardForm onCreate={addBoard} />)}
+                  >
+                    + New
+                  </button>
+                </div>
                 <div className="min-w-0">
                   <input
                     key={board.id + ':name'}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useReducer } from 'react';
+import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react';
 import { seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from './data';
 import {
   saveState, loadState, clearState,
@@ -7,6 +7,7 @@ import {
   exportJSON, importJSON, debouncedSave,
   buildShareLink, loadStateFromUrl, clearShareHash, copyToClipboard,
   fetchServerState, pushServerState,
+  setServerSync, flushSave, discardPendingSave,
 } from './storage';
 import { parseCSV, mergeOperators, downloadCSVTemplate, downloadOperatorsCSV } from './csv';
 import { buildHolidayMap, initHolidays } from './holidays';
@@ -86,21 +87,33 @@ export default function App() {
     initHolidays().then(map => setHolidayMap(map));
   }, []);
 
-  // Adopt the server copy of the workspace on mount (Master backend). If the
-  // server has no state yet, seed it with what we have locally. A shared
-  // workspace loaded from the URL takes precedence over the server copy.
+  // Adopt the server copy of the workspace on mount (Master backend), and only
+  // then let saves reach the server. If the server has never stored a
+  // workspace, seed it with what we have locally; if it can't be reached, stay
+  // local-only. A shared snapshot opened from a link stays local too, so
+  // viewing it never overwrites the team's plan.
+  const latestState = useRef(state);
+  useEffect(() => { latestState.current = state; }, [state]);
+
   useEffect(() => {
-    if (initResult.wasShared) return;
     let cancelled = false;
-    fetchServerState().then(server => {
-      if (cancelled) return;
-      if (server && Array.isArray(server.operators)) {
-        dispatch({ type: 'REPLACE', state: server });
-      } else {
-        pushServerState(initResult.state);
-      }
-    });
-    return () => { cancelled = true; };
+    if (!initResult.wasShared) {
+      fetchServerState().then(({ ok, state: server }) => {
+        if (cancelled || !ok) return;
+        if (server && Array.isArray(server.operators)) {
+          discardPendingSave();
+          dispatch({ type: 'REPLACE', state: server });
+        } else {
+          pushServerState(latestState.current);
+        }
+        setServerSync(true);
+      });
+    }
+    return () => {
+      cancelled = true;
+      flushSave();
+      setServerSync(false);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

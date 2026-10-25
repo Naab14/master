@@ -91,10 +91,13 @@ function saveCache(state) {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch { /* ignore */ }
 }
 
+/* Resolves { ok: true, state } or { ok: false } when the server can't be reached. */
 function fetchServer() {
   try {
-    return fetch('/api/manageclip/state').then(r => (r.ok ? r.json() : null)).catch(() => null);
-  } catch { return Promise.resolve(null); }
+    return fetch('/api/manageclip/state')
+      .then(r => (r.ok ? r.json().then(state => ({ ok: true, state })) : { ok: false }))
+      .catch(() => ({ ok: false }));
+  } catch { return Promise.resolve({ ok: false }); }
 }
 
 function pushServer(state) {
@@ -112,18 +115,21 @@ const isEmpty = s => !s || (!(s.tasks || []).length && !(s.logs || []).length &&
 /* ── The state hook ────────────────────────────────────────────────────── */
 export function useManageclip() {
   const [state, setState] = useState(() => loadCache() || seedState());
-  const loaded = useRef(false);
+  const loaded = useRef(false);   // server copy adopted — saves may reach the server
   const saveTimer = useRef(null);
+  const pending = useRef(null);   // state waiting on the debounce, if any
+  const latest = useRef(state);
 
-  // Adopt the server copy on mount; seed the server if it's still empty.
+  // Adopt the server copy on mount; seed the server if it's still empty. If
+  // the server can't be reached, stay local-only rather than treat it as empty.
   useEffect(() => {
     let cancelled = false;
-    fetchServer().then(server => {
-      if (cancelled) return;
+    fetchServer().then(({ ok, state: server }) => {
+      if (cancelled || !ok) return;
       if (!isEmpty(server)) {
         setState({ settings: { weeklyTarget: 20 }, ...server });
       } else {
-        setState(local => { pushServer(local); return local; });
+        pushServer(latest.current);
       }
       loaded.current = true;
     });
@@ -132,12 +138,23 @@ export function useManageclip() {
 
   // Cache + debounced server push on every change.
   useEffect(() => {
+    latest.current = state;
     saveCache(state);
     if (!loaded.current) return;
+    pending.current = state;
     clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => pushServer(state), 500);
-    return () => clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      pending.current = null;
+      pushServer(state);
+    }, 500);
   }, [state]);
+
+  // Switching sections unmounts this tool — send a save still waiting on the
+  // debounce instead of dropping it.
+  useEffect(() => () => {
+    clearTimeout(saveTimer.current);
+    if (pending.current) pushServer(pending.current);
+  }, []);
 
   /* ── Mutators (immutable versions of the old Store API) ─────────────── */
   const saveTask = useCallback(task => setState(s => {

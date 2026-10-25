@@ -56,27 +56,52 @@ export function importJSON() {
   });
 }
 
-export function debouncedSave(state, delay = 500) {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    saveState(state);
-    pushServerState(state);
-  }, delay);
-}
-
 /* ── Server sync ───────────────────────────────────────────────────────────
  * The Master backend stores the whole workspace at /api/vacation/state.
  * localStorage stays as an offline cache; the server copy wins on load.
- * All calls fail silently so the tool still works with no backend (tests,
- * offline, static hosting).
+ * Saves only reach the server once the App has adopted (or seeded) the
+ * server copy — otherwise a slow first load could push the local cache or
+ * demo data over the shared plan. All calls fail silently so the tool still
+ * works with no backend (tests, offline, static hosting).
  */
+let serverSync = false;
+let pendingState = null;
+
+export function setServerSync(on) { serverSync = on; }
+
+export function debouncedSave(state, delay = 500) {
+  pendingState = state;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(flushSave, delay);
+}
+
+/* Write any pending save now — called when the planner unmounts so a
+ * section switch inside the debounce window doesn't drop the edit. */
+export function flushSave() {
+  clearTimeout(debounceTimer);
+  if (pendingState === null) return;
+  const state = pendingState;
+  pendingState = null;
+  saveState(state);
+  if (serverSync) pushServerState(state);
+}
+
+/* Drop a pending save without writing it (used when the server copy replaces
+ * the local one, so the stale local edit can't be pushed over it). */
+export function discardPendingSave() {
+  clearTimeout(debounceTimer);
+  pendingState = null;
+}
+
+/* Resolves { ok: true, state } — state is null for a workspace the server has
+ * never stored — or { ok: false } when the server can't be reached. */
 export function fetchServerState() {
   try {
     return fetch('/api/vacation/state')
-      .then(r => (r.ok ? r.json() : null))
-      .catch(() => null);
+      .then(r => (r.ok ? r.json().then(state => ({ ok: true, state })) : { ok: false }))
+      .catch(() => ({ ok: false }));
   } catch {
-    return Promise.resolve(null);
+    return Promise.resolve({ ok: false });
   }
 }
 

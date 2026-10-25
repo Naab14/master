@@ -14,7 +14,11 @@ const SECTIONS = [
 ];
 
 function sectionFromHash() {
-  const id = (window.location.hash || '').replace(/^#\/?/, '');
+  const hash = window.location.hash || '';
+  // Vacation Planner share links (#share=…) open the planner, which reads the
+  // snapshot from the hash itself.
+  if (hash.startsWith('#share=')) return 'vacation';
+  const id = hash.replace(/^#\/?/, '');
   return SECTIONS.some(s => s.id === id) ? id : 'dashboard';
 }
 
