@@ -1,0 +1,28 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Arcade.dc.html": { "expand": "fill", "h": 900, "is_interactive": true, "title": "B · Arcade — Dashboard", "w": 1440, "x": 917, "y": 1565 },
+    "Density.dc.html": { "expand": "fill", "h": 1000, "is_interactive": true, "title": "Schedule density · Ctrl + scroll", "w": 1440, "x": 3957, "y": 2885 },
+    "Foundations.dc.html": { "h": 1180, "title": "Foundations · type, color, status", "w": 1200, "x": 3960, "y": -35 },
+    "Main.dc.html": { "expand": "fill", "h": 1180, "is_interactive": true, "title": "Dashboard · Today", "w": 1440, "x": 917, "y": -35 },
+    "Night.dc.html": { "expand": "fill", "h": 900, "is_interactive": true, "title": "C · Night shift — Dashboard", "w": 1440, "x": 2437, "y": 1565 },
+    "Sketch.dc.html": { "expand": "fill", "h": 900, "is_interactive": true, "title": "Sketch tab · Excalidraw", "w": 1440, "x": 2437, "y": 2885 },
+    "Team.dc.html": { "expand": "fill", "h": 1100, "is_interactive": true, "title": "Operator cards · theme switcher", "w": 1440, "x": 917, "y": 2885 },
+    "Vacations.dc.html": { "expand": "fill", "h": 1180, "is_interactive": true, "title": "Vacations · Leave & coverage", "w": 1440, "x": 2440, "y": -35 },
+    "SignIn.dc.html": { "expand": "fill", "h": 900, "is_interactive": true, "title": "Sign in · managers & team leads", "w": 1440, "x": 917, "y": 4405 },
+    "Admin.dc.html": { "expand": "fill", "h": 1240, "is_interactive": true, "title": "Admin · All teams overview", "w": 1440, "x": 2437, "y": 4405 }
+  },
+  "createdOnFiles": { "at": "2026-10-25T18:17:09.768Z", "v": 1 },
+  "designSystems": [],
+  "launch": {},
+  "notes": {
+    "heading": { "kind": "title1", "maxW": 4240, "text": "Master — Direction A: Calm workspace, clear status", "w": 240, "x": 920, "y": -335 },
+    "heading2": { "kind": "title1", "maxW": 2960, "text": "Directions B & C — Arcade · Night shift", "w": 240, "x": 917, "y": 1265 },
+    "heading3": { "kind": "title1", "maxW": 4480, "text": "Features — Operator cards · Sketch tab · Schedule density", "w": 240, "x": 917, "y": 2585 },
+    "heading4": { "kind": "title1", "maxW": 2960, "text": "Admin — Sign in · All teams landing page", "x": 917, "y": 4105 }
+  },
+  "order": ["Main.dc.html", "Vacations.dc.html", "Foundations.dc.html", "Arcade.dc.html", "Night.dc.html", "Team.dc.html", "Sketch.dc.html", "Density.dc.html", "SignIn.dc.html", "Admin.dc.html"],
+  "pages": [],
+  "title": "Design"
+}

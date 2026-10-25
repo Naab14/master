@@ -5,11 +5,13 @@ import { AUTH_PROBLEM_EVENT, waitForPendingRequests } from './access';
 import { loadAuth, googleLoginEnabled, getSession, onSessionChange, signOut } from './auth';
 import AccessGate from './shell/AccessGate';
 import { SignIn, NoAccess } from './shell/SignIn';
+import ThemeSwitcher from './theme/ThemeSwitcher';
 
 const Dashboard = lazy(() => import('./dashboard/Dashboard.jsx'));
 const VacationTool = lazy(() => import('./tools/vacation/App.jsx'));
 const ManageClipTool = lazy(() => import('./tools/manageclip/ManageClipTool.jsx'));
 const BoardsTool = lazy(() => import('./tools/boards/BoardsTool.jsx'));
+const UiPreview = lazy(() => import('./ui/UiPreview.jsx'));
 
 const SECTIONS = [
   { id: 'dashboard', label: 'Dashboard', icon: '◈' },
@@ -24,7 +26,8 @@ function sectionFromHash() {
   // snapshot from the hash itself.
   if (hash.startsWith('#share=')) return 'vacation';
   const id = hash.replace(/^#\/?/, '');
-  return SECTIONS.some(s => s.id === id) ? id : 'dashboard';
+  // #/ui is the base-controls review page; it isn't in the menu.
+  return SECTIONS.some(s => s.id === id) || id === 'ui' ? id : 'dashboard';
 }
 
 function navigate(id) {
@@ -128,8 +131,8 @@ function Workspace({ email, onSignOut, needCode }) {
           <button
             key={s.id}
             onClick={() => navigate(s.id)}
-            className={`flex items-center gap-3 text-left transition-opacity ${rail ? 'justify-center py-3' : 'px-4 py-3'} ${section === s.id ? 'opacity-100' : 'opacity-60 hover:opacity-90'}`}
-            style={section === s.id ? { background: 'rgba(255,255,255,0.12)', boxShadow: 'inset 3px 0 0 var(--accent)' } : undefined}
+            className={`flex items-center gap-3 text-left transition-opacity ${rail ? 'justify-center py-3' : 'px-4 py-3'} ${section === s.id ? 'opacity-100' : 'opacity-75 hover:opacity-100'}`}
+            style={section === s.id ? { background: 'var(--surface-soft)', boxShadow: 'inset 3px 0 0 var(--accent)' } : undefined}
             title={s.label}
             aria-current={section === s.id ? 'page' : undefined}
           >
@@ -152,7 +155,7 @@ function Workspace({ email, onSignOut, needCode }) {
               </button>
             </>
           )}
-          {!rail && <span className="text-[10px] opacity-40">shifts · vacations · boards</span>}
+          <ThemeSwitcher compact={rail} />
         </div>
       </nav>
 
@@ -169,6 +172,7 @@ function Workspace({ email, onSignOut, needCode }) {
           {section === 'shifts' && <ManageClipTool />}
           {section === 'vacation' && <VacationTool />}
           {section === 'boards' && <BoardsTool />}
+          {section === 'ui' && <UiPreview />}
         </Suspense>
       </main>
       {needCode && <AccessGate />}

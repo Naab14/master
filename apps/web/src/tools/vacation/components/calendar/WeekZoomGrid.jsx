@@ -106,7 +106,7 @@ export default function WeekZoomGrid({
                       )}
                       {block && isStart && (
                         <span className="absolute inset-[2px] flex items-center justify-center text-xs font-medium truncate pointer-events-none select-none"
-                          style={{ color: 'var(--text-primary)' }}>
+                          style={{ color: STATUS_COLORS[block.status]?.fg ?? 'var(--text-primary)' }}>
                           {block.startWeek === block.endWeek ? `v.${block.startWeek}` : `v.${block.startWeek}-${block.endWeek}`}
                         </span>
                       )}

@@ -15,8 +15,6 @@ vi.mock('../storage', async (importOriginal) => {
     saveState: vi.fn(),
     loadState: vi.fn(() => null),
     clearState: vi.fn(),
-    saveTheme: vi.fn(),
-    loadTheme: vi.fn(() => 'default'),
     saveUI: vi.fn(),
     loadUI: vi.fn(() => ({})),
     debouncedSave: vi.fn(),
@@ -62,25 +60,6 @@ describe('App', () => {
   it('renders the calendar grid with week headers', () => {
     render(<App />);
     expect(screen.getByText('v.15')).toBeInTheDocument();
-  });
-
-  it('applies theme on change', async () => {
-    render(<App />);
-    const themeSelect = screen.getByDisplayValue('Default');
-    fireEvent.change(themeSelect, { target: { value: 'dark' } });
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-    expect(storage.saveTheme).toHaveBeenCalledWith('dark');
-  });
-
-  it('removes data-theme when default selected', () => {
-    render(<App />);
-    // Switch to dark first
-    const themeSelect = screen.getByDisplayValue('Default');
-    fireEvent.change(themeSelect, { target: { value: 'dark' } });
-    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-    // Switch back to default
-    fireEvent.change(screen.getByDisplayValue('Dark'), { target: { value: 'default' } });
-    expect(document.documentElement.hasAttribute('data-theme')).toBe(false);
   });
 
   it('calls debouncedSave on state changes', () => {

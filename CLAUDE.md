@@ -56,6 +56,7 @@ apps/web/           React 19 + Vite + Tailwind 3 (plain JS, no TypeScript)
 apps/ios/           SwiftUI app with haptics (Xcode 16+, can't be built on Linux)
 supabase/migrations/  database schema
 docs/AUDIT.md       how the three source apps mapped in
+docs/design/        redesign handover: HANDOVER.md, mockups (.dc.html), old screenshots
 ```
 
 **Data:** one Supabase table, `app_state`, with one row per section:
@@ -68,8 +69,15 @@ the server's secret key reaches the table.
 **Web data flow:** the tools keep a localStorage cache for offline use and
 sync to the API (Vacations and Shift HQ PUT the whole section after a 500 ms
 debounce and only after loading the server copy; Boards use granular REST
-calls). Theme colors are CSS variables in `apps/web/src/index.css`; use them
-rather than hard-coded colors.
+calls).
+
+**Theming:** three app-wide themes (Calm, the default; Arcade; Night shift),
+set as `<html data-theme>` and saved per browser (`src/theme/theme.js`).
+Every color, font, radius and status shade is a token in
+`apps/web/src/theme/tokens.css`; use tokens (or their Tailwind names like
+`bg-panel`, `text-ink-3`) rather than hard-coded colors. Old variable names
+(`--bg-primary`, `--accent` …) still work and point at the tokens. Base
+controls live in `src/ui/` (review page: `#/ui`).
 
 ## Deployment
 
@@ -88,7 +96,7 @@ rather than hard-coded colors.
 
 ```sh
 npm --prefix apps/web install
-npm --prefix apps/web run test:ci   # vitest (168 tests)
+npm --prefix apps/web run test:ci   # vitest (174 tests)
 npm --prefix apps/web run lint
 npm --prefix apps/web run build
 node backend/server.js              # self-hosted API + built web app on :3000
