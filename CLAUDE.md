@@ -96,7 +96,7 @@ controls live in `src/ui/` (review page: `#/ui`).
 
 ```sh
 npm --prefix apps/web install
-npm --prefix apps/web run test:ci   # vitest (168 tests)
+npm --prefix apps/web run test:ci   # vitest (174 tests)
 npm --prefix apps/web run lint
 npm --prefix apps/web run build
 node backend/server.js              # self-hosted API + built web app on :3000
