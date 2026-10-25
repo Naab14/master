@@ -7,11 +7,13 @@ final class AppState: ObservableObject {
         didSet { Task { await refresh() } }
     }
 
+    @AppStorage("accessCode") var accessCode: String = ""
+
     @Published var state: FullState?
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    var api: APIClient { APIClient(baseURLString: serverURL) }
+    var api: APIClient { APIClient(baseURLString: serverURL, accessCode: accessCode) }
 
     func refresh() async {
         isLoading = true

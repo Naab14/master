@@ -4,10 +4,13 @@ import Foundation
 /// JSON REST API the web app talks to.
 struct APIClient {
     var baseURL: URL
+    /// Sent as X-Access-Code when the server requires one (always on Vercel).
+    var accessCode: String
 
-    init(baseURLString: String) {
+    init(baseURLString: String, accessCode: String = "") {
         baseURL = URL(string: baseURLString.trimmingCharacters(in: .whitespacesAndNewlines))
             ?? URL(string: "http://localhost:3000")!
+        self.accessCode = accessCode.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     enum APIError: LocalizedError {
@@ -16,6 +19,7 @@ struct APIClient {
 
         var errorDescription: String? {
             switch self {
+            case .http(401): return "Wrong or missing access code — check Settings"
             case .http(let code): return "Server error (HTTP \(code))"
             case .badURL: return "Invalid server URL"
             }
@@ -37,6 +41,9 @@ struct APIClient {
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.timeoutInterval = 10
+        if !accessCode.isEmpty {
+            req.setValue(accessCode, forHTTPHeaderField: "X-Access-Code")
+        }
         if let httpBody {
             req.httpBody = httpBody
             req.setValue("application/json", forHTTPHeaderField: "Content-Type")

@@ -1,3 +1,5 @@
+import { apiFetch } from '../../access';
+
 const STATE_KEY = 'vacation-planner-state';
 const THEME_KEY = 'vacation-planner-theme';
 const UI_KEY = 'vacation-planner-ui';
@@ -97,7 +99,7 @@ export function discardPendingSave() {
  * never stored — or { ok: false } when the server can't be reached. */
 export function fetchServerState() {
   try {
-    return fetch('/api/vacation/state')
+    return apiFetch('/api/vacation/state')
       .then(r => (r.ok ? r.json().then(state => ({ ok: true, state })) : { ok: false }))
       .catch(() => ({ ok: false }));
   } catch {
@@ -107,7 +109,7 @@ export function fetchServerState() {
 
 export function pushServerState(state) {
   try {
-    return fetch('/api/vacation/state', {
+    return apiFetch('/api/vacation/state', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(state),

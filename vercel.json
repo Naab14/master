@@ -3,5 +3,9 @@
   "framework": null,
   "installCommand": "npm --prefix apps/web install",
   "buildCommand": "npm --prefix apps/web run build",
-  "outputDirectory": "apps/web/dist"
+  "outputDirectory": "apps/web/dist",
+  "regions": ["arn1"],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "/api?path=:path*" }
+  ]
 }

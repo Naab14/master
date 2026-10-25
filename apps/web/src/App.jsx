@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useBreakpoint } from './tools/vacation/hooks/useBreakpoint';
+import { ACCESS_REQUIRED_EVENT } from './access';
+import AccessGate from './shell/AccessGate';
 
 const Dashboard = lazy(() => import('./dashboard/Dashboard.jsx'));
 const VacationTool = lazy(() => import('./tools/vacation/App.jsx'));
@@ -34,6 +36,14 @@ export default function App() {
     const onHash = () => setSection(sectionFromHash());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // The API asked for an access code (401) — show the unlock prompt.
+  const [needCode, setNeedCode] = useState(false);
+  useEffect(() => {
+    const onRequired = () => setNeedCode(true);
+    window.addEventListener(ACCESS_REQUIRED_EVENT, onRequired);
+    return () => window.removeEventListener(ACCESS_REQUIRED_EVENT, onRequired);
   }, []);
 
   const rail = isMobile;
@@ -95,6 +105,7 @@ export default function App() {
           {section === 'boards' && <BoardsTool />}
         </Suspense>
       </main>
+      {needCode && <AccessGate />}
     </div>
   );
 }

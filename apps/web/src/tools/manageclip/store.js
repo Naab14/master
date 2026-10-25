@@ -2,6 +2,7 @@
  * models the standalone tool kept in localStorage, now synced to the Master
  * backend at /api/manageclip/state. localStorage stays as an offline cache.
  */
+import { apiFetch } from '../../access';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /* ── Date helpers (all local time, YYYY-MM-DD strings) ─────────────────── */
@@ -94,7 +95,7 @@ function saveCache(state) {
 /* Resolves { ok: true, state } or { ok: false } when the server can't be reached. */
 function fetchServer() {
   try {
-    return fetch('/api/manageclip/state')
+    return apiFetch('/api/manageclip/state')
       .then(r => (r.ok ? r.json().then(state => ({ ok: true, state })) : { ok: false }))
       .catch(() => ({ ok: false }));
   } catch { return Promise.resolve({ ok: false }); }
@@ -102,7 +103,7 @@ function fetchServer() {
 
 function pushServer(state) {
   try {
-    return fetch('/api/manageclip/state', {
+    return apiFetch('/api/manageclip/state', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(state),

@@ -1,10 +1,12 @@
+import { apiFetch } from './access';
+
 /* Tiny client for the Master backend (backend/server.js).
  * Every helper fails soft — the tools keep working offline with their
  * localStorage caches, and the dashboard shows what it can.
  */
 
 async function req(path, options) {
-  const r = await fetch(path, options);
+  const r = await apiFetch(path, options);
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
   return r.json();
 }

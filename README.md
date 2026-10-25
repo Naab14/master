@@ -20,20 +20,44 @@ this one.
 
 ```
 master/
-├── backend/        # zero-dependency Node JSON API + static host (grown from frieday's server)
+├── api/            # Vercel serverless function: the API, data in Supabase
+├── backend/        # API routes (core.js) + self-hosted server on db.json (server.js)
 ├── apps/
 │   ├── web/        # React 19 + Vite + Tailwind: dashboard + 3 tool sections
 │   └── ios/        # native SwiftUI app with haptics (build in Xcode)
 └── docs/AUDIT.md
 ```
 
-Everything shares **one store** (`backend/data/db.json`) through one JSON REST
-API. The web and iOS apps are just two clients of it. There is no auth — like
-the tools it replaces, it's built to run on a trusted home/office network.
+Everything shares **one store** through one JSON REST API; the web and iOS
+apps are just two clients of it. The routes live in `backend/core.js` and run
+in two places:
+
+- **Vercel** (`api/index.js`): data in a Supabase table, `app_state`, one row
+  per section (boards, shift data, vacations). Concurrent saves are safe:
+  each row has a version number and a save that loses a race retries on the
+  fresh data.
+- **Self-hosted** (`backend/server.js`): data in `backend/data/db.json`.
+
+Set `APP_ACCESS_CODE` to require an access code on every API request; on
+Vercel it is required. The web app asks for it once per device, and the iOS
+app has a field for it in Settings.
 
 ## Running
 
-### Backend + web app
+### On Vercel + Supabase
+
+1. In Supabase, run [`supabase/migrations/001_app_state.sql`](supabase/migrations/001_app_state.sql)
+   once (creates the `app_state` table, locked to the server).
+2. Import the repo in Vercel and leave Root Directory and Framework Preset as
+   they are; `vercel.json` sets the build and routes `/api/*` to the function.
+3. In the Vercel project's **Settings → Environment Variables**, add:
+   - `SUPABASE_URL`: `https://<project-ref>.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY`: the project's secret key (Supabase →
+     Project Settings → API Keys). Server-side only; never put it in the web app.
+   - `APP_ACCESS_CODE`: the code people type to open the app
+4. Redeploy. Open the site, enter the access code, and you're in.
+
+### Self-hosted backend + web app
 
 ```sh
 # 1. build the web app
