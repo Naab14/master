@@ -8,10 +8,15 @@
  * Environment (Vercel project settings):
  *   SUPABASE_URL               https://<ref>.supabase.co
  *   SUPABASE_SERVICE_ROLE_KEY  secret key (or SUPABASE_SECRET_KEY) — server only
- *   APP_ACCESS_CODE            optional: code every client must send
+ *   SUPABASE_PUBLISHABLE_KEY   public key the web app signs in with
+ *   ALLOWED_EMAILS             Google accounts allowed in (comma-separated);
+ *                              setting it turns Google login on
+ *   APP_ACCESS_CODE            optional: code accepted instead of a login
+ * See backend/auth.js.
  */
 
-const { route, sectionsFor, normalizeSection, checkAccess } = require('../backend/core');
+const { route, sectionsFor, normalizeSection } = require('../backend/core');
+const { authorize, publicConfig } = require('../backend/auth');
 
 const SB_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '';
@@ -94,14 +99,16 @@ function apiPath(req) {
 }
 
 module.exports = async function handler(req, res) {
-  const denied = checkAccess(req.headers);
-  if (denied) return send(res, denied.status, denied.body);
-  if (!SB_URL || !SB_KEY) {
-    return send(res, 503, { error: 'Server not configured: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' });
-  }
-
   try {
     const pathname = apiPath(req);
+    if (pathname === '/api/config') return send(res, 200, publicConfig());
+
+    const denied = await authorize(req.headers);
+    if (denied) return send(res, denied.status, denied.body);
+    if (!SB_URL || !SB_KEY) {
+      return send(res, 503, { error: 'Server not configured: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' });
+    }
+
     const body = await readBody(req);
     const keys = sectionsFor(pathname);
 

@@ -8,13 +8,14 @@
  * ../apps/web/dist.
  *
  * Run:  node server.js   (PORT env var optional, defaults to 3000)
- * Set APP_ACCESS_CODE to require an access code on every API request.
+ * Sign-in: see auth.js (Google login via ALLOWED_EMAILS, or APP_ACCESS_CODE).
  */
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { route, sectionsFor, normalizeSection, checkAccess } = require('./core');
+const { route, sectionsFor, normalizeSection } = require('./core');
+const { authorize, publicConfig } = require('./auth');
 
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -85,7 +86,8 @@ function readBody(req) {
 }
 
 async function handleApi(req, res, pathname) {
-  const denied = checkAccess(req.headers);
+  if (pathname === '/api/config') return json(res, 200, publicConfig());
+  const denied = await authorize(req.headers);
   if (denied) return json(res, denied.status, denied.body);
 
   const body = req.method === 'GET' ? {} : await readBody(req);
@@ -161,7 +163,7 @@ const server = http.createServer(async (req, res) => {
   // other origins.
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Access-Code');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Access-Code, Authorization');
   if (req.method === 'OPTIONS') {
     res.writeHead(204);
     return res.end();
