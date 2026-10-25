@@ -1,0 +1,433 @@
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,400;0,500;0,800;0,900;1,800;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Default Theme — Neo-Kinetic Travelogue (Electric Horizon) ────────────── */
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-panel: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --accent: #4f46e5;
+  --accent-secondary: #3b82f6;
+  --accent-alert: #f43f5e;
+  --border: #e2e8f0;
+  --border-radius: 12px;
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.12), 0 4px 6px -4px rgba(0,0,0,0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.12), 0 8px 10px -6px rgba(0,0,0,0.06);
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: 'Epilogue', system-ui, sans-serif;
+  --draft-bg: #e2e8f0;
+  --draft-border: #94a3b8;
+  --pending-bg: #fef9c3;
+  --pending-border: #facc15;
+  --approved-bg: #bbf7d0;
+  --approved-border: #22c55e;
+  --requested-bg: #fde68a;
+  --requested-border: #f59e0b;
+  --coverage-green: #22c55e;
+  --coverage-yellow: #eab308;
+  --coverage-red: #f43f5e;
+  --topbar-bg: #1e1b4b;
+  --topbar-text: #f8fafc;
+  --holiday-bg: #fff1f2;
+  --holiday-border: #fda4af;
+  --holiday-text: #be123c;
+  --holiday-stripe-color: rgba(217, 119, 6, 0.22);
+  --holiday-pattern: repeating-linear-gradient(45deg, var(--holiday-stripe-color), var(--holiday-stripe-color) 6px, transparent 6px, transparent 12px), var(--holiday-bg);
+}
+
+/* ── MotherDuck Theme ─────────────────────────────────────────────────────── */
+[data-theme='motherduck'] {
+  --bg-primary: #f4efea;
+  --bg-secondary: #ebe5df;
+  --bg-panel: #fff;
+  --text-primary: #383838;
+  --text-secondary: #6b6b6b;
+  --accent: #2ba5ff;
+  --accent-secondary: #53dbc9;
+  --accent-alert: #ff7169;
+  --border: #c8c0b8;
+  --border-radius: 2px;
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.12), 0 8px 10px -6px rgba(0,0,0,0.06);
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: 'Space Mono', monospace;
+  --draft-bg: #e0dbd5;
+  --draft-border: #b8b0a8;
+  --pending-bg: #fff3a0;
+  --pending-border: #ffde00;
+  --approved-bg: #a8f0e4;
+  --approved-border: #53dbc9;
+  --requested-bg: #ffeaa0;
+  --requested-border: #eab308;
+  --coverage-green: #53dbc9;
+  --coverage-yellow: #ffde00;
+  --coverage-red: #ff7169;
+  --topbar-bg: #383838;
+  --topbar-text: #f4efea;
+  --holiday-bg: #ffe0de;
+  --holiday-border: #ff7169;
+  --holiday-text: #cc4040;
+  --holiday-stripe-color: rgba(204, 64, 64, 0.22);
+}
+
+/* ── Dark Theme ───────────────────────────────────────────────────────────── */
+[data-theme='dark'] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-panel: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --accent: #818cf8;
+  --accent-secondary: #60a5fa;
+  --accent-alert: #fb7185;
+  --border: #334155;
+  --border-radius: 6px;
+  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.4);
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: 'Epilogue', system-ui, sans-serif;
+  --draft-bg: #475569;
+  --draft-border: #64748b;
+  --pending-bg: #854d0e;
+  --pending-border: #a16207;
+  --approved-bg: #166534;
+  --approved-border: #15803d;
+  --requested-bg: #78350f;
+  --requested-border: #92400e;
+  --coverage-green: #4ade80;
+  --coverage-yellow: #facc15;
+  --coverage-red: #f87171;
+  --topbar-bg: #020617;
+  --topbar-text: #f1f5f9;
+  --holiday-bg: #450a0a;
+  --holiday-border: #991b1b;
+  --holiday-text: #fca5a5;
+  --holiday-stripe-color: rgba(251, 191, 36, 0.28);
+}
+
+/* ── Ocean Theme ──────────────────────────────────────────────────────────── */
+[data-theme='ocean'] {
+  --bg-primary: #f0f9ff;
+  --bg-secondary: #e0f2fe;
+  --bg-panel: #f8fafc;
+  --text-primary: #0c4a6e;
+  --text-secondary: #0369a1;
+  --accent: #0284c7;
+  --accent-secondary: #06b6d4;
+  --accent-alert: #f43f5e;
+  --border: #bae6fd;
+  --border-radius: 8px;
+  --shadow-xl: 0 20px 25px -5px rgba(8,145,178,0.2), 0 8px 10px -6px rgba(8,145,178,0.1);
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: 'Epilogue', system-ui, sans-serif;
+  --draft-bg: #cbd5e1;
+  --draft-border: #94a3b8;
+  --pending-bg: #fef9c3;
+  --pending-border: #fde047;
+  --approved-bg: #a7f3d0;
+  --approved-border: #34d399;
+  --requested-bg: #fef3c7;
+  --requested-border: #fbbf24;
+  --coverage-green: #10b981;
+  --coverage-yellow: #f59e0b;
+  --coverage-red: #f43f5e;
+  --topbar-bg: #0c4a6e;
+  --topbar-text: #f0f9ff;
+  --holiday-bg: #fef2f2;
+  --holiday-border: #f87171;
+  --holiday-text: #dc2626;
+  --holiday-stripe-color: rgba(220, 38, 38, 0.2);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); margin: 0; transition: background-color 0.3s ease, color 0.3s ease; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .premium-shadow {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ── Hatched pattern for requested-pending blocks ─────────────────────────── */
+.block-requested {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--requested-bg),
+    var(--requested-bg) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  border: 2px dashed var(--requested-border);
+  opacity: 0.65;
+}
+
+/* ── Holiday cell indicator ───────────────────────────────────────────────── */
+.holiday-cell {
+  background: var(--holiday-bg) !important;
+  border-left: 2px solid var(--holiday-border) !important;
+}
+
+/* ── Zoom transition overlay (day → week) ─────────────────────────────────── */
+.zoom-transition-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background:
+    linear-gradient(rgba(79, 70, 229, 0.08), rgba(79, 70, 229, 0.08)),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 99px,
+      rgba(79, 70, 229, 0.35) 99px,
+      rgba(79, 70, 229, 0.35) 100px
+    );
+  animation: zoomFade 0.25s ease-out forwards;
+}
+@keyframes zoomFade {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Ghost zoom buttons — subtle hover */
+.zoom-btn:hover:not(:disabled) {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Coverage tooltip ─────────────────────────────────────────────────────── */
+.coverage-tooltip {
+  position: absolute;
+  z-index: 100;
+  min-width: 200px;
+  max-width: 300px;
+  padding: 8px 12px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-size: 12px;
+  color: var(--text-primary);
+  pointer-events: none;
+}
+
+/* ── Drag ghost ───────────────────────────────────────────────────────────── */
+.drag-ghost {
+  opacity: 0.6;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.drop-target-highlight {
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+/* ── Time slider ──────────────────────────────────────────────────────────── */
+.time-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+}
+.time-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg-panel);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: grab;
+  transition: transform 0.15s ease;
+}
+.time-slider::-webkit-slider-thumb:hover { transform: scale(1.12); }
+.time-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.2); }
+.time-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid var(--bg-panel);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  cursor: grab;
+}
+
+/* ── Sliding block (dragged) ──────────────────────────────────────────────── */
+.block-dragging {
+  opacity: 0.7;
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 0;
+  z-index: 20 !important;
+  transform: scale(1.03);
+  transition: transform 0.1s ease;
+  box-shadow: 0 12px 24px -6px rgba(0,0,0,0.35) !important;
+}
+
+.block-selected {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 1px;
+}
+
+/* ── Drag preview ─────────────────────────────────────────────────────────── */
+.drag-preview {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  background: var(--accent);
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+  white-space: nowrap;
+}
+
+/* ── Touch target handles ─────────────────────────────────────────────────── */
+.resize-handle {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 14px;
+  z-index: 15;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.resize-handle::before {
+  content: '';
+  width: 4px;
+  height: 50%;
+  background: rgba(255,255,255,0.9);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.resize-handle:hover::before,
+.block-selected .resize-handle::before { opacity: 1; }
+
+/* ── Mobile friendly tap areas ────────────────────────────────────────────── */
+@media (pointer: coarse) {
+  .resize-handle { width: 22px; }
+  .resize-handle::before { opacity: 1; width: 5px; }
+}
+
+/* ── Working / off day cells ──────────────────────────────────────────────── */
+.day-cell-working {
+  background: color-mix(in srgb, var(--coverage-green) 12%, transparent);
+}
+.day-cell-off {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--bg-secondary),
+    var(--bg-secondary) 4px,
+    var(--bg-primary) 4px,
+    var(--bg-primary) 8px
+  );
+}
+
+/* ── Collapsible sidebar ──────────────────────────────────────────────────── */
+.sidebar-collapsed {
+  width: 48px !important;
+  min-width: 48px !important;
+}
+.sidebar-collapsed .sidebar-full-only { display: none !important; }
+
+/* ── Action popover ───────────────────────────────────────────────────────── */
+.block-popover {
+  position: fixed;
+  z-index: 100;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  padding: 8px;
+  min-width: 220px;
+}
+
+/* Disable text selection during drag */
+.grid-dragging, .grid-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* ── Kinetic card — Neo-Kinetic Travelogue lift ───────────────────────────── */
+.kinetic-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-xl);
+  transition: box-shadow 200ms ease-out, transform 200ms ease-out;
+}
+.kinetic-card:hover {
+  box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.15);
+  transform: translateY(-1px);
+}
+
+/* ── Impact heading — Epilogue italic gradient ────────────────────────────── */
+.impact-heading {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.05em;
+  background: linear-gradient(135deg, #818CF8 0%, #C7D2FE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Touch-device adjustments ──────────────────────────────────────────────
+ * Target both no-hover devices and coarse-pointer devices (hybrids/tablets)
+ * to avoid hover-flicker and stray transforms on tap.
+ */
+@media (hover: none), (pointer: coarse) {
+  .kinetic-card:hover,
+  .sidebar-collapsed button:hover,
+  button:hover {
+    transform: none !important;
+  }
+  .grid-cell, [data-week][data-op] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
+/* ── Tablet (<=1024): narrow the collapsed sidebar footprint ─────────────── */
+@media (max-width: 1024px) {
+  .sidebar-collapsed { width: 40px !important; min-width: 40px !important; }
+}
+
+/* ── Mobile (<768): compact top bar, wider tap targets ─────────────────── */
+@media (max-width: 767px) {
+  [data-week][data-op] { min-height: 44px; }
+  .time-slider { width: 120px !important; }
+}
