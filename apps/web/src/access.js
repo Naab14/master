@@ -20,8 +20,23 @@ export function setAccessCode(code) {
   try { localStorage.setItem(KEY, code); } catch { /* ignore */ }
 }
 
+/* Requests still on the wire, so sign-out can let pending saves finish
+ * (while the session is still valid) before clearing anything. */
+const inflight = new Set();
+
+export function waitForPendingRequests() {
+  return Promise.allSettled([...inflight]);
+}
+
 /** fetch() for /api routes: adds the credentials, reports 401/403. */
-export async function apiFetch(path, options = {}) {
+export function apiFetch(path, options = {}) {
+  const p = send(path, options);
+  inflight.add(p);
+  p.finally(() => inflight.delete(p)).catch(() => {});
+  return p;
+}
+
+async function send(path, options) {
   const headers = { ...(options.headers || {}) };
   const code = getAccessCode();
   if (code) headers['X-Access-Code'] = code;

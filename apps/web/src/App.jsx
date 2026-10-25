@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useBreakpoint } from './tools/vacation/hooks/useBreakpoint';
-import { AUTH_PROBLEM_EVENT } from './access';
+import { AUTH_PROBLEM_EVENT, waitForPendingRequests } from './access';
 import { loadAuth, googleLoginEnabled, getSession, onSessionChange, signOut } from './auth';
 import AccessGate from './shell/AccessGate';
 import { SignIn, NoAccess } from './shell/SignIn';
@@ -31,7 +32,7 @@ function navigate(id) {
 }
 
 /* Sign-in state: 'loading' until /api/config answers, then 'signedOut',
- * 'denied' (signed in, not on the allowed list) or 'ready'. Without Google
+ * 'denied' (signed in, not on the allowed list), 'ready' or 'signingOut'. Without Google
  * login the app is 'ready' straight away, and a 401 means the access code. */
 export default function App() {
   const [auth, setAuth] = useState({ phase: 'loading' });
@@ -62,7 +63,19 @@ export default function App() {
     return () => window.removeEventListener(AUTH_PROBLEM_EVENT, onProblem);
   }, []);
 
-  if (auth.phase === 'loading') {
+  // Sign out in an order that loses nothing and leaves nothing behind: close
+  // the workspace first (its tools flush pending saves while the session is
+  // still valid), let those requests finish, then clear the browser's cached
+  // data and the session.
+  const handleSignOut = async () => {
+    flushSync(() => setAuth({ phase: 'signingOut' }));
+    await new Promise(r => setTimeout(r, 0));
+    await waitForPendingRequests();
+    await signOut();
+    setAuth({ phase: 'signedOut' });
+  };
+
+  if (auth.phase === 'loading' || auth.phase === 'signingOut') {
     return <div className="h-screen" style={{ background: 'var(--topbar-bg)' }} aria-busy="true" />;
   }
   if (auth.phase === 'signedOut') return <SignIn />;
@@ -70,7 +83,7 @@ export default function App() {
   return (
     <Workspace
       email={auth.email}
-      onSignOut={async () => { await signOut(); setAuth({ phase: 'signedOut' }); }}
+      onSignOut={handleSignOut}
       needCode={needCode}
     />
   );

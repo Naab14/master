@@ -20,12 +20,14 @@ export async function loadAuth() {
     client = createClient(config.auth.supabaseUrl, config.auth.publishableKey, {
       auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
     });
-    await client.auth.getSession(); // finishes a ?code= sign-in return, if any
+    const { data } = await client.auth.getSession(); // finishes a ?code= sign-in return, if any
     const url = new URL(window.location.href);
-    if (url.searchParams.has('code')) {
-      url.searchParams.delete('code');
-      window.history.replaceState(null, '', url.pathname + url.search + url.hash);
-    }
+    if (url.searchParams.has('code')) url.searchParams.delete('code');
+    // Back from Google: restore where the user was heading (e.g. a
+    // #share=… vacation link), which the OAuth redirect drops.
+    const returnHash = takeReturnHash();
+    if (data.session && returnHash && !url.hash) url.hash = returnHash;
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
   }
   return config;
 }
@@ -49,7 +51,20 @@ export function onSessionChange(cb) {
   return () => data.subscription.unsubscribe();
 }
 
+const RETURN_HASH_KEY = 'master-return-hash';
+
+function takeReturnHash() {
+  try {
+    const h = sessionStorage.getItem(RETURN_HASH_KEY);
+    sessionStorage.removeItem(RETURN_HASH_KEY);
+    return h || '';
+  } catch { return ''; }
+}
+
 export function signInWithGoogle() {
+  try {
+    if (window.location.hash) sessionStorage.setItem(RETURN_HASH_KEY, window.location.hash);
+  } catch { /* ignore */ }
   return client.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin + window.location.pathname },
