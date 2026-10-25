@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master — Schedule density</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBFBFA}
+.dn{--ink:#2C2B28;--ink2:#55544F;--ink3:#6B6A64;--line:#E8E7E4;--accent:#2563C9;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:var(--ink);font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+.dn *{box-sizing:border-box}
+.dn button{font:inherit;color:inherit;cursor:pointer}
+.seg{display:inline-flex;padding:3px;gap:2px;border-radius:9px;background:#EFEEEB}
+.seg button{border:0;background:none;min-height:30px;padding:0 12px;border-radius:7px;font-size:13px;font-weight:500;color:var(--ink2)}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.icon-btn{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;font-size:18px;font-weight:600}
+.icon-btn:hover{background:#EEEDEA}
+.seg button:focus-visible,.icon-btn:focus-visible,.gridbox:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.kbd{display:inline-grid;place-items:center;min-width:22px;height:20px;padding:0 5px;border:1px solid #CFCDC8;border-bottom-width:2px;border-radius:4px;font-size:11px;font-weight:600;background:#fff}
+.g{display:grid}
+.r{transition:height .28s cubic-bezier(.2,.8,.2,1)}
+.blk{border-radius:4px;overflow:hidden;white-space:nowrap;font-size:11.5px;font-weight:600;display:flex;align-items:center;padding:0 6px;transition:margin .28s,border-radius .28s}
+@keyframes toast{0%{opacity:0;transform:translate(-50%,6px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
+@keyframes grow{from{opacity:.4;transform:scaleX(.96)}to{opacity:1;transform:none}}
+.zoomed{animation:grow .28s cubic-bezier(.2,.8,.2,1);transform-origin:left center}
+</style>
+</helmet>
+<div class="dn" style="height: 100vh; min-height: 640px; padding: 20px clamp(12px, 2vw, 28px) 16px; display: flex; flex-direction: column; gap: 14px; background: #FBFBFA">
+  <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 12px; font-weight: 600; color: var(--ink3)">Vacations · density</span>
+      <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 32px; line-height: 1.1">All 16 operators · {{rangeTitle}}</h1>
+      <p style="margin: 0; color: var(--ink2); display: flex; flex-wrap: wrap; gap: 6px; align-items: center">Hold <span class="kbd">Ctrl</span> and scroll to zoom out for more months, in for more detail</p>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px">
+      <button class="icon-btn" onClick="{{zoomOut}}" aria-label="Show more weeks (Ctrl + scroll down)">−</button>
+      <div class="seg" role="group" aria-label="Time span">
+        <sc-for list="{{levels}}" as="l" hint-placeholder-count="4"><button aria-pressed="{{l.on}}" onClick="{{l.pick}}">{{l.name}}</button></sc-for>
+      </div>
+      <button class="icon-btn" onClick="{{zoomIn}}" aria-label="Show fewer weeks (Ctrl + scroll up)">+</button>
+    </div>
+  </header>
+
+  <section class="gridbox" tabindex="0" aria-label="Schedule, {{levelName}}" onWheel="{{onWheel}}" style="position: relative; flex: 1 1 auto; min-height: 0; width: 100%; border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow: auto">
+    <div class="zoomed" key="{{lvlKey}}" style="width: 100%; min-width: {{minW}}">
+      <!-- month band -->
+      <div class="g" style="grid-template-columns: {{cols}}; position: sticky; top: 0; z-index: 4; background: #fff">
+        <div style="position: sticky; left: 0; z-index: 1; background: #fff"></div>
+        <sc-for list="{{months}}" as="m" hint-placeholder-count="12">
+          <div style="grid-column: {{m.span}}; padding: 6px 6px 2px; border-left: 1px solid #CFCDC8; font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{m.label}}</div>
+        </sc-for>
+      </div>
+      <!-- week header -->
+      <div class="g" style="grid-template-columns: {{cols}}; position: sticky; top: 26px; z-index: 3; background: #fff; border-bottom: 1px solid var(--line)">
+        <div style="position: sticky; left: 0; z-index: 1; background: #fff; padding: 4px 12px; font-size: 12px; font-weight: 600; color: var(--ink3); display: flex; align-items: flex-end">{{nameHead}}</div>
+        <sc-for list="{{weeks}}" as="w" hint-placeholder-count="26">
+          <div style="padding: 2px 0 4px; border-left: 1px solid {{w.rule}}; display: flex; flex-direction: column; align-items: center; background: {{w.bg}}; overflow: hidden">
+            <span class="num" style="font-size: {{w.fs}}; font-weight: 600; color: {{w.fg}}; white-space: nowrap">{{w.top}}</span>
+            <span style="font-size: 10.5px; color: var(--ink3); white-space: nowrap">{{w.sub}}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <sc-for list="{{groups}}" as="grp" hint-placeholder-count="2">
+        <div class="g" style="grid-template-columns: {{cols}}; background: #FAFAF8; border-bottom: 1px solid #F1F0EE">
+          <div style="position: sticky; left: 0; background: #FAFAF8; padding: {{grpPad}}; font-size: 12px; font-weight: 700; white-space: nowrap">{{grp.name}}</div>
+        </div>
+        <sc-for list="{{grp.ops}}" as="o" hint-placeholder-count="8">
+          <div class="g r" style="grid-template-columns: {{cols}}; height: {{rowH}}; border-bottom: 1px solid #F4F3F1">
+            <div title="{{o.name}}" style="grid-row: 1; grid-column: 1; position: sticky; left: 0; z-index: 2; background: #fff; padding: 0 12px; display: flex; align-items: center; font-size: {{nameFs}}; font-weight: 500; white-space: nowrap; overflow: hidden">{{o.label}}</div>
+            <sc-for list="{{o.cells}}" as="c" hint-placeholder-count="26"><div style="grid-row: 1; grid-column: {{c.col}}; border-left: 1px solid {{c.rule}}; background: {{c.bg}}"></div></sc-for>
+            <sc-for list="{{o.blocks}}" as="b" hint-placeholder-count="2">
+              <div class="blk" title="{{b.tip}}" style="grid-row: 1; grid-column: {{b.span}}; margin: {{blkM}}; background: {{b.bg}}; color: {{b.fg}}; border: {{b.border}}; z-index: 1">{{b.label}}</div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </sc-for>
+
+      <!-- out per week -->
+      <div class="g" style="grid-template-columns: {{cols}}; border-top: 1px solid var(--line); background: #FAFAF8; position: sticky; bottom: 0; z-index: 3">
+        <div style="position: sticky; left: 0; background: #FAFAF8; padding: 8px 12px; font-size: 12px; font-weight: 600; color: var(--ink2); white-space: nowrap">{{outHead}}</div>
+        <sc-for list="{{out}}" as="x" hint-placeholder-count="26">
+          <div title="{{x.tip}}" style="margin: 4px 1px; height: 22px; border-radius: 3px; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: {{x.bg}}; color: {{x.fg}}">{{x.n}}</div>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-if value="{{showToast}}" hint-placeholder-val="{{false}}">
+      <div key="{{lvlKey}}" aria-live="polite" style="position: sticky; left: 50%; bottom: 48px; width: max-content; transform: translateX(-50%); margin-top: -40px; padding: 8px 14px; border-radius: 999px; background: #2C2B28; color: #fff; font-size: 13px; font-weight: 600; animation: toast 1.4s ease forwards; z-index: 6">{{levelName}}</div>
+    </sc-if>
+  </section>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--ink2)">
+    <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 16px; height: 10px; border-radius: 3px; background: #3B6FD4"></span>Approved</span>
+    <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 16px; height: 10px; border-radius: 3px; background: #EAF1FC; border: 1.5px dashed #3B6FD4"></span>Pending</span>
+    <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 16px; height: 10px; border-radius: 3px; background: #E4E3DF"></span>Draft</span>
+    <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 16px; height: 10px; border-radius: 3px; background: #fff; border: 1.5px dotted #8E8D88"></span>Requested</span>
+    <span>· Sample leave data, incl. summer 2027</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { lvl: 1, toastKey: 0 }; this._t = 0; }
+  setLvl(l) {
+    const lvl = Math.max(0, Math.min(3, l));
+    if (lvl !== this.state.lvl) this.setState({ lvl, toastKey: Date.now() });
+  }
+  renderVals() {
+    const S = this.state;
+    // Each level shows MORE weeks instead of shrinking: columns are 1fr, so the grid always fills the screen.
+    const L = [
+      { name: '3 months', N: 13, minCol: 64, nameW: 190, rowH: '44px', blkM: '8px 3px', nameFs: '14px', grpPad: '8px 12px', wkLabel: 'full' },
+      { name: '6 months', N: 26, minCol: 34, nameW: 160, rowH: '30px', blkM: '5px 2px', nameFs: '13px', grpPad: '5px 12px', wkLabel: 'num' },
+      { name: '12 months', N: 52, minCol: 18, nameW: 130, rowH: '22px', blkM: '4px 1px', nameFs: '12px', grpPad: '3px 12px', wkLabel: 'num' },
+      { name: '18 months', N: 78, minCol: 11, nameW: 56, rowH: '15px', blkM: '2px 0', nameFs: '10.5px', grpPad: '2px 12px', wkLabel: 'every4' }
+    ][S.lvl];
+    const N = L.N;
+    const MS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const MSL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const mon0 = Date.UTC(2026, 9, 26); // Monday of week 44, 2026
+    const isoWeek = d => { const t = new Date(d); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = Date.UTC(t.getUTCFullYear(), 0, 1); return Math.ceil(((t - y0) / 86400000 + 1) / 7); };
+    const W = Array.from({ length: N }, (_, i) => { const d = new Date(mon0 + i * 7 * 86400000); const th = new Date(mon0 + (i * 7 + 3) * 86400000); return { n: isoWeek(d), m: th.getUTCMonth(), y: th.getUTCFullYear(), day: d.getUTCDate() }; });
+    const weeks = W.map((w, i) => {
+      const now = i === 0;
+      let top = String(w.n), sub = '';
+      if (L.wkLabel === 'full') { top = 'v.' + w.n; sub = w.day + ' ' + MS[w.m]; }
+      if (L.wkLabel === 'every4') top = i % 4 === 0 ? String(w.n) : '';
+      if (L.wkLabel === 'num' && S.lvl === 2 && i % 2 === 1) top = '';
+      return { top, sub, fs: S.lvl >= 2 ? '10px' : '12px', fg: now ? '#1F55A8' : '#2C2B28', bg: now ? '#EAF1FC' : 'transparent', rule: w.n === 1 ? '#9C9A94' : '#F1F0EE' };
+    });
+    // month band
+    const months = [];
+    W.forEach((w, i) => {
+      const last = months[months.length - 1];
+      if (last && last.m === w.m && last.y === w.y) last.n++;
+      else months.push({ m: w.m, y: w.y, start: i, n: 1 });
+    });
+    const monthsOut = months.map(m => ({
+      span: (m.start + 2) + ' / span ' + m.n,
+      label: m.n >= 4 && S.lvl < 3 ? MSL[m.m] + (m.m === 0 || m.start === 0 ? ' ' + m.y : '') : MS[m.m] + (m.m === 0 ? ' ’' + String(m.y).slice(2) : '')
+    }));
+    const st = {
+      a: { bg: '#3B6FD4', fg: '#fff', border: '0', w: 'Approved' }, p: { bg: '#EAF1FC', fg: '#1F55A8', border: '1.5px dashed #3B6FD4', w: 'Pending' },
+      d: { bg: '#E4E3DF', fg: '#55544F', border: '0', w: 'Draft' }, r: { bg: '#fff', fg: '#55544F', border: '1.5px dotted #8E8D88', w: 'Requested' }
+    };
+    // blocks as [startIndex, endIndex] from week 44 2026 (index 9 = week 53, index 10 = week 1 2027)
+    const raw = [
+      ['S1', 'Anna Lindgren', [[8, 8, 'a'], [37, 39, 'a']]], ['S1', 'Erik Holm', [[3, 3, 'p'], [38, 40, 'a']]],
+      ['S1', 'Sara Björk', [[7, 8, 'p'], [36, 38, 'p']]], ['S1', 'Johan Nyman', [[7, 7, 'a'], [39, 41, 'a']]],
+      ['S1', 'Klara Dahl', [[0, 0, 'a'], [35, 37, 'a']]], ['S1', 'Oscar Lund', [[17, 18, 'a'], [40, 42, 'd']]],
+      ['S1', 'Maja Ek', [[5, 6, 'd'], [37, 39, 'p']]], ['S1', 'Lars Berg', [[2, 2, 'r'], [38, 40, 'r']]],
+      ['S2', 'Hanna Sjögren', [[8, 8, 'p'], [36, 38, 'a']]], ['S2', 'Emil Strand', [[6, 7, 'a'], [39, 41, 'a']]],
+      ['S2', 'Frida Nordin', [[8, 8, 'a'], [37, 39, 'a']]], ['S2', 'Gustav Wallin', [[16, 17, 'a'], [40, 42, 'a']]],
+      ['S2', 'Lina Åberg', [[11, 12, 'a'], [35, 37, 'p']]], ['S2', 'Nils Persson', [[0, 0, 'a'], [38, 40, 'a']]],
+      ['S2', 'Elin Moberg', [[21, 21, 'p'], [36, 38, 'a']], ], ['S2', 'Axel Svensson', [[23, 24, 'd'], [39, 41, 'd'], [60, 61, 'a']]]
+    ];
+    const ini = n => n.split(' ').map(w => w[0]).join('');
+    const mkOp = ([shift, name, bl]) => ({
+      name, label: S.lvl === 3 ? ini(name) : name,
+      cells: W.map((w, i) => ({ col: i + 2, rule: w.n === 1 ? '#B8B6B0' : (S.lvl >= 2 && i % 4 !== 0 ? 'transparent' : '#F1F0EE'), bg: i === 0 ? '#F3F6FC' : 'transparent' })),
+      blocks: bl.filter(([s]) => s < N).map(([s, e, k]) => {
+        const end = Math.min(e, N - 1), span = end - s + 1, t = st[k];
+        const wk = s === e ? 'v.' + W[s].n : 'v.' + W[s].n + '–' + (W[e] ? W[e].n : '');
+        return { span: (s + 2) + ' / span ' + span, bg: t.bg, fg: t.fg, border: S.lvl >= 2 && k === 'p' ? '1px dashed #3B6FD4' : t.border,
+          label: S.lvl === 0 ? (span > 1 ? wk + ' · ' + t.w : wk) : (S.lvl === 1 && span > 2 ? wk : ''), tip: name + ' · ' + wk + ' · ' + t.w };
+      })
+    });
+    const groups = [
+      { name: S.lvl === 3 ? 'S1' : 'S1 · 8 operators', ops: raw.filter(r => r[0] === 'S1').map(mkOp) },
+      { name: S.lvl === 3 ? 'S2' : 'S2 · 8 operators', ops: raw.filter(r => r[0] === 'S2').map(mkOp) }
+    ];
+    const out = W.map((w, i) => {
+      const n = raw.filter(r => r[2].some(([s, e, k]) => k === 'a' && i >= s && i <= e)).length;
+      const shade = ['#F1F0EE', '#DCE8FA', '#B6CDF3', '#7FA6E6', '#3B6FD4', '#2A54A8'][Math.min(5, n)];
+      return { n: n && S.lvl < 3 ? n : '', bg: shade, fg: n >= 3 ? '#fff' : '#1F55A8', tip: 'Week ' + w.n + ': ' + n + ' out (approved)' };
+    });
+    const levels = ['3 mo', '6 mo', '12 mo', '18 mo'].map((name, i) => ({ name, on: S.lvl === i, pick: () => this.setLvl(i) }));
+    const first = W[0], last = W[N - 1];
+    return {
+      cols: L.nameW + 'px repeat(' + N + ', minmax(' + L.minCol + 'px, 1fr))', minW: (L.nameW + N * L.minCol) + 'px',
+      rowH: L.rowH, blkM: L.blkM, nameFs: L.nameFs, grpPad: L.grpPad, lvlKey: 'l' + S.lvl + '-' + S.toastKey,
+      rangeTitle: MS[first.m] + ' ' + first.y + ' – ' + MS[last.m] + ' ' + last.y,
+      nameHead: S.lvl === 3 ? '' : 'Operator', outHead: S.lvl === 3 ? 'Out' : 'Out (approved)', levelName: L.name,
+      weeks, months: monthsOut, groups, out, levels, showToast: !!S.toastKey,
+      zoomIn: () => this.setLvl(S.lvl - 1), zoomOut: () => this.setLvl(S.lvl + 1),
+      onWheel: e => {
+        if (!e.ctrlKey) return;
+        const now = Date.now();
+        if (now - this._t < 250) return;
+        this._t = now;
+        this.setLvl(S.lvl + (e.deltaY > 0 ? 1 : -1));
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master — Team cards</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,500;6..72,600&amp;family=Archivo:wght@400;500;700;800&amp;family=JetBrains+Mono:wght@500;700&amp;family=Fraunces:opsz,wght@9..144,600&amp;family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&amp;family=Nunito+Sans:opsz,wght@6..12,400;6..12,700;6..12,800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.tm{min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;transition:background .4s ease,color .4s ease}
+.tm *{box-sizing:border-box}
+.tm button{font:inherit;color:inherit;cursor:pointer}
+.sw{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 14px 0 8px;border-radius:999px;border:1px solid var(--edge);background:transparent;font-weight:600;transition:background .2s,border-color .2s,transform .12s}
+.sw:hover{transform:translateY(-1px)}
+.sw[aria-pressed="true"]{background:var(--ink);color:var(--bg) !important;border-color:var(--ink)}
+.chipf{min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--edge);background:transparent;font-weight:600;font-size:14px}
+.chipf[aria-pressed="true"]{background:var(--soft);border-color:var(--ink)}
+.stage{perspective:1200px}
+.card{position:relative;width:100%;height:330px;border:0;padding:0;background:none;text-align:left;transform:rotate(var(--r));transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+.card:hover,.card:focus-visible{transform:rotate(0deg) translateY(-10px) scale(1.03)}
+.card:focus-visible{outline:none}
+.card:focus-visible .face{box-shadow:0 0 0 3px var(--bg),0 0 0 6px var(--ink)}
+.flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.34,1.3,.64,1)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--rad);padding:22px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow);border:var(--cardEdge)}
+.back{transform:rotateY(180deg)}
+.stamp{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;border:1.5px solid currentColor}
+.mono{font-family:"JetBrains Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div class="tm" style="{{vars}}">
+  <div style="max-width: 1240px; margin: 0 auto; padding: 36px clamp(16px, 4vw, 56px) 72px; display: flex; flex-direction: column; gap: 28px">
+
+    <header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 13px; font-weight: 600; color: var(--mute)">Team · L4</span>
+        <h1 style="margin: 0; font-family: var(--display); font-weight: var(--dw); font-size: 52px; line-height: 1; letter-spacing: var(--ls)">The crew</h1>
+        <p style="margin: 0; color: var(--mute)">16 operators · 2 out this week · click a card to flip it</p>
+      </div>
+      <div role="group" aria-label="Theme" style="display: flex; flex-wrap: wrap; gap: 8px">
+        <sc-for list="{{themes}}" as="t" hint-placeholder-count="3">
+          <button class="sw" aria-pressed="{{t.on}}" onClick="{{t.pick}}">
+            <span aria-hidden="true" style="display: flex; width: 26px; height: 26px; border-radius: 50%; overflow: hidden; border: 1px solid rgba(0,0,0,.15)"><span style="flex: 1; background: {{t.a}}"></span><span style="flex: 1; background: {{t.b}}"></span></span>
+            {{t.name}}
+          </button>
+        </sc-for>
+      </div>
+    </header>
+
+    <div role="group" aria-label="Filter" style="display: flex; flex-wrap: wrap; gap: 8px">
+      <button class="chipf" aria-pressed="true">All 16</button>
+      <button class="chipf" aria-pressed="false">S1 · 8</button>
+      <button class="chipf" aria-pressed="false">S2 · 8</button>
+      <button class="chipf" aria-pressed="false">On leave · 2</button>
+      <button class="chipf" aria-pressed="false">Certified: Serialisering</button>
+    </div>
+
+    <div class="stage" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap: 34px 26px; padding-top: 8px">
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="8">
+        <button class="card" style="--r: {{c.rot}}" onClick="{{c.flip}}" aria-pressed="{{c.flipped}}" aria-label="{{c.aria}}">
+          <span class="flip" style="transform: {{c.flipT}}">
+            <!-- front -->
+            <span class="face" style="background: {{c.bg}}; color: {{c.fg}}">
+              <span style="display: flex; justify-content: space-between; align-items: flex-start">
+                <span style="font-family: var(--display); font-weight: var(--dw); font-size: 56px; line-height: .9; letter-spacing: -0.04em; opacity: .9">{{c.ini}}</span>
+                <span class="mono" style="font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 6px; background: {{c.chipBg}}">{{c.shift}}</span>
+              </span>
+              <span style="margin-top: auto; font-family: var(--display); font-weight: var(--dw); font-size: 26px; line-height: 1.1; letter-spacing: var(--ls)">{{c.name}}</span>
+              <span style="display: flex; flex-wrap: wrap; gap: 6px">
+                <sc-for list="{{c.certs}}" as="k" hint-placeholder-count="2"><span class="stamp">{{k}}</span></sc-for>
+              </span>
+              <span style="display: flex; align-items: center; gap: 8px; padding-top: 10px; border-top: 1.5px solid {{c.rule}}; font-size: 13px; font-weight: 700">
+                <span aria-hidden="true" style="width: 9px; height: 9px; border-radius: 50%; background: {{c.dot}}; box-shadow: 0 0 0 3px {{c.chipBg}}"></span>{{c.status}}
+              </span>
+            </span>
+            <!-- back -->
+            <span class="face back" style="background: {{c.bg}}; color: {{c.fg}}">
+              <span style="font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .8">{{c.name}}</span>
+              <span style="font-family: var(--display); font-weight: var(--dw); font-size: 22px">Certifications</span>
+              <span style="display: flex; flex-direction: column; gap: 4px; font-size: 13px">
+                <sc-for list="{{c.matrix}}" as="m" hint-placeholder-count="5">
+                  <span style="display: flex; justify-content: space-between; gap: 8px; opacity: {{m.op}}"><span>{{m.p}}</span><b>{{m.mark}}</b></span>
+                </sc-for>
+              </span>
+              <span style="margin-top: auto; font-family: var(--display); font-weight: var(--dw); font-size: 18px">Leave 2026</span>
+              <span class="mono" style="font-size: 12px">{{c.leave}}</span>
+            </span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { theme: 'night', flipped: null }; }
+  renderVals() {
+    const S = this.state;
+    const T = {
+      calm: { name: 'Calm', a: '#FBFBFA', b: '#2C2B28',
+        vars: '--bg:#FBFBFA;--ink:#2C2B28;--mute:#5F5E59;--edge:#DEDDD9;--soft:#EEEDEA;--body:Inter,system-ui,sans-serif;--display:Newsreader,Georgia,serif;--dw:500;--ls:-0.01em;--rad:14px;--shadow:0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(44,43,40,.08);--cardEdge:1px solid rgba(0,0,0,.06)',
+        cards: [['#F6EFE3', '#2C2B28'], ['#F9E4EC', '#2C2B28'], ['#D9F0E7', '#1E3B30'], ['#DFE8F8', '#1F2F4D'], ['#FBF0CC', '#3B3110']] },
+      arcade: { name: 'Arcade', a: '#1B262D', b: '#E8C26A',
+        vars: '--bg:#1B262D;--ink:#E9EEF0;--mute:#A3B6BF;--edge:rgba(190,214,224,.35);--soft:rgba(255,255,255,.08);--body:Archivo,Tahoma,sans-serif;--display:Archivo,Tahoma,sans-serif;--dw:800;--ls:-0.03em;--rad:2px;--shadow:0 0 0 1px rgba(0,0,0,.4),0 16px 30px rgba(0,0,0,.35);--cardEdge:1px solid rgba(220,236,242,.55)',
+        cards: [['#2F4B57', '#E9EEF0'], ['#4A3F2A', '#F7E3B4'], ['#24443A', '#CFF5DE'], ['#3B3350', '#E6DEFF'], ['#4B2F33', '#FFD9D3']] },
+      night: { name: 'Night shift', a: '#17142B', b: '#B9A6FF',
+        vars: '--bg:#17142B;--ink:#F6F2E8;--mute:#B4ACD2;--edge:rgba(196,182,255,.3);--soft:rgba(255,255,255,.1);--body:"Nunito Sans",system-ui,sans-serif;--display:"Bricolage Grotesque","Nunito Sans",sans-serif;--dw:800;--ls:-0.03em;--rad:22px;--shadow:0 18px 40px rgba(0,0,0,.35);--cardEdge:0',
+        cards: [['#FBF3E4', '#17142B'], ['#FDE3EF', '#17142B'], ['#6BD9C9', '#0F2B2A'], ['#2E3790', '#FFFFFF'], ['#B9A6FF', '#17142B'], ['#FFB38A', '#2A1406']] }
+    };
+    const th = T[S.theme];
+    const themes = Object.keys(T).map(k => ({ name: T[k].name, a: T[k].a, b: T[k].b, on: S.theme === k, pick: () => this.setState({ theme: k }) }));
+    const P = { AVS: 'Avsyning', KAP: 'Kapselresaren', SER: 'Serialisering', ETI: 'Etikettering', DOK: 'Granskning/uttag av dok' };
+    const ops = [
+      ['Anna Lindgren', 'S1', ['AVS', 'SER', 'DOK'], 'On shift', 'ok', 'v.52 approved'],
+      ['Erik Holm', 'S1', ['KAP', 'ETI'], 'Asked for v.47', 'pend', 'v.47 pending'],
+      ['Sara Björk', 'S1', ['AVS', 'KAP', 'SER'], 'Asked for v.51–52', 'pend', 'v.51–52 pending'],
+      ['Johan Nyman', 'S1', ['SER', 'DOK'], 'On shift', 'ok', 'v.51 approved'],
+      ['Klara Dahl', 'S1', ['ETI', 'AVS'], 'On leave · v.44', 'out', 'v.44 approved'],
+      ['Oscar Lund', 'S1', ['KAP', 'SER'], 'On shift', 'ok', 'No leave planned'],
+      ['Maja Ek', 'S1', ['AVS', 'ETI', 'KAP'], 'On shift', 'ok', 'v.49–50 draft'],
+      ['Lars Berg', 'S1', ['SER', 'ETI'], 'On shift', 'ok', 'v.46 requested']
+    ];
+    const rots = ['-3deg', '2deg', '-1.5deg', '2.5deg', '-2deg', '1.5deg', '-2.5deg', '3deg'];
+    const dots = { ok: '#3FBF7F', pend: '#F2A93B', out: '#E5566B' };
+    const cards = ops.map(([name, shift, certs, status, kind, leave], i) => {
+      const [bg, fg] = th.cards[i % th.cards.length];
+      const light = fg === '#FFFFFF' || fg.startsWith('#E') || fg.startsWith('#F') || fg.startsWith('#C');
+      const flipped = S.flipped === i;
+      return {
+        name, shift, certs, status, leave, bg, fg, rot: rots[i], flipped,
+        ini: name.split(' ').map(w => w[0]).join(''),
+        chipBg: light ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.08)', rule: light ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.12)',
+        dot: dots[kind], flipT: flipped ? 'rotateY(180deg)' : 'none',
+        aria: name + ', ' + shift + ', ' + status + (flipped ? ', showing details' : ''),
+        matrix: Object.keys(P).map(k => ({ p: P[k], mark: certs.includes(k) ? '✓' : '—', op: certs.includes(k) ? 1 : 0.5 })),
+        flip: () => this.setState({ flipped: flipped ? null : i })
+      };
+    });
+    return { vars: th.vars, themes, cards };
+  }
+}
+</script>
+</body>
+</html>

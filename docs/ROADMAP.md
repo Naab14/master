@@ -8,6 +8,7 @@ work before starting, move it when done, and log decisions with a date.
 | What | Thread | Status |
 | --- | --- | --- |
 | Google login (Supabase Auth + email allowlist) | Build (original thread) | Code in PR #3. Waiting on the owner for a Google OAuth client ID and secret, a Supabase access token, and the allowed emails. Then: enable the Google provider in Supabase, set `ALLOWED_EMAILS` in Vercel, merge, verify. |
+| Redesign, step 1: theme tokens (Calm, Arcade, Night shift), type scale, base controls, app-wide theme switcher | Design | Branch `design/foundation`. Spec in `docs/design/HANDOVER.md`. Then: app shell → Dashboard → Vacations → Shift HQ → Boards → Team cards |
 
 ## Next
 
@@ -74,3 +75,8 @@ work before starting, move it when done, and log decisions with a date.
 | 2026-10-25 | Host on Vercel with data in Supabase (one `app_state` table, one row per section) | Owner's choice. One JSON document per section keeps the original data models intact |
 | 2026-10-25 | Google login through Supabase Auth with an email allowlist | Owner wants Google sign-in. Supabase is already in use, and the allowlist keeps random Google accounts out |
 | 2026-10-25 | No login while testing; real data only after login is live | Owner wants no friction during testing |
+| 2026-10-25 | Redesign follows `docs/design/HANDOVER.md`; mockups are visual specs, not code to copy | Design exploration done with the owner on a design canvas |
+| 2026-10-25 | Three app-wide themes (Calm, Arcade, Night shift): same layouts, only tokens change. They replace the four Vacations-only themes | One visual language across the tools; the theme is a personal choice |
+| 2026-10-25 | Status colors: green/amber/red mean coverage and work status only. Leave is blue (solid approved, dashed pending, grey draft, dotted requested) | Color should follow priority; holiday stripes were the loudest thing on screen |
+| 2026-10-25 | Schedule zoom 3 → 6 → 12 → 18 months (Ctrl + scroll and −/+); operator cards that flip; Sketch tab with Excalidraw | Owner's picks from the design exploration |
+| 2026-10-25 | Proposed, not yet planned: admin "All teams" page, roles, multi-team, work-account sign-in | From the handover. Needs a Strategy decision (who is it for) and Build work on auth; Design only builds the look until then |

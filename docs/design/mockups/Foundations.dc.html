@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master — Foundations</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,500;6..72,600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.f{font-family:Inter,"Segoe UI",system-ui,sans-serif;color:#2C2B28;-webkit-font-smoothing:antialiased}
+.f *{box-sizing:border-box}
+.lbl{font-size:12px;font-weight:600;color:#6B6A64}
+.h{margin:0;font-size:18px;font-weight:600}
+.sw{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#55544F}
+.sw span:first-child{height:56px;border-radius:8px;border:1px solid rgba(0,0,0,.06)}
+.pill{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:5px;font-size:12px;font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px;border-radius:8px;border:1px solid #E8E7E4;background:#fff;font:inherit;font-weight:500;color:#2C2B28}
+</style>
+</helmet>
+<div class="f" style="width: 1200px; height: 1180px; padding: 56px; background: #FBFBFA; display: flex; flex-direction: column; gap: 44px">
+  <div style="display: flex; flex-direction: column; gap: 6px">
+    <span class="lbl">Foundations</span>
+    <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 40px">Calm workspace, clear status</h1>
+  </div>
+
+  <section style="display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start">
+    <h2 class="h">Type</h2>
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <div style="display: grid; grid-template-columns: 180px 1fr; align-items: baseline; gap: 16px"><span class="lbl">Page title · Newsreader 500 · 40/36</span><span style="font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 40px; line-height: 1.1">Monday, 26 October</span></div>
+      <div style="display: grid; grid-template-columns: 180px 1fr; align-items: baseline; gap: 16px"><span class="lbl">Section · Inter 600 · 18</span><span style="font-size: 18px; font-weight: 600">Shift checklist</span></div>
+      <div style="display: grid; grid-template-columns: 180px 1fr; align-items: baseline; gap: 16px"><span class="lbl">Body · Inter 400–500 · 14</span><span style="font-size: 14px">Line 2 output back on plan after morning changeover delay.</span></div>
+      <div style="display: grid; grid-template-columns: 180px 1fr; align-items: baseline; gap: 16px"><span class="lbl">Meta / label · Inter 600 · 12</span><span class="lbl" style="font-size: 12px">Needs you · Week 44</span></div>
+      <div style="display: grid; grid-template-columns: 180px 1fr; align-items: baseline; gap: 16px"><span class="lbl">Numbers · tabular</span><span style="font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 600">0/2 · 1/2 · 2/2 · 11/20</span></div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start">
+    <h2 class="h">Surface &amp; ink</h2>
+    <div style="display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px">
+      <div class="sw"><span style="background: #FBFBFA"></span>Ground #FBFBFA</div>
+      <div class="sw"><span style="background: #F6F5F3"></span>Sidebar #F6F5F3</div>
+      <div class="sw"><span style="background: #FFFFFF"></span>Panel #FFFFFF</div>
+      <div class="sw"><span style="background: #E8E7E4"></span>Line #E8E7E4</div>
+      <div class="sw"><span style="background: #2C2B28"></span>Ink #2C2B28</div>
+      <div class="sw"><span style="background: #55544F"></span>Ink 2 #55544F</div>
+      <div class="sw"><span style="background: #6B6A64"></span>Ink 3 #6B6A64</div>
+      <div class="sw"><span style="background: #2563C9"></span>Focus/link #2563C9</div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <h2 class="h">Status</h2>
+      <span style="font-size: 13px; color: #55544F">Three vocabularies, one tint system. Color only ever means status.</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 18px">
+      <div style="display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 16px">
+        <span class="lbl">Coverage</span>
+        <span style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span class="pill" style="background: #DDF0E3; color: #1F6B3E">Covered 2/2</span>
+          <span class="pill" style="background: #FBEACB; color: #8A4B00">One short 1/2</span>
+          <span class="pill" style="background: #F9DAD6; color: #A3271C">Gap 0/2</span>
+        </span>
+      </div>
+      <div style="display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 16px">
+        <span class="lbl">Work items</span>
+        <span style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span class="pill" style="background: #DDF0E3; color: #1F6B3E">Done</span>
+          <span class="pill" style="background: #FBEACB; color: #8A4B00">Working on it</span>
+          <span class="pill" style="background: #F9DAD6; color: #A3271C">Stuck</span>
+          <span class="pill" style="background: #ECEBE8; color: #55544F">Not started</span>
+        </span>
+      </div>
+      <div style="display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 16px">
+        <span class="lbl">Leave</span>
+        <span style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span class="pill" style="background: #3B6FD4; color: #fff">Approved</span>
+          <span class="pill" style="background: #EAF1FC; color: #1F55A8; border: 1.5px dashed #3B6FD4">Pending</span>
+          <span class="pill" style="background: #E4E3DF; color: #55544F">Draft</span>
+          <span class="pill" style="background: #fff; color: #55544F; border: 1.5px dotted #8E8D88">Requested</span>
+        </span>
+      </div>
+      <div style="display: grid; grid-template-columns: 130px 1fr; align-items: center; gap: 16px">
+        <span class="lbl">Log category</span>
+        <span style="display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; font-weight: 600; color: #55544F">
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #C2412D"></span>Safety</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2563C9"></span>Quality</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #2F8A55"></span>Delivery</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #8A6A00"></span>Cost</span>
+          <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #7A4BC2"></span>People</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start">
+    <h2 class="h">Controls</h2>
+    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+      <button class="btn" style="background: #2C2B28; border-color: #2C2B28; color: #fff">New task</button>
+      <button class="btn">Log entry</button>
+      <span style="display: inline-flex; padding: 3px; gap: 2px; border-radius: 9px; background: #EFEEEB">
+        <button class="btn" style="min-height: 30px; border: 0; padding: 0 12px; box-shadow: 0 1px 2px rgba(0,0,0,.08); font-weight: 600">Table</button>
+        <button class="btn" style="min-height: 30px; border: 0; padding: 0 12px; background: transparent; color: #55544F">Kanban</button>
+      </span>
+      <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #1F6B3E">Done</label>
+      <label style="display: inline-flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #6B6A64">Due date<input value="2026-10-28" style="height: 36px; width: 150px; padding: 0 10px; border: 1px solid #E8E7E4; border-radius: 8px; font: inherit; font-weight: 400; color: #2C2B28; font-size: 14px"></label>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start">
+    <h2 class="h">Spacing &amp; shape</h2>
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; font-size: 12px; color: #55544F">
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 4px; height: 4px; background: #2C2B28"></span>4</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 8px; height: 8px; background: #2C2B28"></span>8</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 12px; height: 12px; background: #2C2B28"></span>12</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 16px; height: 16px; background: #2C2B28"></span>16</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 24px; height: 24px; background: #2C2B28"></span>24</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 32px; height: 32px; background: #2C2B28"></span>32</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 48px; height: 48px; background: #2C2B28"></span>48</div>
+      <span style="width: 1px; height: 48px; background: #E8E7E4"></span>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 48px; height: 32px; border: 1.5px solid #2C2B28; border-radius: 5px"></span>Pill 5</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 48px; height: 32px; border: 1.5px solid #2C2B28; border-radius: 8px"></span>Control 8</div>
+      <div style="display: flex; flex-direction: column; gap: 6px; align-items: center"><span style="width: 48px; height: 32px; border: 1.5px solid #2C2B28; border-radius: 12px"></span>Panel 10–12</div>
+      <span style="font-size: 13px; color: #55544F; max-width: 260px">Rows ≥ 44px tall for touch. Sections separate with space and hairlines, not boxes.</span>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

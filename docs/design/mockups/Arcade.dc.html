@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master — Arcade dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,900&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#1B262D}
+a{color:#E9EEF0;text-decoration:none}a:hover{color:#FFFFFF}
+.ar{--bg:#1B262D;--panel:rgba(34,49,58,.86);--panel2:rgba(44,62,72,.92);--edge:rgba(190,214,224,.28);--edge-hi:rgba(220,236,242,.75);--ink:#E9EEF0;--mute:#A3B6BF;--gold:#E8C26A;--ok:#62D58E;--warn:#F2B04A;--bad:#FF7F70;
+ font-family:Archivo,Tahoma,"Segoe UI",sans-serif;color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.ar *{box-sizing:border-box}
+.ar button{font:inherit;color:inherit;cursor:pointer}
+.mono{font-family:"JetBrains Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+.pnl{background:var(--panel);border:1px solid var(--edge);backdrop-filter:blur(6px)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes blink{50%{opacity:.35}}
+.rise{animation:rise .45s cubic-bezier(.2,.8,.2,1) both}
+.play{display:flex;flex-direction:column;gap:10px;width:100%;padding:18px 20px;text-align:left;background:linear-gradient(180deg,rgba(52,86,98,.95),rgba(36,58,68,.95));border:1px solid var(--edge-hi);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 14px 30px rgba(0,0,0,.35);transition:transform .15s,box-shadow .15s,border-color .15s}
+.play:hover{transform:translate(3px,-2px);box-shadow:0 0 0 1px rgba(0,0,0,.35),0 0 0 4px rgba(232,194,106,.25),0 18px 36px rgba(0,0,0,.4);border-color:var(--gold)}
+.play:active{transform:translate(1px,1px) scale(.99)}
+.menu{display:flex;align-items:baseline;gap:14px;padding:6px 20px;font-size:27px;font-weight:500;letter-spacing:-.01em;transition:transform .14s ease,color .14s}
+.menu .hint{font-size:13px;font-weight:500;color:var(--mute);letter-spacing:0}
+.menu .arw{opacity:0;transform:translateX(-8px);transition:opacity .14s,transform .14s;color:var(--gold);font-size:20px}
+.menu:hover{transform:translateX(8px);color:#fff}
+.menu:hover .arw{opacity:1;transform:none}
+.menu:focus-visible,.play:focus-visible,.key-btn:focus-visible,.obj:focus-within{outline:2px solid var(--gold);outline-offset:3px}
+.feed{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;font-size:13px;background:rgba(98,122,134,.55);border-left:3px solid transparent;transition:background .15s}
+.feed:hover{background:rgba(110,136,148,.7)}
+.kbd{display:inline-grid;place-items:center;min-width:24px;height:22px;padding:0 6px;border:1px solid var(--edge-hi);border-bottom-width:3px;border-radius:3px;font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;color:var(--ink);background:rgba(0,0,0,.25)}
+.obj{display:flex;align-items:center;gap:12px;min-height:44px;padding:6px 10px;cursor:pointer;transition:background .12s}
+.obj:hover{background:rgba(255,255,255,.05)}
+.box{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:0;border:2px solid var(--mute);background:transparent;display:grid;place-content:center;cursor:pointer;flex:none}
+.box:checked{background:var(--ok);border-color:var(--ok);animation:pop .28s ease}
+.box:checked::after{content:"";width:8px;height:4px;border:2.5px solid #12301E;border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
+.sq{display:inline-block;width:10px;height:10px}
+.key-btn{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 14px;border:1px solid var(--edge);background:var(--panel2);transition:border-color .15s}
+.key-btn:hover{border-color:var(--edge-hi)}
+.add{display:flex;align-items:center;gap:10px;margin:2px 10px 12px;padding:0 6px 0 10px;min-height:44px;border:1px dashed var(--edge);transition:border-color .15s,background .15s}
+.add:focus-within{border-style:solid;border-color:var(--gold);background:rgba(232,194,106,.06)}
+.add input{flex:1;min-width:0;height:40px;border:0;background:transparent;color:var(--ink);font:inherit;outline:none}
+.add input::placeholder{color:var(--mute)}
+.add button{min-height:32px;padding:0 10px;border:1px solid var(--edge-hi);background:rgba(0,0,0,.25);font-size:12px;font-weight:700}
+.add button:hover{border-color:var(--gold);color:var(--gold)}
+.add button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+</helmet>
+<div class="ar" style="position: relative; min-height: 100vh; overflow: hidden; background: radial-gradient(120% 90% at 75% 20%, #2B3B44 0%, #1B262D 55%, #141C21 100%)">
+
+  <!-- atmosphere: angular ramps -->
+  <svg aria-hidden="true" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none">
+    <defs>
+      <pattern id="dots" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="rgba(255,255,255,0.05)"></rect></pattern>
+    </defs>
+    <rect width="1440" height="900" fill="url(#dots)"></rect>
+    <polygon points="620,900 1020,330 1140,360 860,900" fill="rgba(160,190,200,0.07)"></polygon>
+    <polygon points="900,900 1240,420 1440,470 1440,900" fill="rgba(160,190,200,0.05)"></polygon>
+    <polyline points="1020,330 1140,360 1440,280" fill="none" stroke="rgba(200,225,235,0.18)" stroke-width="2"></polyline>
+    <polygon points="0,900 0,700 380,560 560,900" fill="rgba(10,16,20,0.35)"></polygon>
+  </svg>
+
+  <div style="position: relative; display: flex; flex-direction: column; min-height: 100vh; padding: 28px clamp(16px, 5vw, 76px)">
+
+    <!-- top row -->
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: flex-start">
+      <div class="rise" style="display: flex; align-items: center; gap: 12px; padding-top: 120px">
+        <span aria-hidden="true" style="font-family: Archivo; font-weight: 900; font-style: italic; font-size: 44px; color: #8FB6C4; letter-spacing: -6px">//</span>
+        <span style="font-weight: 800; font-size: 54px; letter-spacing: -0.03em">master<span style="font-size: 30px; color: #8FB6C4">.L4</span></span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px; width: min(400px, 100%)">
+        <div class="pnl rise" style="align-self: flex-end; display: flex; align-items: center; gap: 8px; padding: 8px 14px; font-size: 13px">
+          <span class="sq" style="background: var(--ok); animation: blink 2s infinite"></span><b class="mono" style="font-size: 15px">14</b> on shift · week 44 · Mon 26 Oct
+        </div>
+        <sc-for list="{{feed}}" as="f" hint-placeholder-count="4">
+          <div class="feed rise" style="border-left-color: {{f.edge}}; animation-delay: {{f.delay}}">
+            <span><b>{{f.who}}</b> {{f.what}} <span class="mono" style="color: var(--gold)">{{f.hl}}</span></span>
+            <span class="mono" style="color: var(--mute); font-size: 11px; white-space: nowrap">{{f.ago}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- main row -->
+    <div style="display: flex; flex-wrap: wrap; gap: 40px; margin-top: 22px; align-items: flex-start">
+
+      <!-- left: play + menu -->
+      <div style="flex: 1 1 480px; max-width: 540px; display: flex; flex-direction: column; gap: 6px">
+        <a href="#" class="play rise" style="animation-delay: .05s">
+          <span style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+            <span style="font-size: 34px; font-weight: 700; letter-spacing: -0.02em">Start shift</span>
+            <span style="display: flex; align-items: center; gap: 3px">
+              <span class="mono" style="display: grid; place-items: center; width: 28px; height: 28px; background: #3E5F6C; border: 1px solid var(--edge-hi); font-size: 11px">AL</span>
+              <span class="mono" style="display: grid; place-items: center; width: 28px; height: 28px; background: #3E5F6C; border: 1px solid var(--edge-hi); font-size: 11px">EH</span>
+              <span class="mono" style="display: grid; place-items: center; width: 28px; height: 28px; background: #3E5F6C; border: 1px solid var(--edge-hi); font-size: 11px">SB</span>
+              <span class="mono" style="display: grid; place-items: center; width: 28px; height: 28px; background: #3E5F6C; border: 1px solid var(--edge-hi); font-size: 11px">JN</span>
+              <span class="mono" style="font-size: 13px; font-weight: 700; padding-left: 6px">+10</span>
+            </span>
+          </span>
+          <span style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 14px; color: #D3DEE3">
+            <span class="mono" style="padding: 0 6px; border: 1px solid var(--edge-hi); font-size: 11px">S1+S2</span>
+            <span>Handover at start</span><span style="color: var(--edge-hi)">|</span>
+            <b>{{done}}/{{total}} objectives</b><span style="color: var(--edge-hi)">|</span>
+            <span style="color: var(--bad)">1 overdue</span>
+          </span>
+        </a>
+        <div style="display: flex; justify-content: space-between; padding: 2px 2px 14px; font-size: 13px; color: var(--mute)">
+          <span>Last shift log 09:40</span>
+          <a href="#" style="color: #8FB6C4; text-decoration: underline">Open handover notes</a>
+        </div>
+        <nav aria-label="Main" style="display: flex; flex-direction: column">
+          <a class="menu rise" href="#" style="animation-delay: .1s">Shift HQ <span class="hint">5 objectives · 1 overdue</span><span class="arw" aria-hidden="true">▸</span></a>
+          <a class="menu rise" href="#" style="animation-delay: .14s">Vacations <span class="hint" style="color: var(--gold)">3 requests waiting</span><span class="arw" aria-hidden="true">▸</span></a>
+          <a class="menu rise" href="#" style="animation-delay: .18s">Boards <span class="hint">16 items · 1 stuck</span><span class="arw" aria-hidden="true">▸</span></a>
+          <a class="menu rise" href="#" style="animation-delay: .22s">Team <span class="hint">16 operators</span><span class="arw" aria-hidden="true">▸</span></a>
+          <a class="menu rise" href="#" style="animation-delay: .26s">Sketch <span class="hint">3 boards</span><span class="arw" aria-hidden="true">▸</span></a>
+          <a class="menu rise" href="#" style="animation-delay: .3s">Settings<span class="arw" aria-hidden="true">▸</span></a>
+        </nav>
+      </div>
+
+      <!-- right: objectives + scoreboard -->
+      <div style="flex: 1 1 420px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; justify-content: flex-end">
+        <section class="pnl rise" aria-labelledby="obj" style="flex: 1 1 320px; max-width: 400px; animation-delay: .2s">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--edge)">
+            <h2 id="obj" style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase">Objectives</h2>
+            <span class="mono" style="font-size: 13px; color: var(--gold)">{{done}}/{{total}}</span>
+          </div>
+          <div aria-hidden="true" style="display: grid; grid-template-columns: repeat({{total}}, minmax(0, 1fr)); gap: 3px; padding: 10px 14px 4px">
+            <sc-for list="{{tasks}}" as="t" hint-placeholder-count="5"><span style="height: 6px; background: {{t.seg}}; transition: background .25s"></span></sc-for>
+          </div>
+          <div style="padding: 4px 4px 8px">
+            <sc-for list="{{tasks}}" as="t" hint-placeholder-count="5">
+              <label class="obj">
+                <input type="checkbox" class="box" checked="{{t.done}}" onChange="{{t.toggle}}">
+                <span style="flex: 1; color: {{t.color}}; text-decoration: {{t.deco}}">{{t.title}}</span>
+                <span class="mono" style="font-size: 11px; color: {{t.tagColor}}">{{t.tag}}</span>
+              </label>
+            </sc-for>
+          </div>
+          <div class="add">
+            <span aria-hidden="true" style="color: var(--gold); font-weight: 700; font-size: 18px">+</span>
+            <label for="newobj" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">New objective for today</label>
+            <input id="newobj" placeholder="Add objective for today…" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}">
+            <button onClick="{{add}}">ENTER</button>
+          </div>
+        </section>
+
+        <section class="pnl rise" aria-labelledby="cov" style="flex: 1 1 320px; max-width: 400px; animation-delay: .28s">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--edge)">
+            <h2 id="cov" style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase">Coverage · v.44</h2>
+            <span style="font-size: 12px; color: var(--mute)">need 2 each</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px">
+            <thead><tr style="color: var(--mute); font-size: 11px; text-transform: uppercase; letter-spacing: .06em">
+              <th scope="col" style="text-align: left; padding: 8px 14px; font-weight: 600">Process</th><th scope="col" style="padding: 8px; font-weight: 600">S1</th><th scope="col" style="padding: 8px 14px 8px 8px; font-weight: 600">S2</th>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{cov}}" as="c" hint-placeholder-count="5">
+                <tr style="border-top: 1px solid rgba(190,214,224,.12)">
+                  <th scope="row" style="text-align: left; padding: 7px 14px; font-weight: 500; white-space: nowrap; max-width: 190px; overflow: hidden; text-overflow: ellipsis">{{c.name}}</th>
+                  <td class="mono" style="padding: 7px 8px; text-align: center; color: {{c.c1}}"><span class="sq" style="background: {{c.c1}}; margin-right: 6px"></span>{{c.s1}}</td>
+                  <td class="mono" style="padding: 7px 14px 7px 8px; text-align: center; color: {{c.c2}}"><span class="sq" style="background: {{c.c2}}; margin-right: 6px"></span>{{c.s2}}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <div style="padding: 10px 14px; border-top: 1px solid var(--edge); font-size: 13px; color: var(--mute)">Next gap: <b style="color: var(--bad)">v.51</b> Granskning/uttag av dok S1 <span class="mono" style="color: var(--bad)">0/2</span></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- bottom bar -->
+    <div style="margin-top: auto; padding-top: 28px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+      <div class="key-btn">
+        <span class="mono" style="display: grid; place-items: center; width: 32px; height: 32px; background: #3E5F6C; border: 1px solid var(--edge-hi); font-size: 12px">AB</span>
+        <span style="display: flex; flex-direction: column; line-height: 1.2"><b style="font-size: 14px">Abbe</b><span style="font-size: 12px; color: var(--mute)">Shift manager · L4</span></span>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 0 12px; font-size: 13px; color: var(--mute)">
+        <span style="display: inline-flex; gap: 6px; align-items: center"><span class="kbd">N</span>New task</span>
+        <span style="display: inline-flex; gap: 6px; align-items: center"><span class="kbd">L</span>Log</span>
+        <span style="display: inline-flex; gap: 6px; align-items: center"><span class="kbd">V</span>Vacations</span>
+        <span style="display: inline-flex; gap: 6px; align-items: center"><span class="kbd">Ctrl</span><span class="kbd">K</span>Search</span>
+      </div>
+      <div style="margin-left: auto; display: flex; gap: 6px">
+        <button class="key-btn" aria-label="Notifications"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg></button>
+        <button class="key-btn" style="flex-direction: column; align-items: flex-start; gap: 0; line-height: 1.2"><b style="font-size: 14px">Theme</b><span style="font-size: 12px; color: var(--mute)">Arcade</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { done: { t2: true }, extra: [], draft: '' }; }
+  renderVals() {
+    const S = this.state;
+    const base = [
+      { id: 't1', title: 'Gemba walk – Line 1', tag: 'OVERDUE', late: true },
+      { id: 't2', title: 'Shift handover meeting', tag: 'MEETING' },
+      { id: 't3', title: 'Coach team lead on 5S', tag: 'COACHING' },
+      { id: 't4', title: 'Safety cross review', tag: 'SAFETY' },
+      { id: 't5', title: 'Weekly KPI report', tag: 'REPORT' },
+      ...S.extra
+    ];
+    const add = () => {
+      const title = S.draft.trim();
+      if (!title) return;
+      this.setState({ draft: '', extra: [...S.extra, { id: 'x' + Date.now(), title, tag: 'TODAY' }] });
+    };
+    const tasks = base.map(x => {
+      const done = !!S.done[x.id];
+      return { ...x, done, color: done ? '#A3B6BF' : '#E9EEF0', deco: done ? 'line-through' : 'none',
+        seg: done ? '#62D58E' : 'rgba(190,214,224,.18)', tagColor: done ? '#62D58E' : (x.late ? '#FF7F70' : '#A3B6BF'), tag: done ? 'DONE' : x.tag,
+        toggle: () => this.setState({ done: { ...S.done, [x.id]: !done } }) };
+    });
+    const c = { g: '#62D58E', y: '#F2B04A', r: '#FF7F70' };
+    const v = { g: '2/2', y: '1/2', r: '0/2' };
+    const row = (name, a, b) => ({ name, s1: v[a], c1: c[a], s2: v[b], c2: c[b] });
+    return {
+      tasks, done: tasks.filter(t => t.done).length, total: tasks.length,
+      draft: S.draft, add,
+      onDraft: e => this.setState({ draft: e.target.value }),
+      onKey: e => { if (e.key === 'Enter') { e.preventDefault(); add(); } },
+      cov: [row('Avsyning', 'y', 'y'), row('Kapselresaren', 'g', 'g'), row('Serialisering', 'g', 'y'), row('Etikettering', 'y', 'g'), row('Granskning/uttag av dok', 'y', 'y')],
+      feed: [
+        { who: 'Sara Björk', what: 'requested leave', hl: 'v.51–52', ago: 'pending', edge: '#E8C26A', delay: '.1s' },
+        { who: 'Shift log', what: 'Line 2 back on plan', hl: '09:40', ago: 'today', edge: 'transparent', delay: '.16s' },
+        { who: 'Shift log', what: 'Near-miss at packing station', hl: '07:15', ago: 'today', edge: '#FF7F70', delay: '.22s' },
+        { who: 'Klara Dahl', what: 'on leave', hl: 'v.44', ago: 'this week', edge: 'transparent', delay: '.28s' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -56,6 +56,7 @@ apps/web/           React 19 + Vite + Tailwind 3 (plain JS, no TypeScript)
 apps/ios/           SwiftUI app with haptics (Xcode 16+, can't be built on Linux)
 supabase/migrations/  database schema
 docs/AUDIT.md       how the three source apps mapped in
+docs/design/        redesign handover: HANDOVER.md, mockups (.dc.html), old screenshots
 ```
 
 **Data:** one Supabase table, `app_state`, with one row per section:
