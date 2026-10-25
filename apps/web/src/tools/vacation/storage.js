@@ -1,7 +1,6 @@
 import { apiFetch } from '../../access';
 
 const STATE_KEY = 'vacation-planner-state';
-const THEME_KEY = 'vacation-planner-theme';
 const UI_KEY = 'vacation-planner-ui';
 let debounceTimer = null;
 
@@ -18,9 +17,6 @@ export function loadState() {
 }
 
 export function clearState() { localStorage.removeItem(STATE_KEY); }
-
-export function saveTheme(t) { localStorage.setItem(THEME_KEY, t); }
-export function loadTheme() { return localStorage.getItem(THEME_KEY) || 'default'; }
 
 export function saveUI(ui) {
   try { localStorage.setItem(UI_KEY, JSON.stringify(ui)); } catch { /* ignore */ }

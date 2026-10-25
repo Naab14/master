@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'r
 import { seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from './data';
 import {
   saveState, loadState, clearState,
-  saveTheme, loadTheme,
   saveUI, loadUI,
   exportJSON, importJSON, debouncedSave,
   buildShareLink, loadStateFromUrl, clearShareHash, copyToClipboard,
@@ -54,7 +53,6 @@ export default function App() {
   const setFn = useCallback(updater => dispatch({ type: 'SET', updater }), []);
   const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
   const redo = useCallback(() => dispatch({ type: 'REDO' }), []);
-  const [theme, setTheme] = useState(loadTheme);
   const [toast, setToast] = useState(initResult.wasShared ? 'Loaded shared workspace' : null);
   const [showDemand, setShowDemand] = useState(false);
   const [showOperatorMgmt, setShowOperatorMgmt] = useState(false);
@@ -124,13 +122,6 @@ export default function App() {
       return () => clearTimeout(t);
     }
   }, [initResult.wasShared]);
-
-  // Theme effect
-  useEffect(() => {
-    if (theme === 'default') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', theme);
-    saveTheme(theme);
-  }, [theme]);
 
   // Auto-save core state
   useEffect(() => { debouncedSave(state); }, [state]);
@@ -273,7 +264,6 @@ export default function App() {
       {/* ── Top Bar ──────────────────────────────────────────────────────── */}
       <TopBar
         shiftMode={shiftMode} onShiftModeChange={setShiftMode}
-        theme={theme} onThemeChange={setTheme}
         onImportCSV={handleCSVImport} onExportCSV={handleCSVExport} onSave={handleSave}
         onExportJSON={handleExport} onImportJSON={handleImport}
         onReset={handleReset}

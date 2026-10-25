@@ -32,6 +32,7 @@
 /* ── Calm: light, Notion-like (default) ───────────────────────────────────── */
 [data-theme='calm'] {
   color-scheme: light;
+  --legacy-accent: #2563C9;   /* old --accent: tools put white text on it */
   --surface-ground: #FBFBFA;
   --surface-sidebar: #F6F5F3;
   --surface-panel: #FFFFFF;
@@ -78,6 +79,7 @@
 /* ── Arcade: dark slate game menu ─────────────────────────────────────────── */
 [data-theme='arcade'] {
   color-scheme: dark;
+  --legacy-accent: #3A7CA5;   /* old --accent: tools put white text on it */
   --surface-ground: #1B262D;
   --surface-sidebar: #161F25;
   --surface-panel: #22313A;
@@ -124,6 +126,7 @@
 /* ── Night shift: deep purple ─────────────────────────────────────────────── */
 [data-theme='night'] {
   color-scheme: dark;
+  --legacy-accent: #7357E0;   /* old --accent: tools put white text on it */
   --surface-ground: #17142B;
   --surface-sidebar: #1B1533;
   --surface-panel: #211C3B;
@@ -177,8 +180,8 @@
   --bg-panel: var(--surface-panel);
   --text-primary: var(--ink);
   --text-secondary: var(--ink-3);
-  --accent: var(--focus);
-  --accent-secondary: var(--focus);
+  --accent: var(--legacy-accent);
+  --accent-secondary: var(--legacy-accent);
   --accent-alert: var(--bad-solid);
   --border: var(--line);
   --border-radius: var(--radius-panel);
@@ -197,14 +200,20 @@
   --approved-border: var(--leave-approved-bg);
   --requested-bg: var(--leave-requested-bg);
   --requested-border: var(--leave-requested-edge);
+  --draft-fg: var(--leave-draft-fg);
+  --pending-fg: var(--leave-pending-fg);
+  --approved-fg: var(--leave-approved-fg);
+  --requested-fg: var(--leave-requested-fg);
 
-  --coverage-green: var(--ok-solid);
-  --coverage-yellow: var(--warn-solid);
-  --coverage-red: var(--bad-solid);
+  /* The tools draw coverage numbers as text, so use the text shades */
+  --coverage-green: var(--ok-fg);
+  --coverage-yellow: var(--warn-fg);
+  --coverage-red: var(--bad-fg);
 
   /* Holidays stay quiet: a faint tint, never louder than a coverage gap */
   --holiday-bg: var(--holiday-tint);
   --holiday-border: var(--line-strong);
   --holiday-text: var(--holiday-ink);
   --holiday-stripe-color: var(--holiday-tint);
+  --holiday-pattern: var(--holiday-tint);
 }

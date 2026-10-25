@@ -5,6 +5,7 @@ import { AUTH_PROBLEM_EVENT, waitForPendingRequests } from './access';
 import { loadAuth, googleLoginEnabled, getSession, onSessionChange, signOut } from './auth';
 import AccessGate from './shell/AccessGate';
 import { SignIn, NoAccess } from './shell/SignIn';
+import ThemeSwitcher from './theme/ThemeSwitcher';
 
 const Dashboard = lazy(() => import('./dashboard/Dashboard.jsx'));
 const VacationTool = lazy(() => import('./tools/vacation/App.jsx'));
@@ -130,8 +131,8 @@ function Workspace({ email, onSignOut, needCode }) {
           <button
             key={s.id}
             onClick={() => navigate(s.id)}
-            className={`flex items-center gap-3 text-left transition-opacity ${rail ? 'justify-center py-3' : 'px-4 py-3'} ${section === s.id ? 'opacity-100' : 'opacity-60 hover:opacity-90'}`}
-            style={section === s.id ? { background: 'rgba(255,255,255,0.12)', boxShadow: 'inset 3px 0 0 var(--accent)' } : undefined}
+            className={`flex items-center gap-3 text-left transition-opacity ${rail ? 'justify-center py-3' : 'px-4 py-3'} ${section === s.id ? 'opacity-100' : 'opacity-75 hover:opacity-100'}`}
+            style={section === s.id ? { background: 'var(--surface-soft)', boxShadow: 'inset 3px 0 0 var(--accent)' } : undefined}
             title={s.label}
             aria-current={section === s.id ? 'page' : undefined}
           >
@@ -154,7 +155,7 @@ function Workspace({ email, onSignOut, needCode }) {
               </button>
             </>
           )}
-          {!rail && <span className="text-[10px] opacity-40">shifts · vacations · boards</span>}
+          <ThemeSwitcher compact={rail} />
         </div>
       </nav>
 

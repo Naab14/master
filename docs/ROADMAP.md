@@ -79,4 +79,6 @@ work before starting, move it when done, and log decisions with a date.
 | 2026-10-25 | Three app-wide themes (Calm, Arcade, Night shift): same layouts, only tokens change. They replace the four Vacations-only themes | One visual language across the tools; the theme is a personal choice |
 | 2026-10-25 | Status colors: green/amber/red mean coverage and work status only. Leave is blue (solid approved, dashed pending, grey draft, dotted requested) | Color should follow priority; holiday stripes were the loudest thing on screen |
 | 2026-10-25 | Schedule zoom 3 → 6 → 12 → 18 months (Ctrl + scroll and −/+); operator cards that flip; Sketch tab with Excalidraw | Owner's picks from the design exploration |
+| 2026-10-25 | Calm is the default theme; the theme is saved per browser until login can store it per user | Owner's choice. Light reads best on the floor |
+| 2026-10-25 | Old `--accent` stays a fill that carries white text in every theme (Arcade `#3A7CA5`, Night `#7357E0`) | Tools and sign-in put white text on it; as text it is about 3:1 until each tool is redesigned |
 | 2026-10-25 | Proposed, not yet planned: admin "All teams" page, roles, multi-team, work-account sign-in | From the handover. Needs a Strategy decision (who is it for) and Build work on auth; Design only builds the look until then |

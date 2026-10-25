@@ -222,3 +222,6 @@
   .ui-btn, .ui-toggle, .ui-toggle::after { transition: none; }
   .ui-toast { animation: none; }
 }
+
+/* Small segmented control (nav rail) */
+.ui-seg--small button { min-height: 28px; padding: 0 8px; font-size: var(--text-label); }
