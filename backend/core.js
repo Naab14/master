@@ -128,15 +128,12 @@ function sectionsFor(pathname) {
 
 /**
  * When APP_ACCESS_CODE is set, every API request must send it in the
- * x-access-code header. Returns null when allowed, or { status, body }.
+ * x-access-code header; when it isn't, the API is open. Returns null when
+ * allowed, or { status, body }.
  */
-function checkAccess(headers, { required = false } = {}) {
+function checkAccess(headers) {
   const expected = process.env.APP_ACCESS_CODE || '';
-  if (!expected) {
-    return required
-      ? { status: 503, body: { error: 'Server not configured: set the APP_ACCESS_CODE environment variable.' } }
-      : null;
-  }
+  if (!expected) return null;
   const given = String(headers['x-access-code'] || '');
   const a = crypto.createHash('sha256').update(given).digest();
   const b = crypto.createHash('sha256').update(expected).digest();

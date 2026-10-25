@@ -8,7 +8,7 @@
  * Environment (Vercel project settings):
  *   SUPABASE_URL               https://<ref>.supabase.co
  *   SUPABASE_SERVICE_ROLE_KEY  secret key (or SUPABASE_SECRET_KEY) — server only
- *   APP_ACCESS_CODE            code every client must send; required here
+ *   APP_ACCESS_CODE            optional: code every client must send
  */
 
 const { route, sectionsFor, normalizeSection, checkAccess } = require('../backend/core');
@@ -94,7 +94,7 @@ function apiPath(req) {
 }
 
 module.exports = async function handler(req, res) {
-  const denied = checkAccess(req.headers, { required: true });
+  const denied = checkAccess(req.headers);
   if (denied) return send(res, denied.status, denied.body);
   if (!SB_URL || !SB_KEY) {
     return send(res, 503, { error: 'Server not configured: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' });

@@ -38,9 +38,10 @@ in two places:
   fresh data.
 - **Self-hosted** (`backend/server.js`): data in `backend/data/db.json`.
 
-Set `APP_ACCESS_CODE` to require an access code on every API request; on
-Vercel it is required. The web app asks for it once per device, and the iOS
-app has a field for it in Settings.
+Optionally set `APP_ACCESS_CODE` to require an access code on every API
+request. Without it the API is open to anyone with the URL. With it, the web
+app asks for the code once per device, and the iOS app has a field for it in
+Settings.
 
 ## Running
 
@@ -54,8 +55,8 @@ app has a field for it in Settings.
    - `SUPABASE_URL`: `https://<project-ref>.supabase.co`
    - `SUPABASE_SERVICE_ROLE_KEY`: the project's secret key (Supabase →
      Project Settings → API Keys). Server-side only; never put it in the web app.
-   - `APP_ACCESS_CODE`: the code people type to open the app
-4. Redeploy. Open the site, enter the access code, and you're in.
+   - `APP_ACCESS_CODE` (optional): a code people must type to open the app
+4. Redeploy and open the site.
 
 ### Self-hosted backend + web app
 
