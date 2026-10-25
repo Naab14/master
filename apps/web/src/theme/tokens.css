@@ -1,0 +1,210 @@
+/* ── Design tokens: Calm, Arcade, Night shift ────────────────────────────────
+ * Spec: docs/design/HANDOVER.md and docs/design/mockups (Foundations, Team).
+ * The three themes share every layout; only these values change. A theme is
+ * active when <html data-theme="calm|arcade|night"> is set.
+ *
+ * Rule: green/amber/red mean coverage and work status only. Leave is blue
+ * (solid approved, dashed pending, grey draft, dotted requested).
+ */
+
+:root {
+  /* Spacing (px): 4 8 12 16 24 32 48 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --touch: 44px;
+
+  /* Type scale */
+  --text-title: 2.25rem;   /* page title, display font */
+  --text-section: 1.125rem;
+  --text-body: 0.875rem;
+  --text-label: 0.75rem;
+
+  --motion-fast: 120ms;
+  --motion: 200ms;
+  --ease: cubic-bezier(.2, .7, .3, 1);
+}
+
+/* ── Calm: light, Notion-like (default) ───────────────────────────────────── */
+[data-theme='calm'] {
+  color-scheme: light;
+  --surface-ground: #FBFBFA;
+  --surface-sidebar: #F6F5F3;
+  --surface-panel: #FFFFFF;
+  --surface-soft: #EFEEEB;
+  --line: #E8E7E4;
+  --line-strong: #D6D5D1;
+  --ink: #2C2B28;
+  --ink-2: #55544F;
+  --ink-3: #6B6A64;
+  --focus: #2563C9;
+  --on-focus: #FFFFFF;
+  --primary: #2C2B28;          /* primary button fill */
+  --on-primary: #FFFFFF;
+
+  --font-ui: Inter, 'Segoe UI', system-ui, sans-serif;
+  --font-display: Newsreader, Georgia, serif;
+  --display-weight: 500;
+  --display-tracking: -0.01em;
+  --radius-pill: 5px;
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --shadow-panel: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(44,43,40,.08);
+
+  --ok-bg: #DDF0E3;    --ok-fg: #1F6B3E;    --ok-solid: #2F8A55;
+  --warn-bg: #FBEACB;  --warn-fg: #8A4B00;  --warn-solid: #E5A23A;
+  --bad-bg: #F9DAD6;   --bad-fg: #A3271C;   --bad-solid: #D2483C;
+  --idle-bg: #ECEBE8;  --idle-fg: #55544F;
+
+  --leave-approved-bg: #3B6FD4;  --leave-approved-fg: #FFFFFF;
+  --leave-pending-bg: #EAF1FC;   --leave-pending-fg: #1F55A8;  --leave-pending-edge: #3B6FD4;
+  --leave-draft-bg: #E4E3DF;     --leave-draft-fg: #55544F;
+  --leave-requested-bg: #FFFFFF; --leave-requested-fg: #55544F; --leave-requested-edge: #8E8D88;
+
+  --cat-safety: #C2412D;
+  --cat-quality: #2563C9;
+  --cat-delivery: #2F8A55;
+  --cat-cost: #8A6A00;
+  --cat-people: #7A4BC2;
+
+  --holiday-tint: rgba(44,43,40,.04);
+  --holiday-ink: #6B6A64;
+}
+
+/* ── Arcade: dark slate game menu ─────────────────────────────────────────── */
+[data-theme='arcade'] {
+  color-scheme: dark;
+  --surface-ground: #1B262D;
+  --surface-sidebar: #161F25;
+  --surface-panel: #22313A;
+  --surface-soft: #2B3D47;
+  --line: #3E5F6C;
+  --line-strong: #5A7D8A;
+  --ink: #E9EEF0;
+  --ink-2: #C3D1D7;
+  --ink-3: #A3B6BF;
+  --focus: #E8C26A;
+  --on-focus: #1B262D;
+  --primary: #E8C26A;
+  --on-primary: #1B262D;
+
+  --font-ui: Archivo, Tahoma, sans-serif;
+  --font-display: Archivo, Tahoma, sans-serif;
+  --display-weight: 800;
+  --display-tracking: -0.03em;
+  --radius-pill: 2px;
+  --radius-control: 2px;
+  --radius-panel: 2px;
+  --shadow-panel: 0 0 0 1px rgba(0,0,0,.4), 0 16px 30px rgba(0,0,0,.35);
+
+  --ok-bg: rgba(98,213,142,.16);   --ok-fg: #62D58E;   --ok-solid: #62D58E;
+  --warn-bg: rgba(242,176,74,.16); --warn-fg: #F2B04A; --warn-solid: #F2B04A;
+  --bad-bg: rgba(255,127,112,.16); --bad-fg: #FF9A8C;  --bad-solid: #FF7F70;
+  --idle-bg: rgba(255,255,255,.08); --idle-fg: #C3D1D7;
+
+  --leave-approved-bg: #6FA3F7;  --leave-approved-fg: #0E1B2E;
+  --leave-pending-bg: rgba(111,163,247,.16); --leave-pending-fg: #A9C8FB; --leave-pending-edge: #6FA3F7;
+  --leave-draft-bg: rgba(255,255,255,.12);   --leave-draft-fg: #C3D1D7;
+  --leave-requested-bg: transparent; --leave-requested-fg: #C3D1D7; --leave-requested-edge: #8FB6C4;
+
+  --cat-safety: #FF7F70;
+  --cat-quality: #6FA3F7;
+  --cat-delivery: #62D58E;
+  --cat-cost: #E8C26A;
+  --cat-people: #C3A6FF;
+
+  --holiday-tint: rgba(255,255,255,.04);
+  --holiday-ink: #A3B6BF;
+}
+
+/* ── Night shift: deep purple ─────────────────────────────────────────────── */
+[data-theme='night'] {
+  color-scheme: dark;
+  --surface-ground: #17142B;
+  --surface-sidebar: #1B1533;
+  --surface-panel: #211C3B;
+  --surface-soft: #2A2449;
+  --line: rgba(196,182,255,.25);
+  --line-strong: rgba(196,182,255,.45);
+  --ink: #F6F2E8;
+  --ink-2: #D9D3EC;
+  --ink-3: #B4ACD2;
+  --focus: #B9A6FF;
+  --on-focus: #17142B;
+  --primary: #B9A6FF;
+  --on-primary: #17142B;
+
+  --font-ui: 'Nunito Sans', system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Nunito Sans', sans-serif;
+  --display-weight: 800;
+  --display-tracking: -0.03em;
+  --radius-pill: 999px;
+  --radius-control: 12px;
+  --radius-panel: 22px;
+  --shadow-panel: 0 18px 40px rgba(0,0,0,.35);
+
+  --ok-bg: rgba(110,224,166,.16);  --ok-fg: #6EE0A6;  --ok-solid: #6EE0A6;
+  --warn-bg: rgba(255,194,102,.18); --warn-fg: #FFC266; --warn-solid: #FFC266;
+  --bad-bg: rgba(255,138,128,.18); --bad-fg: #FF8A80; --bad-solid: #FF8A80;
+  --idle-bg: rgba(255,255,255,.1); --idle-fg: #D9D3EC;
+
+  --leave-approved-bg: #8FB0FF;  --leave-approved-fg: #17142B;
+  --leave-pending-bg: rgba(143,176,255,.16); --leave-pending-fg: #BFD0FF; --leave-pending-edge: #8FB0FF;
+  --leave-draft-bg: rgba(255,255,255,.12);   --leave-draft-fg: #D9D3EC;
+  --leave-requested-bg: transparent; --leave-requested-fg: #D9D3EC; --leave-requested-edge: #B4ACD2;
+
+  --cat-safety: #FF8A80;
+  --cat-quality: #8FB0FF;
+  --cat-delivery: #6EE0A6;
+  --cat-cost: #FFE08A;
+  --cat-people: #FF8FB8;
+
+  --holiday-tint: rgba(255,255,255,.04);
+  --holiday-ink: #B4ACD2;
+}
+
+/* ── Legacy names ─────────────────────────────────────────────────────────────
+ * The tools still read the old variable names. Inside a new theme they point
+ * at the tokens above, so existing screens take the theme without edits.
+ */
+[data-theme='calm'], [data-theme='arcade'], [data-theme='night'] {
+  --bg-primary: var(--surface-ground);
+  --bg-secondary: var(--surface-soft);
+  --bg-panel: var(--surface-panel);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-3);
+  --accent: var(--focus);
+  --accent-secondary: var(--focus);
+  --accent-alert: var(--bad-solid);
+  --border: var(--line);
+  --border-radius: var(--radius-panel);
+  --shadow-lg: var(--shadow-panel);
+  --shadow-xl: var(--shadow-panel);
+  --font-body: var(--font-ui);
+  --font-heading: var(--font-display);
+  --topbar-bg: var(--surface-sidebar);
+  --topbar-text: var(--ink);
+
+  --draft-bg: var(--leave-draft-bg);
+  --draft-border: var(--leave-draft-fg);
+  --pending-bg: var(--leave-pending-bg);
+  --pending-border: var(--leave-pending-edge);
+  --approved-bg: var(--leave-approved-bg);
+  --approved-border: var(--leave-approved-bg);
+  --requested-bg: var(--leave-requested-bg);
+  --requested-border: var(--leave-requested-edge);
+
+  --coverage-green: var(--ok-solid);
+  --coverage-yellow: var(--warn-solid);
+  --coverage-red: var(--bad-solid);
+
+  /* Holidays stay quiet: a faint tint, never louder than a coverage gap */
+  --holiday-bg: var(--holiday-tint);
+  --holiday-border: var(--line-strong);
+  --holiday-text: var(--holiday-ink);
+  --holiday-stripe-color: var(--holiday-tint);
+}
