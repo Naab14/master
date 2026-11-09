@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildSample } from './sample';
-import { realHours, shiftMinutes, isoWeek, zonedToUtc, utcToZoned, addDays, weekday } from './time';
+import { realHours, shiftMinutes, isoWeek, zonedToUtc, utcToZoned, weekday } from './time';
 import { list } from './model';
 import { buildIndex, resolveShift, shiftTimes, assignPatternOps, editPatternFromOps, overrideOps, moveTeamOps, confirmMoveOps } from './schedule';
 import { computeCoverage, absenceImpact, requirementsFor, runningShifts, templateFor, matchPeople, qualification } from './coverage';

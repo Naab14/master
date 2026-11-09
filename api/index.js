@@ -9,18 +9,19 @@
  *   SUPABASE_URL               https://<ref>.supabase.co
  *   SUPABASE_SERVICE_ROLE_KEY  secret key (or SUPABASE_SECRET_KEY) — server only
  *   SUPABASE_PUBLISHABLE_KEY   public key the web app signs in with
- *   ALLOWED_EMAILS             Google accounts allowed in (comma-separated);
- *                              setting it turns Google login on
+ *   ADMIN_EMAIL                the admin's Google account; turns Google login on
+ *   ALLOWED_EMAILS             older allow list (comma-separated), treated as managers
  *   APP_ACCESS_CODE            optional: code accepted instead of a login
  * See backend/auth.js.
  */
 
 const { route, sectionsFor, normalizeSection } = require('../backend/core');
-const { authorize, publicConfig } = require('../backend/auth');
+const { authenticate, accessEnv, publicConfig } = require('../backend/auth');
 
 const SB_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '';
 const MAX_ATTEMPTS = 12;
+const SEED_ON_READ = ['boards', 'manageclip'];
 
 function send(res, status, body) {
   const data = JSON.stringify(body);
@@ -103,7 +104,7 @@ module.exports = async function handler(req, res) {
     const pathname = apiPath(req);
     if (pathname === '/api/config') return send(res, 200, publicConfig());
 
-    const denied = await authorize(req.headers);
+    const { identity, denied } = await authenticate(req.headers);
     if (denied) return send(res, denied.status, denied.body);
     if (!SB_URL || !SB_KEY) {
       return send(res, 503, { error: 'Server not configured: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' });
@@ -124,10 +125,11 @@ module.exports = async function handler(req, res) {
         versions[key] = row ? Number(row.version) : -1;
         sections[key] = normalizeSection(key, row ? row.data : null);
         // First use: store the seeded boards/shift data so ids stay stable.
-        if ((!row || row.data === null) && sections[key] !== null) toSave.add(key);
+        // (The newer sections are only written when something changes.)
+        if ((!row || row.data === null) && sections[key] !== null && SEED_ON_READ.includes(key)) toSave.add(key);
       }
 
-      const result = route(req.method, pathname, body, sections);
+      const result = route(req.method, pathname, body, sections, { identity, env: accessEnv() });
       for (const key of result.dirty) toSave.add(key);
 
       let saved = true;
@@ -142,6 +144,9 @@ module.exports = async function handler(req, res) {
     return send(res, 409, { error: 'too many concurrent edits — please try again' });
   } catch (err) {
     console.error(err);
+    if (/app_state_key_check|violates check constraint/.test(String(err.message))) {
+      return send(res, 503, { error: 'The database needs an update: run supabase/migrations/002_more_sections.sql.' });
+    }
     const status = err instanceof SyntaxError ? 400 : 500;
     return send(res, status, { error: status === 400 ? 'invalid JSON' : 'server error' });
   }

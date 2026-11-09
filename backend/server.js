@@ -14,8 +14,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { route, sectionsFor, normalizeSection } = require('./core');
-const { authorize, publicConfig } = require('./auth');
+const { route, sectionsFor, normalizeSection, SECTION_KEYS } = require('./core');
+const { authenticate, accessEnv, publicConfig } = require('./auth');
 
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -39,9 +39,10 @@ function loadDb() {
   const boards = normalizeSection('boards', raw && Array.isArray(raw.boards) ? raw : null);
   db = {
     ...boards,
-    manageclip: normalizeSection('manageclip', raw && raw.manageclip),
-    vacation: normalizeSection('vacation', raw && raw.vacation),
   };
+  for (const key of SECTION_KEYS) {
+    if (key !== 'boards') db[key] = normalizeSection(key, raw && raw[key]);
+  }
   if (!raw) saveDb();
 }
 
@@ -87,7 +88,7 @@ function readBody(req) {
 
 async function handleApi(req, res, pathname) {
   if (pathname === '/api/config') return json(res, 200, publicConfig());
-  const denied = await authorize(req.headers);
+  const { identity, denied } = await authenticate(req.headers);
   if (denied) return json(res, denied.status, denied.body);
 
   const body = req.method === 'GET' ? {} : await readBody(req);
@@ -96,7 +97,7 @@ async function handleApi(req, res, pathname) {
     sections[key] = key === 'boards' ? { members: db.members, boards: db.boards } : db[key];
   }
 
-  const result = route(req.method, pathname, body, sections);
+  const result = route(req.method, pathname, body, sections, { identity, env: accessEnv() });
 
   if (result.dirty.length) {
     for (const key of result.dirty) {

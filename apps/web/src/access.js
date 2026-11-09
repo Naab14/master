@@ -45,8 +45,12 @@ async function send(path, options) {
 
   const r = await fetch(path, { ...options, headers });
   if (r.status === 401 || r.status === 403) {
-    const error = await r.clone().json().then(b => b.error).catch(() => '');
-    window.dispatchEvent(new CustomEvent(AUTH_PROBLEM_EVENT, { detail: { status: r.status, error } }));
+    const body = await r.clone().json().catch(() => ({}));
+    // A 403 for one action ("no permission: …") is not an access problem for
+    // the whole app; only "not invited" (or the older allow-list refusal) is.
+    if (r.status === 401 || body.code === 'not-invited' || !body.permission && !/outside your teams|admin only/.test(body.error || '')) {
+      window.dispatchEvent(new CustomEvent(AUTH_PROBLEM_EVENT, { detail: { status: r.status, error: body.error || '' } }));
+    }
   }
   return r;
 }
