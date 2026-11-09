@@ -18,6 +18,7 @@ import { eventsOn } from './logic/events';
 import CellSheet from './CellSheet';
 import DaySheet from './DaySheet';
 import SchedulePrint from './SchedulePrint';
+import LeaveSheet from './LeaveSheet';
 
 const MIN_CELL = 14;
 const MAX_CELL = 130;
@@ -33,6 +34,7 @@ export default function ScheduleView() {
   const [daySheet, setDaySheet] = useState(null);
   const [printing, setPrinting] = useState(false);
   const [swap, setSwap] = useState(null);
+  const [leave, setLeave] = useState(false);
   const settings = settingsOf(wf);
   const absences = useAbsences();
   const canEdit = can('schedule.edit');
@@ -164,6 +166,7 @@ export default function ScheduleView() {
       <PageHeader title={t('Schedule')}>
         <Segmented label={t('View')} value={pref.view} onChange={view => setPref({ view })}
           options={[{ value: 'people', label: t('People') }, { value: 'calendar', label: t('Calendar') }]} />
+        {can('attendance.edit') && <Button onClick={() => setLeave(true)}>{t('Plan leave')}</Button>}
         <Button onClick={() => setPrinting(true)}>{t('Print')}</Button>
       </PageHeader>
 
@@ -249,6 +252,7 @@ export default function ScheduleView() {
       {cellSheet && <CellSheet personId={cellSheet.personId} date={cellSheet.date} onClose={() => setCellSheet(null)} />}
       {daySheet && <DaySheet date={daySheet} onClose={() => setDaySheet(null)} onDate={setDaySheet} />}
       {printing && <SchedulePrint groups={groups} days={days} grid={grid} coverage={coverage} shiftTypes={shiftTypes} absences={absences.map} nick={settings.nicknameIn.reports} onClose={() => setPrinting(false)} />}
+      {leave && <LeaveSheet personId={sel?.personId} date={sel?.date} onClose={() => setLeave(false)} />}
       {swap && (
         <Confirm
           title={t('Swap shifts?')}

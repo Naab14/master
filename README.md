@@ -10,8 +10,27 @@ a native iOS app.
 | **Vacations** | Operator vacation planning and week-by-week coverage vs demand | `vacation-planner` |
 | **Boards** | monday.com-style boards: groups, columns, table + kanban | `frieday` |
 
-A home **Dashboard** joins all three: today's shift tasks and overdue count,
-this week's coverage level and who's out, and open work items by status.
+On top of these sits **workforce planning** for a team of about 40
+operators, 3 shifts and 4 processes:
+
+| Screen | What it does |
+| --- | --- |
+| **Schedule** | People by date or a month calendar; shift patterns, drag-and-drop, zoom, coverage per shift, leave planning with its effect on coverage |
+| **People** | Shared profiles, competency matrix, certificates, import from Excel/CSV |
+| **Attendance** | Daily register, monthly review of deviations with OB, receipt-style summaries, change log |
+| **Training** | Where teams are thin, planned training, expiring certificates |
+| **Sketches** | Excalidraw drawing boards, private until shared |
+| **Setup / Access** | Shifts, patterns, requirements, OB rules; who may sign in and what each role may do |
+
+It is a planning aid in English and Swedish. It is not the payroll,
+time-approval or official training system.
+
+A home **Dashboard** joins it all: today's possible coverage and who's away,
+what needs attention, shift tasks, and open work items.
+
+Requirements: [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md). Status:
+[`docs/ROADMAP.md`](docs/ROADMAP.md). Where to resume:
+[`docs/HANDOFF.md`](docs/HANDOFF.md).
 
 See [`docs/AUDIT.md`](docs/AUDIT.md) for how the three source tools mapped into
 this one.
@@ -40,9 +59,12 @@ in two places:
 
 **Sign-in** (`backend/auth.js`):
 
-- **Google login** turns on when `ALLOWED_EMAILS` is set. The web app shows
-  "Sign in with Google" (Supabase Auth), and the API accepts only confirmed
-  emails on that list.
+- **Google login** turns on when `ADMIN_EMAIL` is set (the admin's Google
+  account). The web app shows "Sign in with Google" (Supabase Auth). Nobody
+  becomes admin by signing up first: everyone else is invited by the admin
+  inside the app (Access), with a role. Roles and permissions are enforced
+  by the API (`backend/access.js`). `ALLOWED_EMAILS`, the older allow list,
+  still works and gives manager rights.
 - **Access code:** `APP_ACCESS_CODE`, if set, is accepted as well. The iOS app
   uses it (field in Settings) until it gets Google sign-in. With Google login
   off, the web app asks for the code instead.
@@ -53,7 +75,9 @@ in two places:
 ### On Vercel + Supabase
 
 1. In Supabase, run [`supabase/migrations/001_app_state.sql`](supabase/migrations/001_app_state.sql)
-   once (creates the `app_state` table, locked to the server).
+   once (creates the `app_state` table, locked to the server), then
+   [`002_more_sections.sql`](supabase/migrations/002_more_sections.sql)
+   (allows the planning sections; changes no existing data).
 2. Import the repo in Vercel and leave Root Directory and Framework Preset as
    they are; `vercel.json` sets the build and routes `/api/*` to the function.
 3. In the Vercel project's **Settings → Environment Variables**, add:
@@ -61,7 +85,7 @@ in two places:
    - `SUPABASE_SERVICE_ROLE_KEY`: the project's secret key (Supabase →
      Project Settings → API Keys). Server-side only; never put it in the web app.
    - For Google login: `SUPABASE_PUBLISHABLE_KEY` (Supabase → API Keys) and
-     `ALLOWED_EMAILS` (comma-separated Google accounts allowed in)
+     `ADMIN_EMAIL` (the admin's Google account)
    - `APP_ACCESS_CODE` (optional): a code accepted instead of a login
 4. For Google login, create an OAuth client in Google Cloud (Web application,
    authorized redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`)
@@ -94,5 +118,6 @@ it at your computer's LAN address in the app's Settings tab.
 ## Tests
 
 ```sh
-npm --prefix apps/web run test:ci   # 168 vitest tests (ported vacation-planner suite)
+npm --prefix apps/web run test:ci   # 215 vitest tests
+npm --prefix apps/web run lint
 ```

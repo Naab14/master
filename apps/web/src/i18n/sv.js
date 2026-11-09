@@ -181,4 +181,10 @@ export default {
   'Only people who already have access to the workspace can be added. The admin can allow outside guests under Access.': 'Bara personer som redan har åtkomst till arbetsytan kan läggas till. Admin kan tillåta externa gäster under Behörighet.',
   'No email is sent from here: send them the link yourself.': 'Inget mejl skickas härifrån: skicka länken själv.', 'Links': 'Länkar', 'Link to': 'Länka till', 'A calendar activity': 'En kalenderaktivitet',
   'A work item or page (web address)': 'Ett ärende eller en sida (webbadress)', 'Activity': 'Aktivitet', 'Web address': 'Webbadress', 'Add link': 'Lägg till länk',
+  // Plan leave
+  'Plan leave': 'Planera ledighet', 'See the effect on coverage before you decide': 'Se effekten på bemanningen innan du bestämmer', 'Save as requested': 'Spara som önskad', 'Save leave': 'Spara ledighet',
+  '{name}: leave {from}–{to} ({n} shifts)': '{name}: ledig {from}–{to} ({n} skift)', 'Effect on coverage': 'Effekt på bemanningen', '{n} scheduled shifts in the period.': '{n} schemalagda skift i perioden.',
+  '{n} of the days already have an absence recorded.': '{n} av dagarna har redan en frånvaro registrerad.', 'No new gaps: every requirement can still be met.': 'Inga nya luckor: alla krav kan fortfarande uppfyllas.',
+  'Could step in without opening a gap': 'Kan hoppa in utan att öppna en lucka', 'day off': 'ledig dag', 'Qualified, but moving them opens a gap on their own shift': 'Behöriga, men att flytta dem öppnar en lucka på deras eget skift',
+  'Some people are ruled out by a certificate that has expired by this date.': 'Vissa personer faller bort på grund av ett certifikat som gått ut detta datum.', 'This is information for your decision. You can still save the leave.': 'Detta är underlag för ditt beslut. Du kan fortfarande spara ledigheten.',
 };
