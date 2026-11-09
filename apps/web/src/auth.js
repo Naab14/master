@@ -72,7 +72,7 @@ export function signInWithGoogle() {
 }
 
 /* Data the tools cache in this browser for offline use. */
-const CACHED_DATA_KEYS = ['master-manageclip', 'vacation-planner-state'];
+const CACHED_DATA_KEYS = ['master-manageclip', 'vacation-planner-state', 'master-workforce-cache'];
 
 export async function signOut() {
   try { CACHED_DATA_KEYS.forEach(k => localStorage.removeItem(k)); } catch { /* ignore */ }

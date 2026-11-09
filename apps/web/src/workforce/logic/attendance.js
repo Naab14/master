@@ -41,7 +41,7 @@ export function absencesFromEntries(wf, entries) {
     const cat = reasons[e.reasonId]?.category;
     if (!['sick', 'vacation', 'absence', 'late'].includes(cat)) continue;
     const hours = e.start && e.end ? (shiftMinutes(e.start, e.end).e - shiftMinutes(e.start, e.end).s) / 60 : e.hours || null;
-    out.push({ personId: e.personId, date: e.date, fullDay: !!e.fullDay && !hours, hours, reasonId: e.reasonId, category: cat });
+    out.push({ personId: e.personId, date: e.date, fullDay: !!e.fullDay && !hours, hours, reasonId: e.reasonId, category: cat, tentative: !!e.tentative });
   }
   return out;
 }
@@ -105,7 +105,7 @@ export function personMonth(wf, idx, entries, personId, month, { holidays = new 
   const to = endOfMonth(from);
   const byDate = new Map();
   for (const e of entries) {
-    if (e.personId !== personId || e.date < from || e.date > to) continue;
+    if (e.personId !== personId || e.date < from || e.date > to || e.tentative) continue;
     if (!byDate.has(e.date)) byDate.set(e.date, []);
     byDate.get(e.date).push(e);
   }
