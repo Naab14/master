@@ -1,7 +1,9 @@
 # Master — project guide for Claude
 
 Read this first in every session. Then read [`docs/ROADMAP.md`](docs/ROADMAP.md)
-for current status, who is working on what, and past decisions.
+for current status, who is working on what, and past decisions, and
+[`docs/STRATEGY.md`](docs/STRATEGY.md) for who the app is for, the data
+rules and what we won't build.
 
 ## What this is
 
@@ -27,7 +29,8 @@ The project is worked on in separate threads, all reading this file:
 - **Design:** look and feel, layout, mobile, theming, UX copy
 - **Features:** new capabilities and fixes, end to end (web, API, data, iOS)
 - **Strategy:** direction, priorities, users, privacy, costs; produces
-  decisions and roadmap changes, not code
+  decisions and roadmap changes, not code. Also the owner's brainstorm:
+  ideas land in `docs/IDEAS.md` and only reach the roadmap once triaged
 
 Rules so threads don't collide:
 
