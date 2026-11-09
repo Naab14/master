@@ -171,74 +171,75 @@ function Workspace({ email, onSignOut, needCode }) {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
-  const rail = isMobile;
-  return (
-    <div
-      className="flex h-screen overflow-hidden"
-      style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)' }}
-    >
-      {/* ── Navigation rail ─────────────────────────────────────────────── */}
-      <nav
-        className={`flex flex-col shrink-0 ${rail ? 'w-14' : 'w-48'}`}
-        style={{ background: 'var(--topbar-bg)', color: 'var(--topbar-text)' }}
-        aria-label="Main navigation"
+  const tools = (
+    <>
+      <button
+        type="button"
+        className={isMobile ? 'shell-tab' : 'ui-focus rounded-control px-2 py-1.5 text-left text-xs font-bold opacity-80 hover:opacity-100'}
+        style={isMobile ? undefined : { background: 'rgba(127,127,127,0.14)' }}
+        onClick={() => setLang(lang === 'sv' ? 'en' : 'sv')}
+        aria-label={t('Language: {name}. Switch language', { name: LANGUAGES.find(l => l.id === lang).label })}
+        title={t('Switch language')}
       >
-        <div
-          className={`flex items-center gap-2 font-black tracking-tight ${rail ? 'justify-center py-4 text-lg' : 'px-4 py-5 text-xl'}`}
-          style={{ fontFamily: 'var(--font-heading)' }}
-        >
-          <span
-            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black"
-            style={{ background: 'var(--accent)', color: '#fff' }}
-          >
-            M
-          </span>
-          {!rail && <span>Master</span>}
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {visible.map((s, i) => (
-            <button
-              key={s.id}
-              onClick={() => navigate(s.id)}
-              className={`ui-focus flex w-full items-center gap-3 text-left transition-opacity ${rail ? 'justify-center py-2.5' : 'px-4 py-2'} ${section === s.id ? 'opacity-100' : 'opacity-75 hover:opacity-100'} ${i > 0 && visible[i - 1].group !== s.group ? 'mt-3' : ''}`}
-              style={section === s.id ? { background: 'var(--surface-soft)', boxShadow: 'inset 3px 0 0 var(--accent)' } : undefined}
-              title={t(s.label)}
-              aria-current={section === s.id ? 'page' : undefined}
-            >
-              <span className="w-5 text-center text-lg leading-none" aria-hidden>{s.icon}</span>
-              {!rail && <span className="text-sm font-bold">{t(s.label)}</span>}
-            </button>
-          ))}
-        </div>
-
-        <div className={`flex flex-col gap-2 pb-4 pt-2 ${rail ? 'items-center' : 'px-4'}`}>
+        {isMobile ? <><span aria-hidden>文</span><span>{lang.toUpperCase()}</span></> : `${LANGUAGES.find(l => l.id === lang).label} ⇄`}
+      </button>
+      {email && (
+        <>
+          {!isMobile && <span className="truncate text-[11px] opacity-60" title={email}>{email}</span>}
           <button
             type="button"
-            className={`ui-focus rounded-control text-xs font-bold opacity-80 hover:opacity-100 ${rail ? 'h-9 w-9' : 'px-2 py-1.5 text-left'}`}
-            style={{ background: 'rgba(127,127,127,0.14)' }}
-            onClick={() => setLang(lang === 'sv' ? 'en' : 'sv')}
-            aria-label={t('Language: {name}. Switch language', { name: LANGUAGES.find(l => l.id === lang).label })}
-            title={t('Switch language')}
+            onClick={onSignOut}
+            className={isMobile ? 'shell-tab' : 'ui-focus rounded-lg px-2 py-1.5 text-left text-xs font-bold opacity-70 hover:opacity-100'}
+            style={isMobile ? undefined : { background: 'rgba(127,127,127,0.14)' }}
+            title={t('Sign out')}
           >
-            {rail ? lang.toUpperCase() : `${LANGUAGES.find(l => l.id === lang).label} ⇄`}
+            {isMobile ? <><span aria-hidden>⎋</span><span>{t('Sign out')}</span></> : t('Sign out')}
           </button>
-          {email && (
-            <>
-              {!rail && <span className="truncate text-[11px] opacity-60" title={email}>{email}</span>}
+        </>
+      )}
+      <ThemeSwitcher compact={isMobile} />
+    </>
+  );
+
+  return (
+    <div
+      className={`flex h-screen overflow-hidden ${isMobile ? 'flex-col-reverse' : ''}`}
+      style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'var(--font-body)', height: '100dvh' }}
+    >
+      {/* ── Navigation: a side rail on wide screens, bottom tabs on phones ── */}
+      {isMobile ? (
+        <nav className="shell-tabs no-print shrink-0" style={{ background: 'var(--topbar-bg)', color: 'var(--topbar-text)' }} aria-label={t('Main navigation')}>
+          {visible.map(s => (
+            <button key={s.id} type="button" className="shell-tab" onClick={() => navigate(s.id)} aria-current={section === s.id ? 'page' : undefined}>
+              <span aria-hidden>{s.icon}</span><span>{t(s.label)}</span>
+            </button>
+          ))}
+          {tools}
+        </nav>
+      ) : (
+        <nav className="no-print flex w-48 shrink-0 flex-col" style={{ background: 'var(--topbar-bg)', color: 'var(--topbar-text)' }} aria-label={t('Main navigation')}>
+          <div className="flex items-center gap-2 px-4 py-5 text-xl font-black tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-sm font-black" style={{ background: 'var(--accent)', color: '#fff' }}>M</span>
+            <span>Master</span>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {visible.map((s, i) => (
               <button
-                onClick={onSignOut}
-                className={`rounded-lg text-xs font-bold opacity-70 hover:opacity-100 ${rail ? 'px-1 py-1' : 'px-2 py-1.5 text-left'}`}
-                style={{ background: 'rgba(255,255,255,0.08)' }}
-                title={t('Sign out')}
+                key={s.id}
+                type="button"
+                onClick={() => navigate(s.id)}
+                className={`ui-focus flex w-full items-center gap-3 px-4 py-2 text-left transition-opacity ${section === s.id ? 'opacity-100' : 'opacity-75 hover:opacity-100'} ${i > 0 && visible[i - 1].group !== s.group ? 'mt-3' : ''}`}
+                style={section === s.id ? { background: 'var(--surface-soft)', boxShadow: 'inset 3px 0 0 var(--accent)' } : undefined}
+                aria-current={section === s.id ? 'page' : undefined}
               >
-                {rail ? '⎋' : t('Sign out')}
+                <span className="w-5 text-center text-lg leading-none" aria-hidden>{s.icon}</span>
+                <span className="text-sm font-bold">{t(s.label)}</span>
               </button>
-            </>
-          )}
-          <ThemeSwitcher compact={rail} />
-        </div>
-      </nav>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2 px-4 pb-4 pt-2">{tools}</div>
+        </nav>
+      )}
 
       {/* ── Active section ──────────────────────────────────────────────── */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">

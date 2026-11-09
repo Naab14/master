@@ -12,3 +12,9 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>
 );
+
+// Installable app (PWA): the service worker keeps the app itself available
+// offline. Data is never cached there; see public/sw.js.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+}

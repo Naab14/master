@@ -155,6 +155,17 @@ export default function SetupView() {
           <p className="mt-2 text-xs text-ink-3">{t('A task with hours and no fixed time is “flexible”: it takes capacity, and the plan shows that its timing is not known.')}</p>
         </Collapsible>
 
+        <Collapsible id="events" title={t('Calendar activities')} defaultOpen={false}>
+          <p className="mb-2 text-xs text-ink-3">{t('Recurring meetings and reminders, shown on the dashboard and in the calendar. They never reduce staffing.')}</p>
+          <EntityTable col="events" permission="events.edit" addLabel={t('Add activity')} sort={(a, b) => a.date.localeCompare(b.date)}
+            make={id => ({ id, title: t('New activity'), date: todayIn(), time: '09:00', repeat: 'weekly', until: '' })}
+            columns={[
+              { key: 'title', label: t('Title'), width: 220 }, { key: 'date', label: t('First date'), type: 'date', width: 150 }, { key: 'time', label: t('Time'), type: 'time', width: 110 },
+              { key: 'repeat', label: t('Repeats'), type: 'select', options: [{ value: 'none', label: t('Once') }, { value: 'weekly', label: t('Every week') }, { value: 'monthly', label: t('Every month') }] },
+              { key: 'until', label: t('Until (optional)'), type: 'date', width: 150 },
+            ]} />
+        </Collapsible>
+
         <Collapsible id="ob" title={t('OB rules')} defaultOpen={false}><ObRules /></Collapsible>
 
         <Collapsible id="reasons" title={t('Attendance statuses and absence reasons')} defaultOpen={false}>

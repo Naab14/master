@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getFullState } from '../api';
 import { getAllCoverageForWeek } from '../tools/vacation/coverage';
 import { PROCESSES } from '../tools/vacation/data';
+import PlanningCards from '../workforce/PlanningCards';
 
 /* ── Date helpers ─────────────────────────────────────────────────────────── */
 function todayStr() {
@@ -138,9 +139,11 @@ export default function Dashboard({ onNavigate }) {
           {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} · week {week}
         </p>
 
+        <PlanningCards onNavigate={onNavigate} />
+
         {error && (
           <div className="mb-6 rounded-lg px-4 py-3 text-sm" style={{ background: 'var(--pending-bg)', border: '1px solid var(--pending-border)' }}>
-            Can't reach the backend ({error}). Start it with <code className="font-mono">node backend/server.js</code> — the tools still work offline.
+            Can't reach the server ({error}). Showing what is saved in this browser; changes sync when the connection is back.
           </div>
         )}
 

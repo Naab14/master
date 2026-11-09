@@ -145,3 +145,31 @@
 @media (prefers-reduced-motion: reduce) {
   .wf-sheet, .wf-sheet-backdrop, .wf-chevron, .sch__shift { animation: none; transition: none; }
 }
+
+/* ── Phones ────────────────────────────────────────────────────────────── */
+.wf-only-sm { display: none; }
+@media (max-width: 640px) {
+  .wf-only-sm { display: inline-flex; }
+  .wf-hide-sm { display: none !important; }
+  .wf-pagehead { padding: var(--space-2) var(--space-3); flex-wrap: nowrap; gap: var(--space-2); }
+  .wf-pagehead__title { font-size: 1.15rem; }
+  .wf-pagehead > div { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; }
+  .wf-pagehead > div > * { flex: none; }
+  /* One scrolling line per toolbar instead of a wall of wrapped buttons */
+  .wf-toolbar { flex-wrap: nowrap; overflow-x: auto; padding: 6px var(--space-3); scrollbar-width: none; }
+  .wf-toolbar > * { flex: none; }
+  .wf-toolbar > .flex-1 { display: none; }
+  .wf-toolbar--filters[data-open='false'] { display: none; }
+  .wf-body { padding: var(--space-3); }
+  .sch { --name: 112px; --row: 36px; }
+  .sch__name .wf-avatar { display: none; }
+  .sch__cov-name { font-size: 10px; padding: 0 6px; }
+  .wf-table th, .wf-table td { padding: 6px 8px; }
+}
+
+/* Bottom tab bar on phones (the shell switches layout in App.jsx) */
+.shell-tabs { display: flex; flex-direction: row; align-items: stretch; overflow-x: auto; scrollbar-width: none; border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+.shell-tabs::-webkit-scrollbar, .wf-toolbar::-webkit-scrollbar { display: none; }
+.shell-tab { display: flex; flex: none; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 64px; height: 54px; padding: 0 6px; border: 0; background: none; color: inherit; font: inherit; font-size: 10px; font-weight: 600; opacity: .7; cursor: pointer; }
+.shell-tab[aria-current='page'] { opacity: 1; box-shadow: inset 0 3px 0 var(--accent); background: var(--surface-soft); }
+.shell-tab > span:first-child { font-size: 18px; line-height: 1; }

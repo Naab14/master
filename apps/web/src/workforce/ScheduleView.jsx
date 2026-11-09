@@ -173,19 +173,20 @@ export default function ScheduleView() {
         <Button icon aria-label={t('Later')} onClick={() => go(1)}>›</Button>
         <strong className="mx-1 text-sm" aria-live="polite">{rangeLabel}</strong>
         <span className="flex-1" />
+        <button type="button" className="wf-chip wf-only-sm" aria-pressed={!!pref.filtersOpen} onClick={() => setPref({ filtersOpen: !pref.filtersOpen })}>{t('Filters')}</button>
         {pref.view === 'people' && (
           <>
             <Button onClick={() => setPref({ cell: 110 })}>{t('Week')}</Button>
             <Button onClick={() => setPref({ cell: 34 })}>{t('Month')}</Button>
             <Button icon aria-label={t('Zoom out')} onClick={() => zoom(0.8)}>−</Button>
-            <input type="range" min={MIN_CELL} max={MAX_CELL} value={pref.cell} onChange={e => setPref({ cell: Number(e.target.value) })} aria-label={t('Zoom')} className="w-24" />
+            <input type="range" min={MIN_CELL} max={MAX_CELL} value={pref.cell} onChange={e => setPref({ cell: Number(e.target.value) })} aria-label={t('Zoom')} className="wf-hide-sm w-24" />
             <Button icon aria-label={t('Zoom in')} onClick={() => zoom(1.25)}>+</Button>
-            <Segmented label={t('Density')} value={pref.density} onChange={density => setPref({ density })} className="ui-seg--small"
+            <Segmented label={t('Density')} value={pref.density} onChange={density => setPref({ density })} className="ui-seg--small wf-hide-sm"
               options={[{ value: 'comfortable', label: t('Comfortable') }, { value: 'compact', label: t('Compact') }]} />
           </>
         )}
       </div>
-      <div className="wf-toolbar no-print">
+      <div className="wf-toolbar wf-toolbar--filters no-print" data-open={!!pref.filtersOpen}>
         <Select value={pref.team} onChange={e => setPref({ team: e.target.value })} aria-label={t('Team')}>
           <option value="all">{t('All teams')}</option>
           {list(wf.teams).map(tm => <option key={tm.id} value={tm.id}>{tm.name}</option>)}
@@ -389,7 +390,7 @@ function CoverageRow({ st, days, data, bottom, cell, label, onPick, t }) {
   return (
     <>
       <div className="sch__cov-name" style={{ bottom }}>
-        <span className="cal__dot" style={{ background: st.color }} />{label} · {st.name}
+        <span className="cal__dot" style={{ background: st.color }} /><span className="wf-hide-sm">{label} ·</span> {st.name}
       </div>
       {days.map((d, i) => {
         const c = data[i];

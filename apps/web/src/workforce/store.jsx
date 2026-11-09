@@ -103,7 +103,7 @@ export function WorkforceProvider({ children, notify }) {
     return () => { clearInterval(timer); window.removeEventListener('online', tick); window.removeEventListener('offline', off); };
   }, [load]);
 
-  const can = useCallback(p => !!ref.current.me?.permissions?.includes(p) && !ref.current.offline, []);
+  const can = useCallback(p => !!state.me?.permissions?.includes(p) && !state.offline, [state.me, state.offline]);
 
   /** Send operations. Resolves true when saved. `silent` skips the undo stack. */
   const send = useCallback((ops, { label, record = true, isUndo = false } = {}) => {
