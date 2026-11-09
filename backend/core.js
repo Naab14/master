@@ -25,7 +25,7 @@ const DOC_COLLECTIONS = { workforce: WORKFORCE_COLLECTIONS, attendance: ATTENDAN
 // The attendance log is the record of who changed what (requirement A6), so
 // it is kept long; the planning log is a recent-activity trail.
 const LOG_LIMIT = { workforce: 500, attendance: 20000 };
-const SECTION_KEYS = ['boards', 'manageclip', 'vacation', 'workforce', 'attendance', 'admin'];
+const SECTION_KEYS = ['boards', 'manageclip', 'vacation', 'workforce', 'attendance', 'admin', 'sketches'];
 
 function seedDoc(key) {
   const doc = { rev: 0, log: [] };
@@ -138,6 +138,7 @@ function normalizeSection(key, data) {
     }
     return doc;
   }
+  if (key === 'sketches') return { boards: data && typeof data === 'object' && data.boards && typeof data.boards === 'object' ? data.boards : {} };
   if (key === 'admin') return { ...access.seedAdmin(), ...(data && typeof data === 'object' ? data : {}) };
   // vacation: null means "not yet initialized" — the web client seeds its
   // own sample data on first run, exactly like the standalone app did.
@@ -152,6 +153,7 @@ function sectionsFor(pathname) {
   if (pathname.startsWith('/api/vacation/')) return ['vacation', 'admin'];
   if (pathname.startsWith('/api/workforce/')) return ['workforce', 'admin'];
   if (pathname.startsWith('/api/attendance/')) return ['attendance', 'workforce', 'admin'];
+  if (pathname === '/api/sketches' || pathname.startsWith('/api/sketches/')) return ['sketches', 'admin'];
   if (pathname === '/api/me' || pathname.startsWith('/api/admin/')) return ['admin'];
   return ['boards', 'admin'];
 }
@@ -265,7 +267,12 @@ function route(method, pathname, body, s, ctx = {}) {
   const env = ctx.env || { adminEmails: [], allowedEmails: [], codeRole: 'manager' };
 
   // --- Who is asking --------------------------------------------------------
-  const user = access.resolveUser(identity, admin, env);
+  let user = access.resolveUser(identity, admin, env);
+  // External guests: only when the admin allows it, and only people a sketch
+  // board has been shared with. They reach nothing but those boards.
+  if (!user && identity.via === 'google' && admin.settings.externalGuests === true && (admin.guestEmails || []).includes(identity.email)) {
+    user = { email: identity.email, name: identity.email, role: 'guest', teams: null, personId: null };
+  }
   if (!user) {
     // Signed in with Google but not invited: remember the request so the
     // admin can approve it in the app, and say no.
@@ -284,6 +291,72 @@ function route(method, pathname, body, s, ctx = {}) {
   if (method === 'GET' && pathname === '/api/me') {
     return out(200, { email: user.email, name: user.name, role: user.role, teams: user.teams, personId: user.personId, permissions: access.permissionsOf(user, admin), via: identity.via });
   }
+
+  // --- Sketch boards (Excalidraw) -------------------------------------------
+  // A board belongs to whoever created it and is private until shared. The
+  // checks below look only at owner and share list: no role, including
+  // admin, opens someone else's private board through the app.
+  if (parts[1] === 'sketches') {
+    const me = user.email || (identity.via === 'code' ? 'access-code' : 'local');
+    const boards = s.sketches.boards;
+    const canSee = (b) => b.owner === me || (b.shared || []).includes(me);
+    const meta = (b) => ({ id: b.id, name: b.name, owner: b.owner, shared: b.owner === me ? b.shared || [] : undefined, mine: b.owner === me, rev: b.rev, updatedAt: b.updatedAt, updatedBy: b.updatedBy, links: b.links || [] });
+    const changedSketch = (status, b) => { dirty.add('sketches'); return out(status, b); };
+    const isGuest = user.role === 'guest';
+    // Keep the list of outside addresses that boards are shared with, so a
+    // guest can be recognised without loading every drawing on each request.
+    const syncGuests = () => {
+      const known = (e) => env.adminEmails.includes(e) || env.allowedEmails.includes(e) || !!admin.users[e];
+      admin.guestEmails = [...new Set(Object.values(boards).flatMap((b) => b.shared || []).filter((e) => !known(e)))];
+      dirty.add('admin');
+    };
+    if (!isGuest && !can('sketches.use')) return need('sketches.use');
+
+    if (parts.length === 2 && method === 'GET') {
+      return out(200, { boards: Object.values(boards).filter(canSee).map(meta).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt))), me, externalGuests: admin.settings.externalGuests === true });
+    }
+    if (parts.length === 2 && method === 'POST') {
+      if (isGuest) return out(403, { error: 'guests cannot create boards' });
+      const name = String(body.name || '').trim().slice(0, 120);
+      if (!name) return out(400, { error: 'name required' });
+      const board = { id: uid(), name, owner: me, shared: [], links: [], scene: null, rev: 1, createdAt: now, updatedAt: now, updatedBy: me };
+      boards[board.id] = board;
+      return changedSketch(201, { ...meta(board), scene: null });
+    }
+    const board = boards[parts[2]];
+    // "Not found" for boards you may not see, so their existence isn't revealed.
+    if (!board || !canSee(board)) return out(404, { error: 'board not found' });
+    if (parts.length === 3 && method === 'GET') return out(200, { ...meta(board), scene: board.scene });
+    if (parts.length === 3 && method === 'PUT') {
+      if (typeof body.baseRev === 'number' && body.baseRev !== board.rev) return out(409, { error: 'conflict', current: { ...meta(board), scene: board.scene } });
+      const owner = board.owner === me;
+      if ((body.name !== undefined || body.shared !== undefined) && !owner) return out(403, { error: 'only the owner can rename or share a board' });
+      if (typeof body.name === 'string' && body.name.trim()) board.name = body.name.trim().slice(0, 120);
+      if (Array.isArray(body.shared)) {
+        const emails = [...new Set(body.shared.map((e) => String(e).trim().toLowerCase()).filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e) && e !== me))];
+        const known = (e) => env.adminEmails.includes(e) || env.allowedEmails.includes(e) || (admin.users[e] && admin.users[e].active !== false);
+        const outside = emails.filter((e) => !known(e));
+        if (outside.length && admin.settings.externalGuests !== true) {
+          return out(400, { error: `Not invited to this workspace: ${outside.join(', ')}. The admin can allow external guests under Access.`, code: 'external-off' });
+        }
+        board.shared = emails.slice(0, 50);
+        syncGuests();
+      }
+      if (Array.isArray(body.links)) board.links = body.links.filter((l) => l && typeof l === 'object').slice(0, 20);
+      if (body.scene && typeof body.scene === 'object') board.scene = body.scene;
+      board.rev += 1; board.updatedAt = now; board.updatedBy = me;
+      return changedSketch(200, meta(board));
+    }
+    if (parts.length === 3 && method === 'DELETE') {
+      if (board.owner !== me) return out(403, { error: 'only the owner can delete a board' });
+      delete boards[board.id];
+      syncGuests();
+      return changedSketch(200, { ok: true });
+    }
+    return out(404, { error: 'not found' });
+  }
+  // Guests reach nothing else.
+  if (user.role === 'guest' && pathname !== '/api/me') return out(403, { error: 'guests can only open boards shared with them', permission: 'guest' });
 
   // --- Admin: users, access requests, permissions ---------------------------
   if (parts[1] === 'admin') {
@@ -323,7 +396,7 @@ function route(method, pathname, body, s, ctx = {}) {
       return changedAdmin(publicAdmin());
     }
     if (method === 'PUT' && pathname === '/api/admin/settings') {
-      admin.settings = { ...admin.settings, ...(body && typeof body === 'object' ? body : {}) };
+      if (typeof body.externalGuests === 'boolean') admin.settings = { ...admin.settings, externalGuests: body.externalGuests };
       return changedAdmin(publicAdmin());
     }
     return out(404, { error: 'not found' });

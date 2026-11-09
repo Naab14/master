@@ -7,7 +7,7 @@ const env = { adminEmails: ['boss@example.com'], allowedEmails: ['old@example.co
 const fresh = () => ({
   workforce: normalizeSection('workforce', null), attendance: normalizeSection('attendance', null),
   admin: normalizeSection('admin', null), boards: normalizeSection('boards', null),
-  manageclip: normalizeSection('manageclip', null), vacation: null,
+  manageclip: normalizeSection('manageclip', null), vacation: null, sketches: normalizeSection('sketches', null),
 });
 const as = email => ({ identity: { via: 'google', email }, env, now: '2026-11-09T10:00:00.000Z' });
 const call = (s, ctx, method, path, body = {}) => route(method, path, body, s, ctx);
@@ -103,5 +103,48 @@ describe('server permissions', () => {
     expect(route('GET', '/api/me', {}, s, { identity: { via: 'open', email: null }, env }).body.role).toBe('admin');
     expect(route('GET', '/api/me', {}, s, { identity: { via: 'code', email: null }, env }).body.role).toBe('manager');
     expect(access.can({ role: 'viewer' }, s.admin, 'schedule.edit')).toBe(false);
+  });
+
+  it('keeps sketch boards private to their owner, with no admin bypass', () => {
+    const s = fresh();
+    const boss = as('boss@example.com');
+    call(s, boss, 'POST', '/api/admin/users', { email: 'lead@example.com', role: 'teamlead' });
+    call(s, boss, 'POST', '/api/admin/users', { email: 'mate@example.com', role: 'teamlead' });
+    const lead = as('lead@example.com');
+    const id = call(s, lead, 'POST', '/api/sketches', { name: 'Line layout' }).body.id;
+    expect(call(s, lead, 'PUT', `/api/sketches/${id}`, { scene: { elements: [{ id: 'a' }] }, baseRev: 1 }).status).toBe(200);
+    expect(call(s, boss, 'GET', `/api/sketches/${id}`).status).toBe(404);           // admin can't open it
+    expect(call(s, boss, 'GET', '/api/sketches').body.boards).toEqual([]);
+    expect(call(s, as('mate@example.com'), 'PUT', `/api/sketches/${id}`, { name: 'x' }).status).toBe(404);
+
+    call(s, lead, 'PUT', `/api/sketches/${id}`, { shared: ['mate@example.com'] });
+    const mate = as('mate@example.com');
+    expect(call(s, mate, 'GET', `/api/sketches/${id}`).body.scene.elements).toHaveLength(1);
+    expect(call(s, mate, 'PUT', `/api/sketches/${id}`, { name: 'Renamed' }).status).toBe(403); // owner only
+    expect(call(s, mate, 'DELETE', `/api/sketches/${id}`).status).toBe(403);
+    const rev = call(s, mate, 'GET', `/api/sketches/${id}`).body.rev;
+    expect(call(s, mate, 'PUT', `/api/sketches/${id}`, { scene: { elements: [] }, baseRev: rev }).status).toBe(200);
+    expect(call(s, lead, 'PUT', `/api/sketches/${id}`, { scene: { elements: [{ id: 'old' }] }, baseRev: rev }).status).toBe(409); // stale save refused
+  });
+
+  it('lets external guests in only when the admin allows it, and only to shared boards', () => {
+    const s = fresh();
+    const boss = as('boss@example.com');
+    const guest = as('guest@outside.com');
+    const id = call(s, boss, 'POST', '/api/sketches', { name: 'Shared plan' }).body.id;
+    const other = call(s, boss, 'POST', '/api/sketches', { name: 'Private' }).body.id;
+    const refused = call(s, boss, 'PUT', `/api/sketches/${id}`, { shared: ['guest@outside.com'] });
+    expect(refused.status).toBe(400);
+    expect(refused.body.code).toBe('external-off');
+    call(s, boss, 'PUT', '/api/admin/settings', { externalGuests: true });
+    expect(call(s, boss, 'PUT', `/api/sketches/${id}`, { shared: ['guest@outside.com'] }).status).toBe(200);
+    expect(call(s, guest, 'GET', '/api/me').body).toMatchObject({ role: 'guest', permissions: [] });
+    expect(call(s, guest, 'GET', '/api/sketches').body.boards.map(b => b.id)).toEqual([id]);
+    expect(call(s, guest, 'GET', `/api/sketches/${other}`).status).toBe(404);
+    expect(call(s, guest, 'POST', '/api/sketches', { name: 'Mine' }).status).toBe(403);
+    expect(call(s, guest, 'GET', '/api/workforce/state').status).toBe(403);
+    expect(call(s, guest, 'GET', '/api/state').status).toBe(403);
+    call(s, boss, 'PUT', '/api/admin/settings', { externalGuests: false });         // switched off again
+    expect(call(s, guest, 'GET', '/api/me').status).toBe(403);
   });
 });

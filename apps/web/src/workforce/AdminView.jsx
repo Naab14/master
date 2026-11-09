@@ -127,6 +127,13 @@ export default function AdminView() {
             <span className="flex-1" /><Button variant="ghost" onClick={async () => { if (await call('PUT', '/api/admin/permissions', {})) reload({ quiet: true }); }}>{t('Back to the standard permissions')}</Button></div>
         </Collapsible>
 
+        <Collapsible id="adm-guests" title={t('Sketch boards: outside guests')} defaultOpen={false}>
+          <Checkbox checked={!!admin.settings?.externalGuests} onChange={e => call('PUT', '/api/admin/settings', { externalGuests: e.target.checked })}>
+            {t('Allow sketch boards to be shared with people outside the workspace')}
+          </Checkbox>
+          <p className="mt-1 text-xs text-ink-3">{t('Off by default. A guest signs in with Google and can open only the boards shared with them: no schedule, people or attendance. Switching this off shuts guests out at once.')}</p>
+        </Collapsible>
+
         <Collapsible id="adm-op" title={t('Operator access')} defaultOpen={false}>
           <Checkbox checked={!!settings.operatorAccess} onChange={e => commit([{ op: 'put', col: 'settings', id: 'main', value: { ...settings, operatorAccess: e.target.checked } }], e.target.checked ? t('Operator access switched on') : t('Operator access switched off'))}>
             {t('Let invited operators see their own schedule, training and competencies')}

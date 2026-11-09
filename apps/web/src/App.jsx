@@ -23,6 +23,7 @@ const AttendanceView = lazy(() => import('./workforce/AttendanceView.jsx'));
 const TrainingView = lazy(() => import('./workforce/TrainingView.jsx'));
 const SetupView = lazy(() => import('./workforce/SetupView.jsx'));
 const AdminView = lazy(() => import('./workforce/AdminView.jsx'));
+const SketchView = lazy(() => import('./workforce/SketchView.jsx'));
 
 /* `needs` is the permission that shows the entry; the server enforces the
  * same permissions on the data (backend/access.js). */
@@ -35,6 +36,7 @@ const SECTIONS = [
   { id: 'shifts', label: 'Shift HQ', icon: '▦', needs: 'shifthq.view', group: 'tools' },
   { id: 'vacation', label: 'Vacations', icon: '☀', needs: 'vacations.view', group: 'tools' },
   { id: 'boards', label: 'Boards', icon: '≣', needs: 'boards.view', group: 'tools' },
+  { id: 'sketch', label: 'Sketches', icon: '✎', needs: 'sketches.use', group: 'tools' },
   { id: 'setup', label: 'Setup', icon: '⚙', needs: 'workforce.view', group: 'admin' },
   { id: 'admin', label: 'Access', icon: '⚿', role: 'admin', group: 'admin' },
 ];
@@ -161,6 +163,7 @@ function Workspace({ email, onSignOut, needCode }) {
   // existing tools as before.
   const visible = SECTIONS.filter(s => {
     if (!me) return !s.needs && !s.role;
+    if (me.role === 'guest') return s.id === 'sketch'; // outside guests: shared boards only
     if (s.role) return me.role === s.role;
     return !s.needs || me.permissions.includes(s.needs) || (s.id === 'schedule' && me.permissions.includes('self.view'));
   });
@@ -252,7 +255,9 @@ function Workspace({ email, onSignOut, needCode }) {
             </div>
           }
         >
-          {section === 'dashboard' && <Dashboard onNavigate={navigate} />}
+          {me?.role === 'guest' && section !== 'sketch' && <SketchView />}
+          {section === 'sketch' && <SketchView />}
+          {section === 'dashboard' && me?.role !== 'guest' && <Dashboard onNavigate={navigate} />}
           {section === 'shifts' && <ManageClipTool />}
           {section === 'vacation' && <VacationTool />}
           {section === 'boards' && <BoardsTool />}
