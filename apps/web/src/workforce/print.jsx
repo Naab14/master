@@ -4,13 +4,13 @@
  * orientation choices, then prints only those pages (the app is hidden in
  * print). "Save as PDF" in the browser's print dialog gives the PDF export.
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button, Segmented } from '../ui';
 import { useI18n } from '../i18n';
-import { usePref } from './ui';
+import { usePref } from './prefs';
+import { PAPER } from './print-util';
 
-export const PAPER = { A4: [210, 297], A3: [297, 420] };
 
 export function PrintPreview({ id, onClose, children, allowed = ['A4', 'A3'], defaultOrientation = 'landscape' }) {
   const { t } = useI18n();
@@ -50,19 +50,14 @@ export function PrintPreview({ id, onClose, children, allowed = ['A4', 'A3'], de
 /** One sheet of paper. Children decide how much fits; see chunk(). */
 export function PrintPage({ title, range, legend, children, page, pages, note }) {
   const { t, fmt } = useI18n();
+  const [now] = useState(() => Date.now());
   return (
     <div className="print-page" style={{ width: 'var(--pw)', minHeight: 'var(--ph)' }}>
       <h1>{title}</h1>
-      <div className="meta"><span>{range}</span><span>{t('Printed {when}', { when: fmt.stamp(Date.now()) })}</span></div>
+      <div className="meta"><span>{range}</span><span>{t('Printed {when}', { when: fmt.stamp(now) })}</span></div>
       {children}
       {legend && <div className="legend">{legend}</div>}
       <div className="foot"><span>{note || t('Planning aid. Not the official time, payroll or training record.')}</span>{pages > 1 && <span>{page} / {pages}</span>}</div>
     </div>
   );
 }
-
-export const chunk = (arr, n) => {
-  const out = [];
-  for (let i = 0; i < arr.length; i += n) out.push(arr.slice(i, i + n));
-  return out.length ? out : [[]];
-};

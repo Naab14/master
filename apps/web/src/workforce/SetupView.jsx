@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button, Checkbox } from '../ui';
 import { useI18n } from '../i18n';
-import { useWorkforce } from './store';
+import { useWorkforce } from './store-context';
 import { Collapsible, Confirm, Empty, Field, Input, PageHeader, Select } from './ui';
 import EntityTable from './EntityTable';
 import ObRules from './ObRules';

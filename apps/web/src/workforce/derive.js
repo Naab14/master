@@ -1,7 +1,7 @@
 /* Data the screens share, derived from the documents. */
 import { useEffect, useMemo, useState } from 'react';
 import { getFullState } from '../api';
-import { useWorkforce } from './store';
+import { useWorkforce } from './store-context';
 import { absencesFromEntries } from './logic/attendance';
 import { reasonsOf, list } from './logic/model';
 import { addDays, dateRange, isoWeekStart, todayIn } from './logic/time';

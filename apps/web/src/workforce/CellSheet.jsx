@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react';
 import { Button, Pill } from '../ui';
 import { useI18n } from '../i18n';
-import { useWorkforce } from './store';
+import { useWorkforce } from './store-context';
 import { useAbsences, useReasons } from './derive';
 import { Confirm, Field, Input, Select, Sheet } from './ui';
 import EntryForm from './EntryForm';

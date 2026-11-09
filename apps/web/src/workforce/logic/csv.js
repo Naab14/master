@@ -1,7 +1,8 @@
 /* Small CSV reader for imports: commas or semicolons (Swedish Excel),
  * quoted fields, a header row. */
 export function parseCsv(text) {
-  const src = String(text).replace(/^﻿/, '');
+  let src = String(text);
+  if (src.charCodeAt(0) === 0xFEFF) src = src.slice(1); // byte-order mark from Excel
   const firstLine = src.split(/\r?\n/, 1)[0] || '';
   const sep = (firstLine.match(/;/g) || []).length > (firstLine.match(/,/g) || []).length ? ';' : firstLine.includes('\t') && !firstLine.includes(',') ? '\t' : ',';
   const table = [];

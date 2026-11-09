@@ -1,10 +1,11 @@
 /* Printed schedule: people × days on real pages, split by weeks and rows so
  * nothing is clipped, with the date range and a legend on every page. */
 import { useI18n } from '../i18n';
-import { PrintPreview, PrintPage, chunk } from './print';
+import { PrintPreview, PrintPage } from './print';
+import { chunk } from './print-util';
 import { displayName } from './logic/model';
 import { weekday, isoWeek } from './logic/time';
-import { useWorkforce } from './store';
+import { useWorkforce } from './store-context';
 
 export default function SchedulePrint({ groups, days, grid, coverage, shiftTypes, absences, nick, onClose }) {
   const { t, fmt } = useI18n();

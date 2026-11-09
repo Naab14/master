@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { Button } from '../ui';
 import { useI18n } from '../i18n';
-import { useWorkforce } from './store';
+import { useWorkforce } from './store-context';
 import { Confirm } from './ui';
 import { list, uid } from './logic/model';
 
-function Cell({ col, value, onChange, disabled, row }) {
+function Cell({ col, value: raw, onChange, disabled, row }) {
   const { fmt } = useI18n();
   const [draft, setDraft] = useState(null);
-  value = col.get ? col.get(row) : value;
+  const value = col.get ? col.get(row) : raw;
   const shown = draft ?? value ?? '';
   const commit = () => { if (draft !== null && draft !== (value ?? '')) onChange(col.type === 'number' ? (draft === '' ? null : Number(draft)) : draft); setDraft(null); };
   if (col.type === 'select') {

@@ -28,7 +28,7 @@ export const isTyping = el => !!el && (el.isContentEditable || /^(INPUT|TEXTAREA
 /** Run handlers[actionId]() on its key, unless the user is typing or a dialog is open. */
 export function useShortcuts(handlers) {
   const ref = useRef(handlers);
-  ref.current = handlers;
+  useEffect(() => { ref.current = handlers; });
   useEffect(() => {
     const map = loadShortcuts();
     const onKey = e => {

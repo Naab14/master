@@ -5,10 +5,11 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Button, Segmented } from '../ui';
 import { useI18n } from '../i18n';
-import { useWorkforce } from './store';
+import { useWorkforce } from './store-context';
 import { useAbsences } from './derive';
 import { useShortcuts } from './shortcuts';
-import { Avatar, Confirm, EmploymentMark, Empty, PageHeader, Select, usePref } from './ui';
+import { Avatar, Confirm, EmploymentMark, Empty, PageHeader, Select } from './ui';
+import { usePref } from './prefs';
 import { addDays, addMonths, dateRange, endOfMonth, isoWeek, startOfMonth, startOfWeek, todayIn, weekday } from './logic/time';
 import { displayName, list, settingsOf } from './logic/model';
 import { clearOverrideOps, overrideOps, resolveShift, teamOf } from './logic/schedule';

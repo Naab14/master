@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '../ui';
 import { useI18n } from '../i18n';
-import { useWorkforce } from './store';
+import { useWorkforce } from './store-context';
 import EntityTable from './EntityTable';
 import { list, uid } from './logic/model';
 import { parseObRows } from './logic/attendance';

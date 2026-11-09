@@ -7,17 +7,15 @@
  *   reached the cache is shown read-only with an "Offline" banner. The cache
  *   is cleared on sign-out (src/auth.js).
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Ctx, CACHE_KEY } from './store-context';
 import { apiFetch } from '../access';
 import { WORKFORCE_COLLECTIONS, ATTENDANCE_COLLECTIONS, emptyDoc } from './logic/model';
 import { buildIndex } from './logic/schedule';
 
-export const CACHE_KEY = 'master-workforce-cache';
 const POLL_MS = 30000;
 const SECTION_OF = col => (ATTENDANCE_COLLECTIONS.includes(col) ? 'attendance' : 'workforce');
 
-const Ctx = createContext(null);
-export const useWorkforce = () => useContext(Ctx);
 
 async function getJson(path) {
   const r = await apiFetch(path);
@@ -52,7 +50,7 @@ export function WorkforceProvider({ children, notify }) {
     offline: false, syncedAt: null, error: null, saving: 0,
   });
   const ref = useRef(state);
-  ref.current = state;
+  useEffect(() => { ref.current = state; });
   // The newest documents, updated in step with every save (state alone can
   // lag a render behind when saves are queued back to back).
   const docs = useRef({ wf: state.wf, att: state.att });
@@ -62,7 +60,7 @@ export function WorkforceProvider({ children, notify }) {
   const [undoCount, setUndoCount] = useState({ undo: 0, redo: 0 });
   const bump = () => setUndoCount({ undo: undoStack.current.length, redo: redoStack.current.length });
   const notifyRef = useRef(notify);
-  notifyRef.current = notify;
+  useEffect(() => { notifyRef.current = notify; });
 
   const load = useCallback(async ({ quiet = false } = {}) => {
     try {
@@ -182,7 +180,7 @@ export function WorkforceProvider({ children, notify }) {
     const ok = await send(step.ops, { label: step.label, isUndo: true });
     if (ok) notifyRef.current?.('undone', step.label);
   }, [send]);
-  undoRef.current = undo;
+  useEffect(() => { undoRef.current = undo; });
   const redo = useCallback(async () => {
     const step = redoStack.current.pop();
     bump();

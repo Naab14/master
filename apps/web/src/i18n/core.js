@@ -5,10 +5,10 @@
  * second argument. A test (i18n.test.js) fails when a text used in the
  * workforce screens has no Swedish translation.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext } from 'react';
 import sv from './sv';
 
-const KEY = 'master-lang';
+export const KEY = 'master-lang';
 export const LANGUAGES = [{ id: 'en', label: 'English' }, { id: 'sv', label: 'Svenska' }];
 
 export function loadLang() {
@@ -28,7 +28,7 @@ export function translate(lang, text, vars) {
 const LOCALE = { en: 'en-GB', sv: 'sv-SE' };
 const utc = s => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
 
-function makeFormat(lang) {
+export function makeFormat(lang) {
   const locale = LOCALE[lang];
   const f = opts => new Intl.DateTimeFormat(locale, { timeZone: 'UTC', ...opts });
   const fmts = {
@@ -49,18 +49,7 @@ function makeFormat(lang) {
   };
 }
 
-const I18nContext = createContext(null);
-
-export function I18nProvider({ children, initial }) {
-  const [lang, setLangState] = useState(initial || loadLang);
-  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
-  const setLang = useCallback(l => {
-    setLangState(l);
-    try { localStorage.setItem(KEY, l); } catch { /* still applies for this visit */ }
-  }, []);
-  const value = useMemo(() => ({ lang, setLang, t: (text, vars) => translate(lang, text, vars), fmt: makeFormat(lang) }), [lang, setLang]);
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
-}
+export const I18nContext = createContext(null);
 
 const FALLBACK = { lang: 'en', setLang: () => {}, t: (text, vars) => translate('en', text, vars), fmt: makeFormat('en') };
 export const useI18n = () => useContext(I18nContext) || FALLBACK;

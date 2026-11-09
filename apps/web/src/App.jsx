@@ -8,7 +8,8 @@ import { SignIn, NoAccess } from './shell/SignIn';
 import ThemeSwitcher from './theme/ThemeSwitcher';
 import { ToastProvider, useToast } from './ui';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n';
-import { WorkforceProvider, useWorkforce } from './workforce/store';
+import { WorkforceProvider } from './workforce/store';
+import { useWorkforce } from './workforce/store-context';
 import './workforce/workforce.css';
 
 const Dashboard = lazy(() => import('./dashboard/Dashboard.jsx'));
