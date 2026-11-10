@@ -202,4 +202,11 @@ export default {
   'This Google account has not been invited. Your request has been sent to the admin; try again once they have approved it.': 'Det här Google-kontot är inte inbjudet. Din förfrågan har skickats till admin; försök igen när den har godkänts.',
   'Use a different account': 'Använd ett annat konto', 'Sign-in is not set up yet': 'Inloggning är inte inställd ännu',
   'This site stays closed until the owner has set up Google sign-in and an admin account. Nothing can be opened without signing in.': 'Sidan är stängd tills ägaren har ställt in Google-inloggning och ett adminkonto. Inget kan öppnas utan inloggning.',
+  // Dashboard and theme
+  'Open': 'Öppna', 'Good morning.': 'God morgon.', 'Good afternoon.': 'God eftermiddag.', 'Good evening.': 'God kväll.',
+  'Can’t reach the server ({error}). Showing what is saved in this browser; changes sync when the connection is back.': 'Når inte servern ({error}). Visar det som är sparat i webbläsaren; ändringar synkas när anslutningen är tillbaka.',
+  'Today on shift': 'Idag på skiftet', 'Due today': 'Idag', 'Done today': 'Klart idag', 'Overdue': 'Försenat', 'Nothing due today': 'Inget att göra idag', 'No shift data yet.': 'Inga skiftdata ännu.',
+  'All processes covered': 'Alla processer bemannade', 'Coverage tight': 'Tunn bemanning', 'Coverage gap': 'Lucka i bemanningen', 'Out this week: {names}': 'Borta denna vecka: {names}',
+  'Nobody on vacation this week.': 'Ingen på semester denna vecka.', 'Open the vacation planner once to set up the workspace.': 'Öppna semesterplaneraren en gång för att sätta upp arbetsytan.',
+  'Work items': 'Ärenden', 'Items': 'Ärenden', 'No boards yet.': 'Inga tavlor ännu.', 'Theme': 'Tema', 'Theme: {name}': 'Tema: {name}', 'Theme: {name}. Switch to {next}': 'Tema: {name}. Byt till {next}',
 };

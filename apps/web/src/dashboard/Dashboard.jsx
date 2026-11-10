@@ -3,6 +3,7 @@ import { getFullState } from '../api';
 import { getAllCoverageForWeek } from '../tools/vacation/coverage';
 import { PROCESSES } from '../tools/vacation/data';
 import PlanningCards from '../workforce/PlanningCards';
+import { useI18n } from '../i18n';
 
 /* ── Date helpers ─────────────────────────────────────────────────────────── */
 function todayStr() {
@@ -32,6 +33,7 @@ const LEVEL_COLORS = {
 
 /* ── Card chrome ──────────────────────────────────────────────────────────── */
 function Card({ title, subtitle, onOpen, children }) {
+  const { t } = useI18n();
   return (
     <section
       className="flex flex-col gap-3 p-5"
@@ -47,7 +49,7 @@ function Card({ title, subtitle, onOpen, children }) {
           className="shrink-0 rounded-full px-3 py-1 text-xs font-bold text-white"
           style={{ background: 'var(--accent)' }}
         >
-          Open →
+          {t('Open')} →
         </button>
       </header>
       {children}
@@ -66,6 +68,7 @@ function Stat({ value, label, tone }) {
 
 /* ── Dashboard ────────────────────────────────────────────────────────────── */
 export default function Dashboard({ onNavigate }) {
+  const { t, fmt } = useI18n();
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
   const today = todayStr();
@@ -133,54 +136,54 @@ export default function Dashboard({ onNavigate }) {
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-5xl px-6 py-8">
         <h1 className="text-3xl font-black tracking-tight" style={{ fontFamily: 'var(--font-heading)' }}>
-          Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}.
+          {new Date().getHours() < 12 ? t('Good morning.') : new Date().getHours() < 18 ? t('Good afternoon.') : t('Good evening.')}
         </h1>
         <p className="mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} · week {week}
+          {fmt.date(today, 'long')} · {t('week')} {week}
         </p>
 
         <PlanningCards onNavigate={onNavigate} />
 
         {error && (
           <div className="mb-6 rounded-lg px-4 py-3 text-sm" style={{ background: 'var(--pending-bg)', border: '1px solid var(--pending-border)' }}>
-            Can't reach the server ({error}). Showing what is saved in this browser; changes sync when the connection is back.
+            {t('Can’t reach the server ({error}). Showing what is saved in this browser; changes sync when the connection is back.', { error })}
           </div>
         )}
 
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {/* ── Shift HQ ────────────────────────────────────────────────── */}
-          <Card title="Shift HQ" subtitle="Today on shift" onOpen={() => onNavigate('shifts')}>
+          <Card title={t('Shift HQ')} subtitle={t('Today on shift')} onOpen={() => onNavigate('shifts')}>
             {shiftStats ? (
               <>
                 <div className="grid grid-cols-3 gap-2">
-                  <Stat value={shiftStats.dueToday.length} label="Due today" />
-                  <Stat value={shiftStats.doneToday.length} label="Done today" tone="var(--coverage-green)" />
-                  <Stat value={shiftStats.overdue.length} label="Overdue" tone={shiftStats.overdue.length ? 'var(--coverage-red)' : undefined} />
+                  <Stat value={shiftStats.dueToday.length} label={t('Due today')} />
+                  <Stat value={shiftStats.doneToday.length} label={t('Done today')} tone="var(--coverage-green)" />
+                  <Stat value={shiftStats.overdue.length} label={t('Overdue')} tone={shiftStats.overdue.length ? 'var(--coverage-red)' : undefined} />
                 </div>
                 <ul className="flex flex-col gap-1 text-sm">
-                  {shiftStats.dueToday.slice(0, 4).map(t => (
-                    <li key={t.id} className="truncate">
+                  {shiftStats.dueToday.slice(0, 4).map(task => (
+                    <li key={task.id} className="truncate">
                       <span className="mr-2 inline-block h-2 w-2 rounded-full align-middle" style={{ background: 'var(--accent-secondary)' }} />
-                      {t.title}
+                      {task.title}
                     </li>
                   ))}
                   {shiftStats.dueToday.length === 0 && (
-                    <li style={{ color: 'var(--text-secondary)' }}>Nothing due today 🎉</li>
+                    <li style={{ color: 'var(--text-secondary)' }}>{t('Nothing due today')}</li>
                   )}
                 </ul>
               </>
             ) : (
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No shift data yet.</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('No shift data yet.')}</p>
             )}
           </Card>
 
           {/* ── Vacations / coverage ────────────────────────────────────── */}
-          <Card title="Vacations" subtitle={`Coverage · week ${week}`} onOpen={() => onNavigate('vacation')}>
+          <Card title={t('Vacations')} subtitle={`${t('Coverage')} · ${t('week')} ${week}`} onOpen={() => onNavigate('vacation')}>
             {vacStats ? (
               <>
                 <div className="flex items-center gap-2 text-sm font-bold">
                   <span className="inline-block h-3 w-3 rounded-full" style={{ background: LEVEL_COLORS[vacStats.worst] }} />
-                  {vacStats.worst === 'green' ? 'All processes covered' : vacStats.worst === 'yellow' ? 'Coverage tight' : 'Coverage gap!'}
+                  {vacStats.worst === 'green' ? t('All processes covered') : vacStats.worst === 'yellow' ? t('Coverage tight') : t('Coverage gap')}
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {Object.entries(vacStats.perProcess).map(([proc, level]) => (
@@ -191,24 +194,24 @@ export default function Dashboard({ onNavigate }) {
                 </div>
                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                   {vacStats.out.length
-                    ? `Out this week: ${vacStats.out.map(o => o.name.split(' ')[0]).join(', ')}`
-                    : 'Nobody on vacation this week.'}
+                    ? t('Out this week: {names}', { names: vacStats.out.map(o => o.name.split(' ')[0]).join(', ') })
+                    : t('Nobody on vacation this week.')}
                 </p>
               </>
             ) : (
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Open the vacation planner once to set up the workspace.
+                {t('Open the vacation planner once to set up the workspace.')}
               </p>
             )}
           </Card>
 
           {/* ── Boards ──────────────────────────────────────────────────── */}
-          <Card title="Boards" subtitle="Work items" onOpen={() => onNavigate('boards')}>
+          <Card title={t('Boards')} subtitle={t('Work items')} onOpen={() => onNavigate('boards')}>
             {boardStats ? (
               <>
                 <div className="grid grid-cols-2 gap-2">
-                  <Stat value={boardStats.total} label={`item${boardStats.total === 1 ? '' : 's'}`} />
-                  <Stat value={boardStats.boards} label={`board${boardStats.boards === 1 ? '' : 's'}`} />
+                  <Stat value={boardStats.total} label={t('Items')} />
+                  <Stat value={boardStats.boards} label={t('Boards')} />
                 </div>
                 <ul className="flex flex-col gap-1 text-sm">
                   {Object.entries(boardStats.counts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([label, n]) => (
@@ -220,7 +223,7 @@ export default function Dashboard({ onNavigate }) {
                 </ul>
               </>
             ) : (
-              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No boards yet.</p>
+              <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('No boards yet.')}</p>
             )}
           </Card>
         </div>
