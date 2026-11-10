@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'r
 import { seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from './data';
 import {
   saveState, loadState, clearState,
-  saveTheme, loadTheme,
   saveUI, loadUI,
   exportJSON, importJSON, debouncedSave,
   buildShareLink, loadStateFromUrl, clearShareHash, copyToClipboard,
@@ -13,6 +12,8 @@ import { parseCSV, mergeOperators, downloadCSVTemplate, downloadOperatorsCSV } f
 import { buildHolidayMap, initHolidays } from './holidays';
 import { historyReducer, initHistory } from './historyReducer';
 import { useBreakpoint } from './hooks/useBreakpoint';
+import { useWorkforce } from '../../workforce/store-context';
+import { syncOperatorsWithPeople, linkOperator } from './sharedPeople';
 
 import TopBar from './components/TopBar';
 import OperatorPanel from './components/OperatorPanel';
@@ -54,8 +55,8 @@ export default function App() {
   const setFn = useCallback(updater => dispatch({ type: 'SET', updater }), []);
   const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
   const redo = useCallback(() => dispatch({ type: 'REDO' }), []);
-  const [theme, setTheme] = useState(loadTheme);
   const [toast, setToast] = useState(initResult.wasShared ? 'Loaded shared workspace' : null);
+  const [adopted, setAdopted] = useState(false); // the saved plan has been loaded from the server
   const [showDemand, setShowDemand] = useState(false);
   const [showOperatorMgmt, setShowOperatorMgmt] = useState(false);
   const [zoom, setZoom] = useState(storedUI.zoom === 'day' ? 'day' : 'week');
@@ -107,6 +108,7 @@ export default function App() {
           pushServerState(latestState.current);
         }
         setServerSync(true);
+        setAdopted(true);
       });
     }
     return () => {
@@ -117,6 +119,24 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // One shared operator identity: once the saved plan is loaded, every People
+  // profile has an operator here, linked by id, and names follow the profile.
+  const planning = useWorkforce();
+  const planningReady = planning?.phase === 'ready' && !planning?.offline;
+  const profiles = planning?.wf?.people;
+  const canEditPlan = !!planning?.can('vacations.edit');
+  const people = useMemo(
+    () => (planningReady && profiles ? Object.values(profiles).map(p => ({ id: p.id, name: p.name, endDate: p.endDate })) : null),
+    [planningReady, profiles],
+  );
+  useEffect(() => {
+    if (!adopted || !people || initResult.wasShared || !canEditPlan) return;
+    const today = new Date().toISOString().slice(0, 10);
+    const next = syncOperatorsWithPeople(state.operators, people, today);
+    if (next !== state.operators) dispatch({ type: 'SYNC', updater: s => ({ ...s, operators: syncOperatorsWithPeople(s.operators, people, today) }) });
+  }, [adopted, people, state.operators, initResult.wasShared, canEditPlan]);
+  const linkOp = useCallback((operatorId, personId) => { if (people) setFn(s => linkOperator(s, operatorId, personId, people)); }, [people, setFn]);
+
   // Auto-dismiss initial toast (shared workspace)
   useEffect(() => {
     if (initResult.wasShared) {
@@ -124,13 +144,6 @@ export default function App() {
       return () => clearTimeout(t);
     }
   }, [initResult.wasShared]);
-
-  // Theme effect
-  useEffect(() => {
-    if (theme === 'default') document.documentElement.removeAttribute('data-theme');
-    else document.documentElement.setAttribute('data-theme', theme);
-    saveTheme(theme);
-  }, [theme]);
 
   // Auto-save core state
   useEffect(() => { debouncedSave(state); }, [state]);
@@ -273,7 +286,6 @@ export default function App() {
       {/* ── Top Bar ──────────────────────────────────────────────────────── */}
       <TopBar
         shiftMode={shiftMode} onShiftModeChange={setShiftMode}
-        theme={theme} onThemeChange={setTheme}
         onImportCSV={handleCSVImport} onExportCSV={handleCSVExport} onSave={handleSave}
         onExportJSON={handleExport} onImportJSON={handleImport}
         onReset={handleReset}
@@ -290,6 +302,7 @@ export default function App() {
           showMgmt={showOperatorMgmt}
           onToggleMgmt={() => setShowOperatorMgmt(p => !p)}
           onAddOperator={addOperator} onRemoveOperator={removeOperator}
+          people={people} onLinkOperator={linkOp}
           onDownloadTemplate={downloadCSVTemplate}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(p => !p)}

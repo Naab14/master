@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master — Admin overview</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBFBFA}
+a{color:#2C2B28;text-decoration:none}a:hover{color:#1F55A8}
+.ad{--side:#F6F5F3;--ink:#2C2B28;--ink2:#55544F;--ink3:#6B6A64;--line:#E8E7E4;--hover:#EEEDEA;--accent:#2563C9;
+ --ok-bg:#DDF0E3;--ok-fg:#1F6B3E;--warn-bg:#FBEACB;--warn-fg:#8A4B00;--bad-bg:#F9DAD6;--bad-fg:#A3271C;--neu-bg:#ECEBE8;--neu-fg:#55544F;--info-bg:#DCE8FA;--info-fg:#1F55A8;
+ font-family:Inter,"Segoe UI",system-ui,sans-serif;color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.ad *{box-sizing:border-box}
+.ad button{font:inherit;color:inherit;cursor:pointer}
+.nav-item{display:flex;align-items:center;gap:10px;min-height:32px;padding:4px 10px;border-radius:6px;color:var(--ink2);font-weight:500}
+.nav-item:hover{background:var(--hover);color:var(--ink)}
+.nav-item.on{background:#EBEAE6;color:var(--ink);font-weight:600}
+.label{font-size:12px;font-weight:600;color:var(--ink3)}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:5px;font-size:12px;font-weight:600;white-space:nowrap}
+.num{font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:500}
+.btn:hover{background:var(--hover)}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:#fff !important}.btn-primary:hover{background:#000}
+.kpi{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.trow{display:grid;grid-template-columns:minmax(150px,1.4fr) minmax(110px,1fr) 90px 150px 80px 80px 28px;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid #F1F0EE;transition:background .12s}
+a.trow:hover{background:#F7F6F3;color:var(--ink)}
+.sq{width:22px;height:14px;border-radius:3px}
+.tog{position:relative;width:38px;height:22px;border-radius:11px;border:0;padding:0;background:#CFCDC8;transition:background .2s}
+.tog::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.tog[aria-checked="true"]{background:#1F6B3E}
+.tog[aria-checked="true"]::after{transform:translateX(16px)}
+.tog:disabled{opacity:.55;cursor:not-allowed}
+.btn:focus-visible,.tog:focus-visible,.trow:focus-visible,.nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</helmet>
+<div class="ad" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #FBFBFA">
+
+  <nav aria-label="Admin" style="flex: 1 1 232px; max-width: 100%; display: flex; flex-direction: column; gap: 18px; padding: 14px 10px; background: var(--side); border-right: 1px solid var(--line)">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 10px">
+      <span aria-hidden="true" style="display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: #2C2B28; color: #fff; font-weight: 700; font-size: 13px">M</span>
+      <div style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 600">Master</span><span style="font-size: 12px; color: var(--ink3)">Admin · all teams</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav-item on" href="Admin.dc.html" aria-current="page">Overview</a>
+      <a class="nav-item" href="#">Teams</a>
+      <a class="nav-item" href="#">People &amp; access</a>
+      <a class="nav-item" href="#">Leave requests<span class="num" style="margin-left: auto; font-size: 12px; color: var(--ink3)">{{pending}}</span></a>
+      <a class="nav-item" href="#">Settings</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span class="label" style="padding: 0 10px 4px">Open a team workspace</span>
+      <a class="nav-item" href="Arcade.dc.html">L4 packaging<span style="margin-left: auto; font-size: 12px; color: var(--ink3)">↗</span></a>
+      <a class="nav-item" href="#">Line 1</a>
+      <a class="nav-item" href="#">Line 2</a>
+      <a class="nav-item" href="#">Line 3</a>
+      <a class="nav-item" href="#">Line 5</a>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0">
+    <div style="max-width: 1160px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 48px) 64px; display: flex; flex-direction: column; gap: 32px">
+
+      <header style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span class="label">Admin overview</span>
+          <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 40px; line-height: 1.1">All teams · Week 44</h1>
+          <p style="margin: 0; color: var(--ink2)">Monday 26 October · 5 teams · 78 people</p>
+        </div>
+        <div style="display: flex; gap: 8px"><button class="btn">Add team</button><button class="btn btn-primary">Invite person</button></div>
+      </header>
+
+      <section aria-label="Key numbers" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr)); gap: 12px">
+        <div class="kpi"><span class="label">Leave to decide</span><span class="num" style="font-size: 28px; font-weight: 600">{{pending}}</span><span style="font-size: 12px; color: var(--ink2)">across 3 teams</span></div>
+        <div class="kpi"><span class="label">Coverage gaps · 8 wks</span><span class="num" style="font-size: 28px; font-weight: 600; color: var(--bad-fg)">3</span><span style="font-size: 12px; color: var(--ink2)">L4 v.51–52 · Line 2 v.47</span></div>
+        <div class="kpi"><span class="label">Overdue tasks</span><span class="num" style="font-size: 28px; font-weight: 600">4</span><span style="font-size: 12px; color: var(--ink2)">2 teams</span></div>
+        <div class="kpi"><span class="label">On shift now</span><span class="num" style="font-size: 28px; font-weight: 600">61<span style="font-size: 16px; color: var(--ink3)">/66</span></span><span style="font-size: 12px; color: var(--ink2)">5 on leave</span></div>
+      </section>
+
+      <section aria-labelledby="teams" style="display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 id="teams" style="margin: 0; font-size: 18px; font-weight: 600">Teams</h2><span style="font-size: 12px; color: var(--ink3)">Click a team to open its workspace</span></div>
+        <div style="border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow-x: auto">
+          <div style="min-width: 820px">
+            <div class="trow" style="border-top: 0; padding-top: 8px; padding-bottom: 8px">
+              <span class="label">Team</span><span class="label">Manager / lead</span><span class="label">On shift</span><span class="label">Coverage next 4 wks</span><span class="label">Leave</span><span class="label">Overdue</span><span></span>
+            </div>
+            <sc-for list="{{teams}}" as="t" hint-placeholder-count="5">
+              <a class="trow" href="{{t.href}}">
+                <span style="display: flex; flex-direction: column; line-height: 1.3"><b>{{t.name}}</b><span style="font-size: 12px; color: var(--ink3)">{{t.shifts}}</span></span>
+                <span style="color: var(--ink2)">{{t.lead}}</span>
+                <span class="num">{{t.on}}</span>
+                <span style="display: flex; gap: 3px" title="{{t.covTip}}"><sc-for list="{{t.cov}}" as="c" hint-placeholder-count="4"><span class="sq" style="background: {{c}}"></span></sc-for></span>
+                <span><span class="pill num" style="background: {{t.leaveBg}}; color: {{t.leaveFg}}">{{t.leave}}</span></span>
+                <span class="num" style="color: {{t.odColor}}; font-weight: 600">{{t.overdue}}</span>
+                <span aria-hidden="true" style="color: var(--ink3)">→</span>
+              </a>
+            </sc-for>
+          </div>
+        </div>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 32px; align-items: start">
+
+        <!-- What each role sees -->
+        <section aria-labelledby="access" style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <h2 id="access" style="margin: 0; font-size: 18px; font-weight: 600">What each role sees</h2>
+            <span style="font-size: 13px; color: var(--ink2)">Controls the menu in every team workspace. Changes apply at next sign-in.</span>
+          </div>
+          <div style="border: 1px solid var(--line); border-radius: 12px; background: #fff; overflow-x: auto">
+            <table style="width: 100%; border-collapse: collapse; min-width: 420px">
+              <thead><tr>
+                <th scope="col" class="label" style="text-align: left; padding: 10px 14px">Module</th>
+                <sc-for list="{{roles}}" as="r" hint-placeholder-count="3"><th scope="col" class="label" style="padding: 10px 8px; text-align: center">{{r}}</th></sc-for>
+              </tr></thead>
+              <tbody>
+                <sc-for list="{{matrix}}" as="m" hint-placeholder-count="7">
+                  <tr style="border-top: 1px solid #F1F0EE">
+                    <th scope="row" style="text-align: left; padding: 9px 14px; font-weight: 500">{{m.name}}<span style="display: block; font-size: 12px; font-weight: 400; color: var(--ink3)">{{m.sub}}</span></th>
+                    <sc-for list="{{m.cells}}" as="c" hint-placeholder-count="3">
+                      <td style="text-align: center; padding: 9px 8px"><button class="tog" role="switch" aria-checked="{{c.on}}" aria-label="{{c.aria}}" disabled="{{c.locked}}" onClick="{{c.flip}}"></button></td>
+                    </sc-for>
+                  </tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Decide + people -->
+        <div style="display: flex; flex-direction: column; gap: 32px">
+          <section aria-labelledby="dec" style="display: flex; flex-direction: column; gap: 8px">
+            <h2 id="dec" style="margin: 0; font-size: 18px; font-weight: 600">Leave to decide</h2>
+            <sc-for list="{{reqs}}" as="q" hint-placeholder-count="4">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff">
+                <span class="pill" style="background: var(--neu-bg); color: var(--neu-fg)">{{q.team}}</span>
+                <span style="flex: 1; min-width: 160px"><b>{{q.name}}</b> <span class="num" style="color: var(--ink2)">{{q.when}}</span><span style="display: block; font-size: 12px; color: {{q.impactColor}}">{{q.impact}}</span></span>
+                <sc-if value="{{q.open}}" hint-placeholder-val="{{true}}"><button class="btn" onClick="{{q.approve}}" style="min-height: 32px">Approve</button></sc-if>
+                <sc-if value="{{q.done}}" hint-placeholder-val="{{false}}"><span class="pill" style="background: var(--ok-bg); color: var(--ok-fg)">Approved</span></sc-if>
+              </div>
+            </sc-for>
+          </section>
+
+          <section aria-labelledby="ppl" style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 id="ppl" style="margin: 0; font-size: 18px; font-weight: 600">Managers &amp; team leads</h2><a href="#" style="font-size: 13px; color: var(--ink2)">All people →</a></div>
+            <sc-for list="{{people}}" as="p" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 4px; border-bottom: 1px solid #F1F0EE">
+                <span aria-hidden="true" style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: {{p.bg}}; font-size: 12px; font-weight: 700">{{p.ini}}</span>
+                <span style="flex: 1; display: flex; flex-direction: column; line-height: 1.3"><b>{{p.name}}</b><span style="font-size: 12px; color: var(--ink3)">{{p.teams}}</span></span>
+                <span class="pill" style="background: {{p.roleBg}}; color: {{p.roleFg}}">{{p.role}}</span>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+      </div>
+      <p style="margin: 0; font-size: 12px; color: var(--ink3)">Sample data: teams other than L4 and all names are placeholders.</p>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    this.state = {
+      acc: {
+        today: [1, 1, 1], shift: [1, 1, 0], vacView: [1, 1, 1], vacApprove: [1, 0, 0], coverage: [1, 1, 0], boards: [1, 1, 1], team: [1, 1, 0], sketch: [1, 1, 1]
+      },
+      approved: {}
+    };
+  }
+  renderVals() {
+    const S = this.state;
+    const G = '#DDF0E3', Y = '#FBEACB', R = '#F9DAD6';
+    const teams = [
+      { name: 'L4 packaging', shifts: '2 shifts · S1 + S2', lead: 'Abbe', on: '14/16', cov: [Y, Y, Y, Y], covTip: 'One short in at least one process every week', leave: '3 pending', overdue: 1, href: 'Arcade.dc.html' },
+      { name: 'Line 1', shifts: '1 shift', lead: '[Manager]', on: '11/12', cov: [G, G, G, G], covTip: 'Covered', leave: '0', overdue: 0, href: '#' },
+      { name: 'Line 2', shifts: '2 shifts', lead: '[Manager]', on: '15/16', cov: [G, G, G, R], covTip: 'Gap in week 47', leave: '2 pending', overdue: 3, href: '#' },
+      { name: 'Line 3', shifts: '2 shifts', lead: '[Manager]', on: '13/14', cov: [G, Y, G, G], covTip: 'One short in week 45', leave: '1 pending', overdue: 0, href: '#' },
+      { name: 'Line 5', shifts: '1 shift', lead: '[Manager]', on: '8/8', cov: [G, G, G, G], covTip: 'Covered', leave: '0', overdue: 0, href: '#' }
+    ].map(t => ({ ...t, leaveBg: t.leave === '0' ? '#ECEBE8' : '#DCE8FA', leaveFg: t.leave === '0' ? '#55544F' : '#1F55A8', overdue: t.overdue || '—', odColor: t.overdue ? '#A3271C' : '#6B6A64' }));
+    const roles = ['Shift manager', 'Team lead', 'Operator'];
+    const mods = [
+      ['today', 'Today', 'Dashboard'], ['shift', 'Shift HQ', 'Tasks, log, weekly review'], ['vacView', 'Vacations · view', 'Own team’s plan'],
+      ['vacApprove', 'Vacations · approve', 'Approve or decline leave'], ['coverage', 'Coverage numbers', 'Per process, per week'],
+      ['boards', 'Boards', 'Work items'], ['team', 'Team cards', 'Certifications, leave'], ['sketch', 'Sketch', 'Whiteboard']
+    ];
+    const matrix = mods.map(([k, name, sub]) => ({
+      name, sub,
+      cells: roles.map((r, i) => {
+        const on = !!S.acc[k][i];
+        const locked = k === 'today';
+        return { on, locked, aria: name + ' for ' + r, flip: () => { if (locked) return; const row = S.acc[k].slice(); row[i] = row[i] ? 0 : 1; this.setState({ acc: { ...S.acc, [k]: row } }); } };
+      })
+    }));
+    const reqDefs = [
+      ['L4', 'Sara Björk', 'v.51–52', 'Kapselresaren v.51 → 1/2', '#8A4B00'],
+      ['L4', 'Erik Holm', 'v.47', 'Granskning/uttag av dok v.47 → 0/2', '#A3271C'],
+      ['Line 2', '[Operator]', 'v.47', 'Creates the week 47 gap', '#A3271C'],
+      ['Line 3', '[Operator]', 'v.45', 'No coverage change', '#1F6B3E']
+    ];
+    const reqs = reqDefs.map(([team, name, when, impact, impactColor], i) => {
+      const done = !!S.approved[i];
+      return { team, name, when, impact, impactColor, done, open: !done, approve: () => this.setState({ approved: { ...S.approved, [i]: true } }) };
+    });
+    const people = [
+      ['Abbe', 'L4 packaging', 'Admin', '#DCE8FA', '#1F55A8', '#F6EFE3'],
+      ['[Manager]', 'Line 1 · Line 5', 'Shift manager', '#ECEBE8', '#55544F', '#F9E4EC'],
+      ['[Manager]', 'Line 2', 'Shift manager', '#ECEBE8', '#55544F', '#D9F0E7'],
+      ['[Team lead]', 'L4 · S2', 'Team lead', '#ECEBE8', '#55544F', '#FBF0CC']
+    ].map(([name, teams, role, roleBg, roleFg, bg]) => ({ name, teams, role, roleBg, roleFg, bg, ini: name.replace(/[\[\]]/g, '').split(' ').map(w => w[0]).join('').slice(0, 2) }));
+    return { teams, roles, matrix, reqs, people, pending: reqs.filter(r => r.open).length + 2 };
+  }
+}
+</script>
+</body>
+</html>

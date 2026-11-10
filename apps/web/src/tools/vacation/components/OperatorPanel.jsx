@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { PROCESSES } from '../data';
 
-export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, onToggleMgmt, onAddOperator, onRemoveOperator, onDownloadTemplate, collapsed, onToggleCollapse }) {
+export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, onToggleMgmt, onAddOperator, onRemoveOperator, onDownloadTemplate, collapsed, onToggleCollapse, people = null, onLinkOperator }) {
   const [editId, setEditId] = useState(null);
   const [newName, setNewName] = useState('');
   const [newShift, setNewShift] = useState('S1');
@@ -107,6 +107,7 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
               onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.background = 'rgba(79,70,229,0.06)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'transparent'; }}>
               <span className="flex-1 truncate font-medium">{op.name}</span>
+              {people && !op.personId && <span className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }} title="Not linked to a profile in People">unlinked</span>}
               <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold"
                 style={op.shift === 'S1'
                   ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 0 10px rgba(79,70,229,0.4)' }
@@ -120,11 +121,28 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
                 <div>
                   <label className="text-xs block mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>Name</label>
                   <input type="text" value={op.name} onChange={e => onUpdateOperator(op.id, { name: e.target.value })}
+                    disabled={!!op.personId} title={op.personId ? 'The name comes from the profile in People' : undefined}
                     className="w-full px-2.5 py-1.5 text-sm shadow-sm outline-none"
                     style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}
                     onFocus={e => { e.target.style.boxShadow = '0 0 0 2px var(--accent)'; }}
                     onBlur={e => { e.target.style.boxShadow = 'none'; }} />
                 </div>
+                {op.personId && (
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                    Linked to the profile in <a href={`#/people/${op.personId}`} className="underline">People</a>. Change the name there.
+                  </p>
+                )}
+                {!op.personId && people && (
+                  <div>
+                    <label className="text-xs block mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>Not linked to a profile</label>
+                    <select value="" aria-label={`Link ${op.name} to a profile`} onChange={e => e.target.value && onLinkOperator(op.id, e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-sm shadow-sm outline-none"
+                      style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}>
+                      <option value="">Link to a profile…</option>
+                      {people.slice().sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs block mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>Shift</label>
                   <select value={op.shift} onChange={e => onUpdateOperator(op.id, { shift: e.target.value })}
@@ -156,7 +174,7 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
                     ))}
                   </div>
                 </div>
-                {showMgmt && (
+                {showMgmt && !(op.personId && people?.some(p => p.id === op.personId)) && (
                   <button onClick={() => { if (confirm(`Remove ${op.name}?`)) { onRemoveOperator(op.id); setEditId(null); } }}
                     className="w-full px-3 py-2 text-xs font-semibold rounded-md transition-colors mt-2"
                     style={{ color: 'var(--accent-alert)', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>

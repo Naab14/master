@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { signInWithGoogle, signOut } from '../auth';
+import { signInWithGoogle, signOut, googleProviderReady } from '../auth';
+import { useI18n } from '../i18n';
 
 function GoogleLogo() {
   return (
@@ -30,6 +31,8 @@ function Shell({ children }) {
 
 /* Signed out: one button, Sign in with Google. */
 export function SignIn() {
+  const { t, lang, setLang } = useI18n();
+  const notReady = googleProviderReady() === false;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -45,30 +48,35 @@ export function SignIn() {
     <Shell>
       <div>
         <h1 className="text-2xl font-black" style={{ fontFamily: 'var(--font-heading)' }}>Master</h1>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Shift HQ · Vacations · Boards</p>
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('Shift planning for the team')}</p>
       </div>
       <button
         onClick={start}
-        disabled={busy}
+        disabled={busy || notReady}
         className="flex w-full items-center justify-center gap-3 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
         style={{ background: '#fff', color: '#1f1f1f', border: '1px solid #dadce0' }}
       >
         <GoogleLogo />
-        {busy ? 'Opening Google…' : 'Sign in with Google'}
+        {busy ? t('Opening Google…') : t('Sign in with Google')}
       </button>
+      {notReady && <p className="text-xs" style={{ color: 'var(--text-secondary)' }} role="status">{t('Google sign-in is not switched on yet. The site owner needs to finish the setup.')}</p>}
       {error && <p className="text-xs" style={{ color: 'var(--coverage-red)' }} role="alert">{error}</p>}
+      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{t('Only invited people can sign in. Ask your shift manager for access.')}</p>
+      <button type="button" className="text-xs underline" style={{ color: 'var(--text-secondary)' }} onClick={() => setLang(lang === 'sv' ? 'en' : 'sv')}>{lang === 'sv' ? 'English' : 'Svenska'}</button>
     </Shell>
   );
 }
 
 /* Signed in with an account that isn't on the server's ALLOWED_EMAILS list. */
 export function NoAccess({ message }) {
+  const { t } = useI18n();
   return (
     <Shell>
       <div>
-        <h1 className="text-xl font-black" style={{ fontFamily: 'var(--font-heading)' }}>No access</h1>
+        <h1 className="text-xl font-black" style={{ fontFamily: 'var(--font-heading)' }}>{t('No access yet')}</h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {message || "This Google account doesn't have access to this workspace."}
+          {t('This Google account has not been invited. Your request has been sent to the admin; try again once they have approved it.')}
+          {message && <span className="mt-2 block text-xs opacity-70">{message}</span>}
         </p>
       </div>
       <button
@@ -76,8 +84,23 @@ export function NoAccess({ message }) {
         className="w-full rounded-lg px-4 py-2.5 text-sm font-bold text-white"
         style={{ background: 'var(--accent)' }}
       >
-        Use a different account
+        {t('Use a different account')}
       </button>
+    </Shell>
+  );
+}
+
+/* Production with no admin configured: nobody gets in, by design. */
+export function Locked() {
+  const { t } = useI18n();
+  return (
+    <Shell>
+      <div>
+        <h1 className="text-xl font-black" style={{ fontFamily: 'var(--font-heading)' }}>{t('Sign-in is not set up yet')}</h1>
+        <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {t('This site stays closed until the owner has set up Google sign-in and an admin account. Nothing can be opened without signing in.')}
+        </p>
+      </div>
     </Shell>
   );
 }

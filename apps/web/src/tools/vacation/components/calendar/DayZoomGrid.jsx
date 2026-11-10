@@ -177,7 +177,7 @@ export default function DayZoomGrid({
                       onClick={e => handleDayClick(e, op, block, c.dateStr, c.week)}>
                       {block && (
                         <span className="font-medium truncate pointer-events-none select-none"
-                          style={{ color: 'var(--text-primary)', opacity: 0.8 }}>
+                          style={{ color: STATUS_COLORS[dayStatus]?.fg ?? 'var(--text-primary)' }}>
                           {STATUS_LABELS[dayStatus]?.slice(0, 3)}
                         </span>
                       )}

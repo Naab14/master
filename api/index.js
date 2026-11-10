@@ -9,18 +9,24 @@
  *   SUPABASE_URL               https://<ref>.supabase.co
  *   SUPABASE_SERVICE_ROLE_KEY  secret key (or SUPABASE_SECRET_KEY) — server only
  *   SUPABASE_PUBLISHABLE_KEY   public key the web app signs in with
- *   ALLOWED_EMAILS             Google accounts allowed in (comma-separated);
- *                              setting it turns Google login on
+ *   ADMIN_EMAIL                the admin's Google account; turns Google login on
+ *                              (or `owners` in the admin section of the database)
+ * On the production site (VERCEL_ENV=production) the API is locked until an
+ * admin is configured. Preview deployments use the table app_state_preview.
+ *   ALLOWED_EMAILS             older allow list (comma-separated), treated as managers
  *   APP_ACCESS_CODE            optional: code accepted instead of a login
  * See backend/auth.js.
  */
 
 const { route, sectionsFor, normalizeSection } = require('../backend/core');
-const { authorize, publicConfig } = require('../backend/auth');
+const { authSettings, authenticate, accessEnv, publicConfig } = require('../backend/auth');
 
 const SB_URL = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '';
 const MAX_ATTEMPTS = 12;
+const SEED_ON_READ = ['boards', 'manageclip'];
+// Preview deployments never touch production data: they use their own table.
+const TABLE = process.env.APP_STATE_TABLE || (process.env.VERCEL_ENV === 'preview' ? 'app_state_preview' : 'app_state');
 
 function send(res, status, body) {
   const data = JSON.stringify(body);
@@ -51,7 +57,7 @@ async function sbFetch(path, options) {
 }
 
 async function loadRows(keys) {
-  const rows = await sbFetch(`app_state?select=key,data,version&key=in.(${keys.join(',')})`, { headers: sbHeaders() });
+  const rows = await sbFetch(`${TABLE}?select=key,data,version&key=in.(${keys.join(',')})`, { headers: sbHeaders() });
   return Object.fromEntries(rows.map((row) => [row.key, row]));
 }
 
@@ -60,14 +66,14 @@ async function saveRow(key, data, version) {
   const body = JSON.stringify({ data, version: version + 1, updated_at: new Date().toISOString() });
   if (version < 0) {
     // Row missing (never created): insert unless someone beat us to it.
-    const rows = await sbFetch('app_state', {
+    const rows = await sbFetch(TABLE, {
       method: 'POST',
       headers: sbHeaders({ Prefer: 'resolution=ignore-duplicates,return=representation' }),
       body: JSON.stringify({ key, data, version: 1 }),
     });
     return rows.length === 1;
   }
-  const rows = await sbFetch(`app_state?key=eq.${key}&version=eq.${version}`, {
+  const rows = await sbFetch(`${TABLE}?key=eq.${key}&version=eq.${version}`, {
     method: 'PATCH',
     headers: sbHeaders({ Prefer: 'return=representation' }),
     body,
@@ -101,11 +107,15 @@ function apiPath(req) {
 module.exports = async function handler(req, res) {
   try {
     const pathname = apiPath(req);
-    if (pathname === '/api/config') return send(res, 200, publicConfig());
+    const configured = SB_URL && SB_KEY;
+    // Sign-in settings come from the environment and the admin section.
+    const adminRow = configured ? (await loadRows(['admin'])).admin : null;
+    const settings = authSettings(adminRow ? adminRow.data : null);
+    if (pathname === '/api/config') return send(res, 200, await publicConfig(settings));
 
-    const denied = await authorize(req.headers);
+    const { identity, denied } = await authenticate(req.headers, settings);
     if (denied) return send(res, denied.status, denied.body);
-    if (!SB_URL || !SB_KEY) {
+    if (!configured) {
       return send(res, 503, { error: 'Server not configured: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' });
     }
 
@@ -124,10 +134,11 @@ module.exports = async function handler(req, res) {
         versions[key] = row ? Number(row.version) : -1;
         sections[key] = normalizeSection(key, row ? row.data : null);
         // First use: store the seeded boards/shift data so ids stay stable.
-        if ((!row || row.data === null) && sections[key] !== null) toSave.add(key);
+        // (The newer sections are only written when something changes.)
+        if ((!row || row.data === null) && sections[key] !== null && SEED_ON_READ.includes(key)) toSave.add(key);
       }
 
-      const result = route(req.method, pathname, body, sections);
+      const result = route(req.method, pathname, body, sections, { identity, env: accessEnv(settings) });
       for (const key of result.dirty) toSave.add(key);
 
       let saved = true;
@@ -142,6 +153,9 @@ module.exports = async function handler(req, res) {
     return send(res, 409, { error: 'too many concurrent edits — please try again' });
   } catch (err) {
     console.error(err);
+    if (/app_state_key_check|violates check constraint/.test(String(err.message))) {
+      return send(res, 503, { error: 'The database needs an update: run supabase/migrations/002_more_sections.sql.' });
+    }
     const status = err instanceof SyntaxError ? 400 : 500;
     return send(res, status, { error: status === 400 ? 'invalid JSON' : 'server error' });
   }

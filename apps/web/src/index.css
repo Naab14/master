@@ -1,11 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,400;0,500;0,800;0,900;1,800;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:ital,wght@0,400;0,500;0,800;0,900;1,800;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Archivo:wght@400;500;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap');
+@import './theme/tokens.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ── Default Theme — Neo-Kinetic Travelogue (Electric Horizon) ────────────── */
-:root {
+/* Fallback before a theme is set; :where() keeps it below every [data-theme] rule. */
+:where(:root) {
   --bg-primary: #f8fafc;
   --bg-secondary: #f1f5f9;
   --bg-panel: #ffffff;
@@ -40,112 +42,29 @@
   --holiday-pattern: repeating-linear-gradient(45deg, var(--holiday-stripe-color), var(--holiday-stripe-color) 6px, transparent 6px, transparent 12px), var(--holiday-bg);
 }
 
-/* ── MotherDuck Theme ─────────────────────────────────────────────────────── */
-[data-theme='motherduck'] {
-  --bg-primary: #f4efea;
-  --bg-secondary: #ebe5df;
-  --bg-panel: #fff;
-  --text-primary: #383838;
-  --text-secondary: #6b6b6b;
-  --accent: #2ba5ff;
-  --accent-secondary: #53dbc9;
-  --accent-alert: #ff7169;
-  --border: #c8c0b8;
-  --border-radius: 2px;
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.12), 0 8px 10px -6px rgba(0,0,0,0.06);
-  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-heading: 'Space Mono', monospace;
-  --draft-bg: #e0dbd5;
-  --draft-border: #b8b0a8;
-  --pending-bg: #fff3a0;
-  --pending-border: #ffde00;
-  --approved-bg: #a8f0e4;
-  --approved-border: #53dbc9;
-  --requested-bg: #ffeaa0;
-  --requested-border: #eab308;
-  --coverage-green: #53dbc9;
-  --coverage-yellow: #ffde00;
-  --coverage-red: #ff7169;
-  --topbar-bg: #383838;
-  --topbar-text: #f4efea;
-  --holiday-bg: #ffe0de;
-  --holiday-border: #ff7169;
-  --holiday-text: #cc4040;
-  --holiday-stripe-color: rgba(204, 64, 64, 0.22);
-}
-
-/* ── Dark Theme ───────────────────────────────────────────────────────────── */
-[data-theme='dark'] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-panel: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --accent: #818cf8;
-  --accent-secondary: #60a5fa;
-  --accent-alert: #fb7185;
-  --border: #334155;
-  --border-radius: 6px;
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.4);
-  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-heading: 'Epilogue', system-ui, sans-serif;
-  --draft-bg: #475569;
-  --draft-border: #64748b;
-  --pending-bg: #854d0e;
-  --pending-border: #a16207;
-  --approved-bg: #166534;
-  --approved-border: #15803d;
-  --requested-bg: #78350f;
-  --requested-border: #92400e;
-  --coverage-green: #4ade80;
-  --coverage-yellow: #facc15;
-  --coverage-red: #f87171;
-  --topbar-bg: #020617;
-  --topbar-text: #f1f5f9;
-  --holiday-bg: #450a0a;
-  --holiday-border: #991b1b;
-  --holiday-text: #fca5a5;
-  --holiday-stripe-color: rgba(251, 191, 36, 0.28);
-}
-
-/* ── Ocean Theme ──────────────────────────────────────────────────────────── */
-[data-theme='ocean'] {
-  --bg-primary: #f0f9ff;
-  --bg-secondary: #e0f2fe;
-  --bg-panel: #f8fafc;
-  --text-primary: #0c4a6e;
-  --text-secondary: #0369a1;
-  --accent: #0284c7;
-  --accent-secondary: #06b6d4;
-  --accent-alert: #f43f5e;
-  --border: #bae6fd;
-  --border-radius: 8px;
-  --shadow-xl: 0 20px 25px -5px rgba(8,145,178,0.2), 0 8px 10px -6px rgba(8,145,178,0.1);
-  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-heading: 'Epilogue', system-ui, sans-serif;
-  --draft-bg: #cbd5e1;
-  --draft-border: #94a3b8;
-  --pending-bg: #fef9c3;
-  --pending-border: #fde047;
-  --approved-bg: #a7f3d0;
-  --approved-border: #34d399;
-  --requested-bg: #fef3c7;
-  --requested-border: #fbbf24;
-  --coverage-green: #10b981;
-  --coverage-yellow: #f59e0b;
-  --coverage-red: #f43f5e;
-  --topbar-bg: #0c4a6e;
-  --topbar-text: #f0f9ff;
-  --holiday-bg: #fef2f2;
-  --holiday-border: #f87171;
-  --holiday-text: #dc2626;
-  --holiday-stripe-color: rgba(220, 38, 38, 0.2);
-}
-
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); margin: 0; transition: background-color 0.3s ease, color 0.3s ease; }
 h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+
+/* ── Type scale (theme fonts from src/theme/tokens.css) ───────────────────── */
+@layer components {
+  .t-title {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    letter-spacing: var(--display-tracking);
+    font-size: var(--text-title);
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  .t-section { font-family: var(--font-ui); font-size: var(--text-section); font-weight: 600; line-height: 1.3; color: var(--ink); }
+  .t-body { font-family: var(--font-ui); font-size: var(--text-body); line-height: 1.5; color: var(--ink); }
+  .t-label { font-family: var(--font-ui); font-size: var(--text-label); font-weight: 600; line-height: 1.3; color: var(--ink-3); }
+  .t-num { font-variant-numeric: tabular-nums; }
+  @media (max-width: 767px) {
+    .t-title { font-size: 1.75rem; }
+  }
+}
 
 @layer utilities {
   .glass {

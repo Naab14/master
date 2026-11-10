@@ -3,10 +3,10 @@ export const CELL_H = 32;
 export const LABEL_W = 130;
 
 export const STATUS_COLORS = {
-  draft: { bg: 'var(--draft-bg)', border: 'var(--draft-border)' },
-  pending: { bg: 'var(--pending-bg)', border: 'var(--pending-border)' },
-  approved: { bg: 'var(--approved-bg)', border: 'var(--approved-border)' },
-  requested: { bg: 'var(--requested-bg)', border: 'var(--requested-border)' },
+  draft: { bg: 'var(--draft-bg)', border: 'var(--draft-border)', fg: 'var(--draft-fg, inherit)' },
+  pending: { bg: 'var(--pending-bg)', border: 'var(--pending-border)', fg: 'var(--pending-fg, inherit)' },
+  approved: { bg: 'var(--approved-bg)', border: 'var(--approved-border)', fg: 'var(--approved-fg, inherit)' },
+  requested: { bg: 'var(--requested-bg)', border: 'var(--requested-border)', fg: 'var(--requested-fg, inherit)' },
 };
 
 export const STATUS_LABELS = { draft: 'Utkast', pending: 'Väntande', approved: 'Godkänd', requested: 'Begärd' };

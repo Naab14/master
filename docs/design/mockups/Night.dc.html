@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master — Night shift dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&amp;family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#17142B}
+a{color:#EDE9FF;text-decoration:none}a:hover{color:#fff}
+.nt{--rail:#100D20;--chan:#1B1731;--main:#211C3B;--card:#2A2449;--edge:rgba(196,182,255,.16);--ink:#F1EEFB;--mute:#B4ACD2;--lav:#B9A6FF;--peach:#FFB38A;--pink:#FF8FB8;--ok:#6EE0A6;--warn:#FFC266;--bad:#FF8A80;
+ font-family:"Nunito Sans","Segoe UI",system-ui,sans-serif;color:var(--ink);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.nt *{box-sizing:border-box}
+.nt button{font:inherit;color:inherit;cursor:pointer}
+.srv{position:relative;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#2A2449;color:var(--mute);transition:border-radius .2s ease,background .2s,color .2s}
+.srv:hover,.srv.on{border-radius:16px;background:var(--lav);color:#1B1533}
+.srv .pip{position:absolute;left:-14px;width:4px;height:8px;border-radius:0 4px 4px 0;background:#fff;transition:height .2s}
+.srv:hover .pip{height:20px}.srv.on .pip{height:36px}
+.ch{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 10px;border-radius:6px;color:var(--mute);font-weight:600}
+.ch:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.ch.on{background:rgba(185,166,255,.16);color:#fff}
+.grp{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9A92BC;padding:14px 10px 4px}
+.badge{margin-left:auto;min-width:20px;height:18px;padding:0 6px;border-radius:9px;background:var(--pink);color:#2A0E1C;font-size:11px;font-weight:800;display:grid;place-items:center}
+.msg{display:grid;grid-template-columns:40px 1fr;gap:12px;padding:8px 20px;transition:background .12s}
+.msg:hover{background:rgba(255,255,255,.03)}
+.av{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;font-weight:800;font-size:14px}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:10px;font-size:11px;font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 16px;border-radius:999px;border:1px solid var(--edge);background:rgba(255,255,255,.06);font-weight:700;transition:transform .12s,background .15s}
+.btn:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
+.btn-w{background:#fff;color:#1B1533 !important;border-color:#fff}
+.btn-w:hover{background:#F1ECFF}
+.srv:focus-visible,.ch:focus-visible,.btn:focus-visible{outline:2px solid var(--peach);outline-offset:2px}
+.mem{display:flex;align-items:center;gap:10px;min-height:40px;padding:4px 8px;border-radius:6px}
+.mem:hover{background:rgba(255,255,255,.05)}
+.dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--chan)}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.new{animation:slideIn .35s cubic-bezier(.2,.8,.2,1) both}
+</style>
+</helmet>
+<div class="nt" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: var(--main)">
+
+  <!-- module rail -->
+  <nav aria-label="Modules" style="flex: 0 0 72px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 0; background: var(--rail)">
+    <a href="#" class="srv on" aria-label="Today" aria-current="page"><span class="pip"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 4l9 7"></path><path d="M5 10v10h14V10"></path></svg></a>
+    <span aria-hidden="true" style="width: 32px; height: 2px; border-radius: 1px; background: #2A2449; margin: 2px 0"></span>
+    <a href="#" class="srv" aria-label="Shift HQ"><span class="pip"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg></a>
+    <a href="#" class="srv" aria-label="Vacations, 3 requests" style="position: relative"><span class="pip"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg><span aria-hidden="true" style="position: absolute; right: -2px; bottom: -2px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--pink); color: #2A0E1C; font-size: 11px; font-weight: 800; display: grid; place-items: center; border: 3px solid var(--rail)">3</span></a>
+    <a href="#" class="srv" aria-label="Boards"><span class="pip"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="5" height="16" rx="1.5"></rect><rect x="10" y="4" width="5" height="11" rx="1.5"></rect><rect x="17" y="4" width="4" height="7" rx="1.5"></rect></svg></a>
+    <a href="#" class="srv" aria-label="Team"><span class="pip"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.7 2.6 2.4 3 5.2"></path></svg></a>
+    <a href="#" class="srv" aria-label="Sketch"><span class="pip"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16z"></path><path d="M14 6l3 3"></path></svg></a>
+  </nav>
+
+  <!-- channels -->
+  <nav aria-label="Channels" style="flex: 0 0 240px; display: flex; flex-direction: column; background: var(--chan)">
+    <div style="padding: 16px 16px 12px; border-bottom: 1px solid rgba(0,0,0,.25); box-shadow: 0 1px 0 rgba(255,255,255,.03)">
+      <div style="font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 18px">L4 shift team</div>
+      <div style="font-size: 12px; color: var(--mute)">Week 44 · Mon 26 Oct</div>
+    </div>
+    <div style="padding: 4px 8px; display: flex; flex-direction: column">
+      <div class="grp">Shift HQ</div>
+      <a class="ch" href="#"><span aria-hidden="true">#</span>checklist<span class="badge" style="background: var(--bad)">1</span></a>
+      <a class="ch on" href="#" aria-current="page"><span aria-hidden="true">#</span>shift-log</a>
+      <a class="ch" href="#"><span aria-hidden="true">#</span>weekly-review</a>
+      <div class="grp">Vacations</div>
+      <a class="ch" href="#"><span aria-hidden="true">#</span>requests<span class="badge">3</span></a>
+      <a class="ch" href="#"><span aria-hidden="true">#</span>coverage</a>
+      <div class="grp">Boards</div>
+      <a class="ch" href="#"><span aria-hidden="true">#</span>l4-improvements</a>
+      <a class="ch" href="#"><span aria-hidden="true">#</span>getting-started</a>
+    </div>
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #15122A">
+      <span class="av" style="width: 34px; height: 34px; background: var(--peach); color: #3A1A08; font-size: 12px">AB</span>
+      <span style="display: flex; flex-direction: column; line-height: 1.2"><b style="font-size: 14px">Abbe</b><span style="font-size: 12px; color: var(--mute)">Shift manager</span></span>
+      <button aria-label="Theme" style="margin-left: auto; width: 32px; height: 32px; border: 0; border-radius: 6px; background: transparent; color: var(--mute)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg></button>
+    </div>
+  </nav>
+
+  <!-- feed -->
+  <main style="flex: 999 1 480px; min-width: 0; display: flex; flex-direction: column; background: radial-gradient(90% 60% at 50% 0%, #2C2252 0%, #211C3B 60%)">
+    <header style="display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid rgba(0,0,0,.25)">
+      <span aria-hidden="true" style="color: var(--mute); font-size: 22px">#</span>
+      <h1 style="margin: 0; font-family: Fraunces, Georgia, serif; font-weight: 600; font-size: 22px">shift-log</h1>
+      <span style="color: var(--mute); font-size: 13px; border-left: 1px solid var(--edge); padding-left: 10px">Everything that happened on the line</span>
+      <div style="margin-left: auto; display: flex; gap: 8px">
+        <button class="btn">Weekly review</button>
+        <button class="btn btn-w">New task</button>
+      </div>
+    </header>
+
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 12px 0">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 8px 20px; color: var(--mute); font-size: 12px; font-weight: 700"><span style="flex: 1; height: 1px; background: var(--edge)"></span>Today — Monday 26 October<span style="flex: 1; height: 1px; background: var(--edge)"></span></div>
+
+      <div class="msg">
+        <span class="av" style="background: var(--lav); color: #1B1533" aria-hidden="true">M</span>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div><b>Master</b> <span class="tag" style="background: rgba(185,166,255,.2); color: var(--lav)">AUTO</span> <span style="color: var(--mute); font-size: 12px">06:00</span></div>
+          <div style="max-width: 560px; padding: 14px 16px; border-radius: 12px; background: var(--card); border: 1px solid var(--edge); display: flex; flex-direction: column; gap: 10px">
+            <div style="font-family: Fraunces, Georgia, serif; font-size: 18px; font-weight: 600">Sara Björk asked for weeks 51–52</div>
+            <div style="font-size: 14px; color: var(--mute)">If approved: Kapselresaren S1 v.51 <b style="color: var(--ink)">2/2 → <span style="color: var(--warn)">1/2</span></b> · Avsyning S1 v.52 <b style="color: var(--ink)">2/2 → <span style="color: var(--warn)">1/2</span></b></div>
+            <div style="display: flex; gap: 8px">
+              <sc-if value="{{pending}}" hint-placeholder-val="{{true}}">
+                <button class="btn btn-w" onClick="{{approve}}">Approve</button>
+                <button class="btn">Decline</button>
+                <button class="btn">Open planner</button>
+              </sc-if>
+              <sc-if value="{{approved}}" hint-placeholder-val="{{false}}">
+                <span class="tag new" style="height: 32px; padding: 0 14px; font-size: 13px; background: rgba(110,224,166,.18); color: var(--ok)">Approved by you just now</span>
+                <button class="btn" onClick="{{undo}}">Undo</button>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="msg">
+        <span class="av" style="background: var(--peach); color: #3A1A08" aria-hidden="true">AB</span>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <div><b>Abbe</b> <span style="color: var(--mute); font-size: 12px">07:15</span></div>
+          <div><span class="tag" style="background: rgba(255,138,128,.18); color: var(--bad)">SAFETY</span> Near-miss reported at packing station; area taped off and ticket raised.</div>
+        </div>
+      </div>
+      <div class="msg">
+        <span class="av" style="background: var(--peach); color: #3A1A08" aria-hidden="true">AB</span>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <div><b>Abbe</b> <span style="color: var(--mute); font-size: 12px">09:40</span></div>
+          <div><span class="tag" style="background: rgba(110,224,166,.16); color: var(--ok)">DELIVERY</span> Line 2 output back on plan after morning changeover delay.</div>
+        </div>
+      </div>
+      <div class="msg">
+        <span class="av" style="background: var(--lav); color: #1B1533" aria-hidden="true">M</span>
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <div><b>Master</b> <span class="tag" style="background: rgba(185,166,255,.2); color: var(--lav)">AUTO</span> <span style="color: var(--mute); font-size: 12px">10:00</span></div>
+          <div><span class="tag" style="background: rgba(255,194,102,.18); color: var(--warn)">COVERAGE</span> Granskning/uttag av dok S1 drops to <b style="color: var(--bad)">0/2</b> in week 51 (Johan Nyman on leave).</div>
+        </div>
+      </div>
+      <sc-for list="{{logs}}" as="l" hint-placeholder-count="0">
+        <div class="msg new">
+          <span class="av" style="background: var(--peach); color: #3A1A08" aria-hidden="true">AB</span>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <div><b>Abbe</b> <span style="color: var(--mute); font-size: 12px">now</span></div>
+            <div><span class="tag" style="background: rgba(185,166,255,.2); color: var(--lav)">{{l.cat}}</span> {{l.text}}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- composer -->
+    <div style="padding: 0 20px 20px">
+      <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px 12px; border-radius: 14px; background: #2E2850; border: 1px solid var(--edge)">
+        <label for="cmp" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Log to shift-log</label>
+        <div style="display: flex; gap: 8px; align-items: center">
+          <input id="cmp" value="{{draft}}" onChange="{{onDraft}}" placeholder="Log to #shift-log…" style="flex: 1; min-width: 0; height: 40px; border: 0; background: transparent; color: var(--ink); font: inherit; outline: none">
+          <button onClick="{{send}}" aria-label="Send" style="display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; border: 0; background: #fff; color: #1B1533"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"></path></svg></button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{cats}}" as="c" hint-placeholder-count="5">
+            <button onClick="{{c.pick}}" aria-pressed="{{c.on}}" style="height: 28px; padding: 0 12px; border-radius: 14px; border: 1px solid {{c.border}}; background: {{c.bg}}; font-size: 12px; font-weight: 700; color: {{c.fg}}; transition: all .15s">{{c.name}}</button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- on shift -->
+  <aside aria-label="On shift" style="flex: 1 1 240px; max-width: 280px; padding: 16px 10px; background: var(--chan); display: flex; flex-direction: column; gap: 4px">
+    <div class="grp" style="padding-top: 4px">On shift S1 — 7</div>
+    <sc-for list="{{inOps}}" as="o" hint-placeholder-count="7">
+      <div class="mem">
+        <span style="position: relative"><span class="av" style="width: 32px; height: 32px; font-size: 12px; background: {{o.bg}}; color: #1B1533">{{o.ini}}</span><span class="dot" style="position: absolute; right: -2px; bottom: -2px; background: var(--ok)"></span></span>
+        <span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 700; font-size: 14px">{{o.name}}</span><span style="font-size: 11px; color: var(--mute)">{{o.certs}}</span></span>
+      </div>
+    </sc-for>
+    <div class="grp">Out — 1</div>
+    <div class="mem" style="opacity: .7">
+      <span style="position: relative"><span class="av" style="width: 32px; height: 32px; font-size: 12px; background: #4A4370; color: var(--ink)">KD</span><span class="dot" style="position: absolute; right: -2px; bottom: -2px; background: var(--warn)"></span></span>
+      <span style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 700; font-size: 14px">Klara Dahl</span><span style="font-size: 11px; color: var(--mute)">Leave · v.44</span></span>
+    </div>
+    <div class="grp">S2 — 7 in · 1 out</div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { st: 'pending', draft: '', cat: 'Quality', logs: [] }; }
+  renderVals() {
+    const S = this.state;
+    const pal = ['#B9A6FF', '#FFB38A', '#6EE0A6', '#FF8FB8', '#8FD3FF', '#FFE08A', '#C9F07A'];
+    const ops = [['Anna Lindgren', 'AVS · SER · DOK'], ['Erik Holm', 'KAP · ETI'], ['Sara Björk', 'AVS · KAP · SER'], ['Johan Nyman', 'SER · DOK'], ['Oscar Lund', 'KAP · SER'], ['Maja Ek', 'AVS · ETI · KAP'], ['Lars Berg', 'SER · ETI']];
+    const cats = ['Safety', 'Quality', 'Delivery', 'Cost', 'People'].map(name => {
+      const on = S.cat === name;
+      return { name, on, bg: on ? '#fff' : 'transparent', fg: on ? '#1B1533' : '#B4ACD2', border: on ? '#fff' : 'rgba(196,182,255,.25)', pick: () => this.setState({ cat: name }) };
+    });
+    return {
+      pending: S.st === 'pending', approved: S.st === 'approved',
+      approve: () => this.setState({ st: 'approved' }), undo: () => this.setState({ st: 'pending' }),
+      draft: S.draft, onDraft: e => this.setState({ draft: e.target.value }), cats,
+      send: () => { if (!S.draft.trim()) return; this.setState({ draft: '', logs: [...S.logs, { cat: S.cat.toUpperCase(), text: S.draft.trim() }] }); },
+      logs: S.logs,
+      inOps: ops.map(([name, certs], i) => ({ name, certs, ini: name.split(' ').map(w => w[0]).join(''), bg: pal[i % pal.length] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

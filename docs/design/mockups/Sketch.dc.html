@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Master — Sketch tab</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:opsz,wght@6..72,500&amp;family=Caveat:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBFBFA}
+a{color:#2C2B28;text-decoration:none}a:hover{color:#1F55A8}
+.sk{--side:#F6F5F3;--ink:#2C2B28;--ink2:#55544F;--ink3:#6B6A64;--line:#E8E7E4;--hover:#EEEDEA;--accent:#2563C9;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.sk *{box-sizing:border-box}
+.sk button{font:inherit;color:inherit;cursor:pointer}
+.nav-item{display:flex;align-items:center;gap:10px;min-height:32px;padding:4px 10px;border-radius:6px;color:var(--ink2);font-weight:500}
+.nav-item:hover{background:var(--hover);color:var(--ink)}
+.nav-item.on{background:#EBEAE6;color:var(--ink);font-weight:600}
+.file{display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:8px;border:1px solid transparent;text-align:left;background:none;width:100%}
+.file:hover{background:var(--hover)}
+.file.on{background:#fff;border-color:var(--line);box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px;border-radius:8px;border:1px solid var(--line);background:#fff;font-weight:500}
+.btn:hover{background:var(--hover)}
+.tool{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;border:0;background:transparent;color:var(--ink2)}
+.tool:hover{background:var(--hover)}
+.tool[aria-pressed="true"]{background:#E3EAF8;color:#1F55A8}
+.btn:focus-visible,.tool:focus-visible,.file:focus-visible,.nav-item:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hand{font-family:Caveat,"Comic Sans MS",cursive}
+</style>
+</helmet>
+<div class="sk" style="display: flex; flex-wrap: wrap; min-height: 100vh; background: #FBFBFA">
+
+  <nav aria-label="Main" style="flex: 1 1 232px; max-width: 100%; display: flex; flex-direction: column; gap: 18px; padding: 14px 10px; background: var(--side); border-right: 1px solid var(--line)">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 10px">
+      <span aria-hidden="true" style="display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; background: #2C2B28; color: #fff; font-weight: 700; font-size: 13px">M</span>
+      <div style="display: flex; flex-direction: column; line-height: 1.2"><span style="font-weight: 600">Master</span><span style="font-size: 12px; color: var(--ink3)">L4 packaging</span></div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav-item" href="Main.dc.html">Today</a>
+      <a class="nav-item" href="#">Shift HQ</a>
+      <a class="nav-item" href="Vacations.dc.html">Vacations</a>
+      <a class="nav-item" href="#">Boards</a>
+      <a class="nav-item" href="Team.dc.html">Team</a>
+      <a class="nav-item on" href="Sketch.dc.html" aria-current="page">Sketch</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 10px"><span style="font-size: 12px; font-weight: 600; color: var(--ink3)">Sketches</span><button aria-label="New sketch" style="border: 0; background: none; font-size: 18px; color: var(--ink2); width: 28px; height: 28px; border-radius: 6px">+</button></div>
+      <sc-for list="{{files}}" as="f" hint-placeholder-count="3">
+        <button class="file {{f.cls}}" onClick="{{f.pick}}">
+          <span style="font-weight: 600">{{f.name}}</span>
+          <span style="font-size: 12px; color: var(--ink3)">{{f.meta}}</span>
+        </button>
+      </sc-for>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--line); background: #fff">
+      <div style="display: flex; flex-direction: column">
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink3)">Sketch</span>
+        <h1 style="margin: 0; font-family: Newsreader, Georgia, serif; font-weight: 500; font-size: 26px; line-height: 1.15">{{title}}</h1>
+      </div>
+      <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink3)"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 50%; background: #2F8A55"></span>Saved to Master</span>
+      <div style="margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px">
+        <button class="btn">Link to board item</button>
+        <button class="btn">Attach to shift log</button>
+        <button class="btn" style="background: #2C2B28; border-color: #2C2B28; color: #fff">Export PNG</button>
+      </div>
+    </header>
+
+    <div style="position: relative; flex: 1; min-height: 640px; overflow: hidden; background-color: #FFFFFF; background-image: radial-gradient(#DCDBD6 1px, transparent 1px); background-size: 22px 22px">
+
+      <!-- Embedded editor toolbar (Excalidraw's own UI renders here) -->
+      <div style="position: absolute; top: 16px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 2">
+        <div role="toolbar" aria-label="Drawing tools" style="display: flex; gap: 2px; padding: 4px; border-radius: 10px; background: #fff; border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(44,43,40,.08)">
+          <sc-for list="{{tools}}" as="t" hint-placeholder-count="8">
+            <button class="tool" aria-label="{{t.name}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{t.d}}"></path></svg>
+            </button>
+          </sc-for>
+        </div>
+        <span style="font-size: 11px; color: var(--ink3); background: rgba(255,255,255,.9); padding: 1px 8px; border-radius: 4px">Placeholder · the embedded Excalidraw editor supplies its own toolbar</span>
+      </div>
+
+      <!-- Hand-drawn sample scene -->
+      <svg role="img" aria-label="Hand-drawn sketch of the L4 line: Kapsel, Etikett, Serialisering, Avsyning, Pack, with a note about the SMED changeover cart" viewBox="0 0 1100 600" style="position: absolute; left: 50%; top: 110px; transform: translateX(-50%); width: min(1100px, 96%); height: auto; overflow: visible">
+        <g fill="none" stroke="#2C2B28" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M42 120 C40 90 44 82 60 81 L178 79 C192 80 196 86 196 100 L197 160 C196 176 190 180 176 181 L60 182 C46 181 41 175 42 160 Z" fill="#E8F0FC"></path>
+          <path d="M262 118 C261 92 266 82 282 82 L398 80 C412 81 417 88 416 102 L417 160 C416 175 410 181 396 181 L282 183 C268 182 262 176 262 162 Z" fill="#FFF4D6"></path>
+          <path d="M482 117 C482 92 487 83 503 82 L638 80 C652 81 656 88 656 101 L658 160 C657 176 651 182 637 182 L503 183 C489 182 483 175 483 161 Z" fill="#E4F4EA"></path>
+          <path d="M722 118 C721 93 727 83 742 82 L858 81 C872 82 877 88 876 102 L877 161 C876 175 870 181 856 181 L742 183 C728 182 722 176 722 162 Z" fill="#FBE5EC"></path>
+          <path d="M932 118 C931 94 936 84 950 83 L1040 82 C1054 83 1058 90 1058 103 L1059 161 C1058 175 1052 181 1038 181 L950 182 C937 181 932 175 932 161 Z" fill="#F1EFEA"></path>
+          <path d="M200 131 C222 129 238 132 256 130"></path><path d="M244 121 L257 130 L245 140"></path>
+          <path d="M420 131 C442 133 460 129 478 131"></path><path d="M466 122 L479 131 L467 141"></path>
+          <path d="M660 131 C682 129 700 133 718 131"></path><path d="M706 122 L719 131 L707 141"></path>
+          <path d="M880 131 C898 133 912 129 928 131"></path><path d="M916 122 L929 131 L917 141"></path>
+          <path d="M330 300 C328 268 336 260 360 260 L560 258 C584 259 590 268 590 290 L591 380 C590 402 582 408 560 409 L360 410 C338 409 330 402 330 380 Z" fill="#FFF9C9" stroke="#B8A23A"></path>
+          <path d="M440 186 C452 214 448 236 452 256" stroke-dasharray="6 8"></path><path d="M442 246 L452 258 L460 245"></path>
+          <ellipse cx="840" cy="350" rx="118" ry="58" fill="#FBEACB" stroke="#B9822B"></ellipse>
+          <path d="M800 187 C810 230 820 262 826 292" stroke="#B9822B"></path><path d="M816 282 L827 294 L834 280" stroke="#B9822B"></path>
+        </g>
+        <g class="hand" fill="#2C2B28" font-size="26" text-anchor="middle">
+          <text x="119" y="140">Kapsel</text>
+          <text x="339" y="140">Etikett</text>
+          <text x="570" y="140">Serialisering</text>
+          <text x="799" y="140">Avsyning</text>
+          <text x="995" y="140">Pack</text>
+          <text x="460" y="300" font-size="28" font-weight="700">SMED cart</text>
+          <text x="460" y="336" font-size="23">pre-stage labels + tools</text>
+          <text x="460" y="366" font-size="23">during last 20 min of batch</text>
+          <text x="840" y="345" font-size="24">Near-miss here</text>
+          <text x="840" y="373" font-size="20">(26 Oct log)</text>
+          <text x="560" y="50" font-size="34" font-weight="700">L4 — changeover idea</text>
+        </g>
+      </svg>
+
+      <!-- Master link chips -->
+      <div style="position: absolute; right: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 8px; width: min(300px, calc(100% - 40px)); padding: 14px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(44,43,40,.08)">
+        <span style="font-size: 12px; font-weight: 600; color: var(--ink3)">Linked in Master</span>
+        <a href="#" style="display: flex; justify-content: space-between; gap: 8px; align-items: center"><span style="font-weight: 500">SMED changeover kit</span><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 5px; background: #FBEACB; color: #8A4B00">Working on it</span></a>
+        <a href="#" style="display: flex; justify-content: space-between; gap: 8px; align-items: center"><span style="font-weight: 500">Shift log · 07:15 near-miss</span><span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 5px; background: #F9DAD6; color: #A3271C">Safety</span></a>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = { file: 0, tool: 'Select' }; }
+  renderVals() {
+    const S = this.state;
+    const F = [['L4 — changeover idea', 'Edited 10 min ago · 2 links'], ['5S zones, packing area', 'Edited Fri 23 Oct'], ['Tier board layout', 'Edited 14 Oct']];
+    const tools = [
+      ['Select', 'M5 3l13 7-6 2-2 6z'], ['Rectangle', 'M4 5h16v14H4z'], ['Ellipse', 'M12 5c5 0 8 3 8 7s-3 7-8 7-8-3-8-7 3-7 8-7z'],
+      ['Arrow', 'M5 19L19 5M10 5h9v9'], ['Line', 'M5 19L19 5'], ['Draw', 'M4 20l4-1 11-11-3-3L5 16z'], ['Text', 'M5 6h14M12 6v13'], ['Eraser', 'M16 4l4 4-10 10H6l-2-2z']
+    ];
+    return {
+      title: F[S.file][0],
+      files: F.map(([name, meta], i) => ({ name, meta, cls: S.file === i ? 'on' : '', pick: () => this.setState({ file: i }) })),
+      tools: tools.map(([name, d]) => ({ name, d, on: S.tool === name, pick: () => this.setState({ tool: name }) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

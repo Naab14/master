@@ -5,8 +5,6 @@ import TopBar from '../components/TopBar';
 const defaultProps = () => ({
   shiftMode: 'separate',
   onShiftModeChange: vi.fn(),
-  theme: 'default',
-  onThemeChange: vi.fn(),
   onImportCSV: vi.fn(),
   onSave: vi.fn(),
   onExportJSON: vi.fn(),
@@ -44,20 +42,6 @@ describe('TopBar', () => {
     render(<TopBar {...props} />);
     fireEvent.click(screen.getByText('Summer'));
     expect(props.onShiftModeChange).toHaveBeenCalledWith('summer');
-  });
-
-  it('renders the theme select with correct value', () => {
-    render(<TopBar {...defaultProps()} />);
-    const select = screen.getByDisplayValue('Default');
-    expect(select).toBeInTheDocument();
-  });
-
-  it('calls onThemeChange when changing theme', () => {
-    const props = defaultProps();
-    render(<TopBar {...props} />);
-    const select = screen.getByDisplayValue('Default');
-    fireEvent.change(select, { target: { value: 'dark' } });
-    expect(props.onThemeChange).toHaveBeenCalledWith('dark');
   });
 
   it('renders the Share button', () => {

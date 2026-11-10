@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { saveState, loadState, clearState, saveTheme, loadTheme, saveUI, loadUI, buildShareLink, copyToClipboard } from '../storage';
+import { saveState, loadState, clearState, saveUI, loadUI, buildShareLink, copyToClipboard } from '../storage';
 
 const mockStorage = (() => {
   let store = {};
@@ -39,16 +39,6 @@ describe('state persistence', () => {
   });
 });
 
-describe('theme persistence', () => {
-  it('saveTheme + loadTheme roundtrip', () => {
-    saveTheme('dark');
-    expect(loadTheme()).toBe('dark');
-  });
-
-  it('loadTheme returns default when nothing saved', () => {
-    expect(loadTheme()).toBe('default');
-  });
-});
 
 describe('UI persistence', () => {
   it('saveUI + loadUI roundtrip', () => {

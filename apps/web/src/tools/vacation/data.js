@@ -58,10 +58,3 @@ export const defaultSettings = {
   startWeek: 15,
 };
 
-// ── Themes ───────────────────────────────────────────────────────────────────
-export const themes = [
-  { id: 'default', label: 'Default' },
-  { id: 'motherduck', label: 'MotherDuck' },
-  { id: 'dark', label: 'Dark' },
-  { id: 'ocean', label: 'Ocean' },
-];

@@ -9,6 +9,12 @@ export function historyReducer(state, action) {
     case 'REPLACE': {
       return { ...state, present: action.state };
     }
+    // Housekeeping that is not the user's own edit (keeping operators in step
+    // with the shared profiles): applied without an undo step.
+    case 'SYNC': {
+      const next = action.updater(state.present);
+      return next === state.present ? state : { ...state, present: next };
+    }
     case 'SET': {
       const next = action.updater(state.present);
       if (next === state.present) return state;

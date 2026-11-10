@@ -1,7 +1,16 @@
 # Master — project guide for Claude
 
-Read this first in every session. Then read [`docs/ROADMAP.md`](docs/ROADMAP.md)
-for current status, who is working on what, and past decisions.
+Read this first in every session. Then, in this order:
+
+1. [`docs/HANDOFF.md`](docs/HANDOFF.md): the exact checkpoint. Read it and
+   run `git status` before doing anything; don't redo finished work.
+2. [`docs/REQUIREMENTS.md`](docs/REQUIREMENTS.md): what the product must do
+   (the owner's brief of 2026-11-09). It wins over older documents.
+3. [`docs/ROADMAP.md`](docs/ROADMAP.md): status per requirement, what's
+   next, and the decisions log.
+
+[`docs/STRATEGY.md`](docs/STRATEGY.md) is the earlier direction (2026-10-27);
+still useful background, but superseded where it conflicts with the brief.
 
 ## What this is
 
@@ -13,8 +22,13 @@ One tool for running a shift team, merged from three earlier apps:
 | **Vacations** | `naab14/vacation-planner` | Operator vacation planning and week-by-week coverage vs demand |
 | **Boards** | `naab14/frieday` | monday.com-style boards: groups, columns, table + kanban |
 
-A **Dashboard** joins them: today's tasks and overdue count, this week's
-coverage and who's out, and work items by status.
+On top of those sits **workforce planning** for about 40 operators, 3 shifts
+and 4 processes: Schedule, People (profiles and competency matrix),
+Attendance (register and monthly review with OB), Training, Sketches
+(Excalidraw), Setup and Access.
+
+A **Dashboard** joins them: today's possible coverage and who's away,
+upcoming activities, what needs attention, tasks, and work items by status.
 
 **Owner:** a shift manager. This is a hobby project, not company software.
 The owner isn't a developer: explain things in plain language, do setup work
@@ -27,7 +41,8 @@ The project is worked on in separate threads, all reading this file:
 - **Design:** look and feel, layout, mobile, theming, UX copy
 - **Features:** new capabilities and fixes, end to end (web, API, data, iOS)
 - **Strategy:** direction, priorities, users, privacy, costs; produces
-  decisions and roadmap changes, not code
+  decisions and roadmap changes, not code. Also the owner's brainstorm:
+  ideas land in `docs/IDEAS.md` and only reach the roadmap once triaged
 
 Rules so threads don't collide:
 
@@ -35,9 +50,12 @@ Rules so threads don't collide:
   progress** (with the thread name) before starting, and record decisions in
   its **Decisions** log with a date. Don't keep important context only in a
   chat.
-- One branch and one PR per piece of work, branched from the latest `main`.
-  Before starting, check open PRs so you don't edit the same files as another
-  thread.
+- **The workforce build uses one branch and one draft PR**
+  (`claude/naab14-shift-management-qmu4s9`, PR #6) until the owner says
+  otherwise. Don't open extra or stacked PRs for it, don't merge or push to
+  `main` without the owner's instruction, and don't force-push.
+- For unrelated work: one branch and one PR per piece, from the latest
+  `main`. Check open PRs first so you don't edit the same files.
 - When a thread changes something every thread should know (architecture,
   conventions, deploy setup), update this file in the same PR.
 
@@ -46,30 +64,56 @@ Rules so threads don't collide:
 ```
 api/index.js        Vercel serverless function: every /api route, data in Supabase
 backend/core.js     the API routes, independent of storage (shared)
-backend/auth.js     who may call the API: Google login allowlist / access code (shared)
+backend/auth.js     who is calling: Google login / access code (shared)
+backend/access.js   what they may do: roles and the permission table (shared)
 backend/server.js   self-hosted server: same routes, data in backend/data/db.json
 apps/web/           React 19 + Vite + Tailwind 3 (plain JS, no TypeScript)
   src/App.jsx         shell: sign-in phases, nav rail, hash routing (#/dashboard …)
   src/dashboard/      cross-tool dashboard
   src/tools/manageclip|vacation|boards/
+  src/workforce/      planning screens; logic/ holds the pure, tested rules
+  src/i18n/           English and Swedish (sv.js); t('English text')
+  src/ui/, src/theme/ shared controls and the three themes
   src/api.js, access.js, auth.js   API client, credentials, Supabase login
+  public/             icon and service worker (keeps the app shell loadable offline; not installable)
 apps/ios/           SwiftUI app with haptics (Xcode 16+, can't be built on Linux)
 supabase/migrations/  database schema
 docs/AUDIT.md       how the three source apps mapped in
+docs/design/        redesign handover: HANDOVER.md, mockups (.dc.html), old screenshots
 ```
 
 **Data:** one Supabase table, `app_state`, with one row per section:
 `boards` (`{members, boards}`), `manageclip` (`{tasks, logs, links, settings}`)
 and `vacation` (`{operators, vacationBlocks, demand, settings}`, or null until
-first use). Every write bumps `version`, and `api/index.js` retries on version
-conflicts, so concurrent saves aren't lost. RLS is on with no policies: only
-the server's secret key reaches the table.
+first use), plus `workforce` (people, teams, patterns, competencies,
+requirements, training, activities, settings), `attendance` (entries and a
+change log), `admin` (invited users, permissions) and `sketches`
+(Excalidraw boards). Every write bumps `version`, and `api/index.js` retries
+on version conflicts, so concurrent saves aren't lost. RLS is on with no
+policies: only the server's secret key reaches the table.
+
+**Planning data** is saved per entity: the web app sends operations to
+`/api/workforce/ops` or `/api/attendance/ops`, each with the entity version
+it last saw. The server refuses a stale one (409), so an edit or an Undo
+never overwrites a colleague's change. Planning rules (who is scheduled,
+coverage, OB) run in the browser from `src/workforce/logic`; the server
+stores, checks permissions and logs.
+
+**Permissions** are checked on the server for every route
+(`backend/access.js`). Hiding a button in the web app is only a courtesy.
 
 **Web data flow:** the tools keep a localStorage cache for offline use and
 sync to the API (Vacations and Shift HQ PUT the whole section after a 500 ms
 debounce and only after loading the server copy; Boards use granular REST
-calls). Theme colors are CSS variables in `apps/web/src/index.css`; use them
-rather than hard-coded colors.
+calls).
+
+**Theming:** three app-wide themes (Calm, the default; Arcade; Night shift),
+set as `<html data-theme>` and saved per browser (`src/theme/theme.js`).
+Every color, font, radius and status shade is a token in
+`apps/web/src/theme/tokens.css`; use tokens (or their Tailwind names like
+`bg-panel`, `text-ink-3`) rather than hard-coded colors. Old variable names
+(`--bg-primary`, `--accent` …) still work and point at the tokens. Base
+controls live in `src/ui/` (review page: `#/ui`).
 
 ## Deployment
 
@@ -80,15 +124,31 @@ rather than hard-coded colors.
   (region `arn1`, Stockholm).
 - **Supabase** project `master`, ref `wsqpjlhhfonkqhrxqgre`, region eu-north-1.
 - **Vercel environment variables** (names only; never commit values):
-  `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (secret), `SUPABASE_PUBLISHABLE_KEY`,
-  `ALLOWED_EMAILS` (turns Google login on), `APP_ACCESS_CODE` (optional).
+  `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (secret), and optionally
+  `SUPABASE_PUBLISHABLE_KEY`, `ADMIN_EMAIL`, `ALLOWED_EMAILS` (older allow
+  list, treated as managers), `APP_ACCESS_CODE`. The Vercel connector can't
+  read or change these; the owner edits them in the Vercel dashboard.
+- **Sign-in settings can also live in the database**: the `admin` row's
+  `owners` (admin Google addresses) and `authConfig.publishableKey`. Only a
+  hand-run SQL statement changes them; the API never does.
+- **Production is locked without an admin.** With `VERCEL_ENV=production`
+  and no admin configured, every API route answers 503 "locked" and the web
+  app shows a closed page. Open, no-sign-in access exists only for
+  `node backend/server.js` and for preview deployments.
+- **Preview deployments** (`VERCEL_ENV=preview`) use the table
+  `app_state_preview`, never `app_state`. They sit behind Vercel login.
+- **Database migrations** in `supabase/migrations` are run by hand, with the
+  owner's go-ahead. 001–003 are applied. Take a backup copy first and
+  compare checksums after, as done for 002 (`app_state_backup_20261110`).
+- The free Supabase project **pauses after about a week without use**;
+  restoring it is free and keeps the data.
 - **Sign-in:** see `backend/auth.js`. Current state is in the roadmap.
 
 ## Commands
 
 ```sh
 npm --prefix apps/web install
-npm --prefix apps/web run test:ci   # vitest (168 tests)
+npm --prefix apps/web run test:ci   # vitest (231 tests)
 npm --prefix apps/web run lint
 npm --prefix apps/web run build
 node backend/server.js              # self-hosted API + built web app on :3000
@@ -105,5 +165,21 @@ npm --prefix apps/web run dev       # Vite dev server, proxies /api to :3000
 - Never commit secrets or keys. Test against real data carefully: don't leave
   test data in production Supabase.
 - The backend stays dependency-free Node (CommonJS). The web app is plain JS.
+- Every user-facing text in `src/workforce` goes through `t('English text')`
+  and needs a Swedish entry in `src/i18n/sv.js`; a test fails otherwise.
+- Use the theme tokens (`src/theme/tokens.css`) and the shared controls in
+  `src/ui` and `src/workforce/ui.jsx`. Lint is strict about React rules: no
+  refs or `Date.now()` during render, components in their own files.
+- Coverage wording is always "possible", never "assigned": positions are
+  decided at the whiteboard. No OB rates or rules are built in; without
+  rules the app says "OB rules not configured", never zero.
+- No printing and no install prompt: both were removed on the owner's
+  request. Receipts are an on-screen format.
+- Motion is part of the product: use the helpers in
+  `src/workforce/motion.js` and the motion block in `workforce.css`, keep
+  it quick, and make sure it is instant under `prefers-reduced-motion`.
+- Nothing matches people by name. Vacations operators carry the profile's
+  id (`personId`).
+- Demo and test data use made-up names.
 - Swift can't be compiled in the Linux container: keep iOS changes small,
   mirror the API contract exactly, and say they're unverified.
