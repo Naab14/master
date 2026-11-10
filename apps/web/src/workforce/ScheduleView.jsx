@@ -19,6 +19,7 @@ import CellSheet from './CellSheet';
 import DaySheet from './DaySheet';
 import LeaveSheet from './LeaveSheet';
 import { flyTo, pulse } from './motion';
+import { reqLabel } from './labels';
 
 const MIN_CELL = 14;
 const MAX_CELL = 130;
@@ -426,25 +427,38 @@ function CoverageRow({ st, days, data, bottom, cell, label, onPick, t }) {
 function MonthCalendar({ days, month, today, shiftTypes, coverage, wf, onPick }) {
   const { t, fmt } = useI18n();
   return (
-    <div className="cal" role="grid" aria-label={fmt.date(`${month}-01`, 'month')}>
-      {days.slice(0, 7).map(d => <div key={d} className="cal__dow">{fmt.date(d, 'weekday')}</div>)}
-      {days.map((d, i) => (
-        <button type="button" key={d} className="cal__day" data-out={d.slice(0, 7) !== month} data-today={d === today} onClick={() => onPick(d)} aria-label={fmt.date(d, 'long')}>
-          <span className="cal__num">{fmt.date(d, 'day')}</span>
-          {eventsOn(wf, d).slice(0, 2).map(ev => <span key={ev.id} className="cal__line" title={ev.title}>◆ <span className="txt">{ev.time} {ev.title}</span></span>)}
-          {shiftTypes.map(st => {
-            const c = coverage[st.id][i];
-            if (c.level === 'none' && !c.scheduled.length) return null;
-            return (
-              <span key={st.id} className="cal__line" title={`${st.name}: ${t('{n} scheduled', { n: c.scheduled.length })}`}>
-                <span className="cal__dot" data-level={c.level} />
-                <b>{st.code}</b> <span className="txt">{c.available.length}{c.absent.length ? ` (−${c.absent.length})` : ''}</span>
-              </span>
-            );
-          })}
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="cal" role="grid" aria-label={fmt.date(`${month}-01`, 'month')}>
+        {days.slice(0, 7).map(d => <div key={d} className="cal__dow">{fmt.date(d, 'weekdayLong')}</div>)}
+        {days.map((d, i) => (
+          <button type="button" key={d} className="cal__day" data-out={d.slice(0, 7) !== month} data-today={d === today} onClick={() => onPick(d)} aria-label={fmt.date(d, 'long')}>
+            <span className="cal__num">{fmt.date(d, 'day')}</span>
+            {eventsOn(wf, d).slice(0, 2).map(ev => <span key={ev.id} className="cal__line cal__line--event" title={ev.title}>◆ <span className="txt">{ev.time} {ev.title}</span></span>)}
+            {shiftTypes.map(st => {
+              const c = coverage[st.id][i];
+              if (c.level === 'none' && !c.scheduled.length) return null;
+              const short = c.results.filter(r => r.status === 'short');
+              return (
+                <span key={st.id} className="cal__line" data-level={c.level}
+                  title={`${st.name}: ${t('{a} of {s} scheduled people available', { a: c.available.length, s: c.scheduled.length })}`}>
+                  <span className="cal__dot" data-level={c.level} />
+                  <b>{st.name}</b>
+                  <span className="txt">{c.available.length}/{c.scheduled.length}</span>
+                  {short.length > 0 && <span className="txt cal__short">{reqLabel(wf, short[0].req)} {short[0].filled}/{short[0].required}{short.length > 1 ? ` +${short.length - 1}` : ''}</span>}
+                </span>
+              );
+            })}
+          </button>
+        ))}
+      </div>
+      <p className="cal__legend">
+        <span><i className="cal__dot" data-level="met" /> {t('Covered')}</span>
+        <span><i className="cal__dot" data-level="risk" /> {t('Possible, with risks')}</span>
+        <span><i className="cal__dot" data-level="short" /> {t('Short')}</span>
+        <span>{t('Numbers: people available / scheduled')}</span>
+        <span>◆ {t('Activity (a reminder, no effect on staffing)')}</span>
+      </p>
+    </>
   );
 }
 

@@ -21,7 +21,7 @@
 
 const crypto = require('crypto');
 
-const TOKEN_CACHE_MS = 60 * 1000;
+const TOKEN_CACHE_MS = 20 * 1000; // a signed-out or revoked session stops working within 20 s
 const TOKEN_CACHE_MAX = 500;
 const tokenCache = new Map(); // access token -> { email, providers, expires }
 

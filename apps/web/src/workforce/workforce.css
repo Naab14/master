@@ -98,7 +98,14 @@
 .cal__dot[data-level='risk'] { background: var(--warn-solid); }
 .cal__dot[data-level='short'] { background: var(--bad-solid); }
 .cal__dot[data-level='none'] { background: var(--line-strong); }
-@media (max-width: 640px) { .cal__day { min-height: 64px; padding: 4px; } .cal__line span.txt { display: none; } }
+.cal__line b { font-weight: 600; }
+.cal__line .txt { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.cal__line--event { color: var(--ink-2); }
+.cal__short { color: var(--bad-fg) !important; font-weight: 700; }
+.cal__legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; font-size: var(--text-label); color: var(--ink-3); }
+.cal__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal__legend i { display: inline-block; }
+@media (max-width: 640px) { .cal__day { min-height: 64px; padding: 4px; } .cal__line span.txt { display: none; } .cal__line b { font-size: 10px; } .cal__dow { font-size: 10px; padding: 4px; overflow: hidden; } }
 
 /* Matrix */
 .mx td, .mx th { text-align: center; }

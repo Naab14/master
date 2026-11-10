@@ -209,4 +209,5 @@ export default {
   'All processes covered': 'Alla processer bemannade', 'Coverage tight': 'Tunn bemanning', 'Coverage gap': 'Lucka i bemanningen', 'Out this week: {names}': 'Borta denna vecka: {names}',
   'Nobody on vacation this week.': 'Ingen på semester denna vecka.', 'Open the vacation planner once to set up the workspace.': 'Öppna semesterplaneraren en gång för att sätta upp arbetsytan.',
   'Work items': 'Ärenden', 'Items': 'Ärenden', 'No boards yet.': 'Inga tavlor ännu.', 'Theme': 'Tema', 'Theme: {name}': 'Tema: {name}', 'Theme: {name}. Switch to {next}': 'Tema: {name}. Byt till {next}',
+  'Numbers: people available / scheduled': 'Siffror: tillgängliga / schemalagda', 'Activity (a reminder, no effect on staffing)': 'Aktivitet (en påminnelse, påverkar inte bemanningen)',
 };

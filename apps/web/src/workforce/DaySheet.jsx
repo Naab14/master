@@ -91,7 +91,7 @@ export default function DaySheet({ date, onClose, onDate }) {
                             <Button icon variant="ghost" aria-label={t('Need one more this day')} title={t('Shift-click: whole week')} onClick={e => adjust(r, 1, e.shiftKey)}>+</Button>
                           </span>
                         )}
-                        <Pill tone={STATUS_TONE[r.status]}>{r.filled}{r.competing ? `+${r.competing}?` : ''} / {r.required}</Pill>
+                        <Pill tone={STATUS_TONE[r.status]}>{t(r.status === 'met' ? 'Covered' : r.status === 'risk' ? 'Possible, with risks' : 'Short')}</Pill>
                       </div>
                       {(r.people.length > 0 || r.supervised.length > 0) && (
                         <p className="mt-1 text-xs text-ink-2">{t('Could be')}: {names(r.people)}{r.supervised.length ? ` · ${t('trainee')}: ${names(r.supervised)}` : ''}</p>
