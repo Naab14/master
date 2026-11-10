@@ -8,30 +8,30 @@ the bottom with a date.
 
 | What | Where | Status |
 | --- | --- | --- |
-| Workforce planning build (the 2026-11-09 brief) | Branch `claude/naab14-shift-management-qmu4s9`, draft PR #6. **One branch, one PR** for all of it | Phases 1–6 built and browser-tested; see the table below. Not deployed: `main` and production are unchanged |
-| Design foundation, PR #4 | Included in PR #6 | Merged into the working branch; PR #4 left open and untouched |
-| Strategy docs, PR #5 | Included in PR #6 | Merged into the working branch; PR #5 left open. Where it conflicts with the brief, the brief wins (see Decisions) |
+| Workforce planning build (brief of 2026-11-09, corrections of 2026-11-10) | Branch `claude/naab14-shift-management-qmu4s9`, PR #6. **One branch, one PR** | Released to production on 2026-11-10 in a **locked** state: the site refuses everyone until Google sign-in and an admin are set up. See `HANDOFF.md` for what the owner must do |
+| Design foundation (PR #4), Strategy docs (PR #5) | Included in PR #6 | Their commits are part of PR #6; the two PRs were left untouched |
 
 ## Status by requirement
 
-"Built" means it works in the app and was driven in a real browser against a
-local server with the 40-operator demo plant. Nothing here has run against
-production data or real Google sign-in yet.
+"Built" means it works in the app and was driven in a real browser. The
+planning screens were also checked on the Vercel preview with real sign-in
+tokens. **Google sign-in itself has not been exercised**: it is not switched
+on in Supabase yet.
 
 | Area | Built | Not built yet |
 | --- | --- | --- |
-| **Calendar and patterns** (C1–C8) | People-by-date grid and month calendar; smooth zoom (slider, buttons, Ctrl+wheel); Today/Week/Month; view, filters, zoom and scroll remembered; repeating patterns per team or person, fixed and rotating; change one day or from a date onward with history kept; each process runs its own shifts; team moves with optional manager confirmation; overnight shifts, Swedish time, DST-correct hours, ISO week 53 | A true hour-by-hour day grid (the day panel has a 30-hour timeline strip); public holidays marked in the schedule; shift time overrides in the UI (the data model has them) |
-| **Coverage** (K1–K9) | Matrix with configurable levels; certificates with expiry judged on the planned date; requirements per process, shift and weekday; templates (normal / low season) by date range; day and week adjustments; one person never fills two dedicated positions; shared roles; tasks with fixed window or flexible hours shown as competing demands; trainees count only next to a supervisor, configurable per level and process; find-by-skill chips; leave planning with gaps, replacements and knock-on gaps; wording says "possible", never "assigned" | **Digital line assignments** (optional toggle): not built. Time-window overrides for line positions (only tasks have windows). The trainee step is a simple pass after the main matching, so a trainer is not deliberately steered to the process that needs supervising |
-| **Attendance and reports** (A1–A6) | Day register; configurable reasons; partial days by hours or times; comment-only entries flagged, never given a duration; month review with deviations, overtime, sick, vacation, other absence, late, OB per rule; OB from configurable rules with priority, public holidays and a CSV preview; receipt-style and team summaries; grouping by employment; print/PDF; no locking; change log with who, when, old and new | OB rules ship empty: **the owner's workplace rules are needed**. Breaks are not deducted from OB. Excel `.xlsx` files are not read directly (CSV or paste) |
-| **Profiles** (P1–P5) | One profile (real name, nickname, photo, colour, employment type, team history, notes); employment filter/grouping and a subtle marker with admin-set style; nickname use per view; CSV/paste import with preview, validation, duplicate handling | The older **Vacations** tool still has its own operator list. Its approved leave shows in the schedule when names match, but the lists are not merged |
-| **Training** (T1–T3) | Thin spots per team and competency; planned training with trainer, period, progress, status; expiring certificates; trainee counting rules | Training sessions do not reserve time in the schedule |
-| **Events and existing tools** (E1–E3) | Weekly/monthly calendar activities on the dashboard, calendar and day panel, never affecting staffing; dashboard cards for today's coverage, who is away, short shifts in the next two weeks, pending team moves, expiring certificates; Shift HQ, Vacations and Boards unchanged and working | Turning a shift task into a board item; a weekly review across all tools |
-| **Design and interaction** (D1–D6) | Three themes (Calm, Arcade, Night) across the new screens via shared tokens; drag with mouse and long-press touch, drop targets, immediate simple moves, confirm for swaps and from-date changes; Undo toast, Ctrl/Cmd+Z, redo; arrow keys, shift-code keys, changeable shortcuts; undo refused when a colleague changed the item since; detail panels with fullscreen, phone full-screen sheets; collapsible sections remembered; reduced-motion respected | A fourth "cartoon/pop" theme; per-user theme saved on the server (it is per browser); the three older tools still carry their original look; no formal accessibility audit |
-| **Printing and languages** (L1–L2) | A4/A3, portrait/landscape print layouts with headings, date ranges, legends and page splitting for the schedule, competency matrix, month review and receipts; English and Swedish for every new screen, with a test that fails on a missing translation; dates and numbers follow the language | **Shift HQ, Vacations, Boards and the old dashboard cards are English only.** Server error messages are English |
-| **Login and permissions** (S1–S5) | `ADMIN_EMAIL` names the admin; uninvited Google accounts are refused and queued for approval; invitations, roles, a permission table the admin edits; all enforced on the server, including the older tools; team-limited team leads; operator read access prepared and off; offline read-only with banner, last-update time and paused editing; cache cleared on sign-out | **Google sign-in itself has never been switched on** (needs the owner's Google OAuth client). Operator screens and vacation requests. Shift HQ and Vacations keep their own older offline caches |
-| **Excalidraw** (X1–X4) | The real Excalidraw editor embedded; multiple named boards, saved and reopened; private until shared, with no admin bypass in the app; sharing with workspace users; outside guests behind an admin switch, limited to shared boards; links to activities and web addresses | **Live collaboration is not built.** Others' saves appear within seconds, and simultaneous saves are detected, not merged. See "Excalidraw collaboration" below |
-| **Optional AI** (AI1–AI3) | Nothing depends on AI | **Not built**: no admin settings, no provider, no key storage |
-| **Platforms** (W1–W3) | Installable web app (manifest, icons, service worker for the app shell); phone layout with bottom tabs | Not yet installed on a real phone; iOS app untouched and behind (see below) |
+| **Calendar and patterns** (C1–C8) | People-by-date grid and month calendar with a legend; smooth zoom; Today/Week/Month; view, filters, zoom and scroll remembered; repeating patterns per team or person; change one day or from a date onward with history kept; each process runs its own shifts; team moves with optional manager confirmation; overnight shifts, Swedish time, DST-correct hours, ISO week 53 | An hour-by-hour day grid (the day panel has a timeline strip); public holidays marked in the schedule; shift time overrides in the UI |
+| **Coverage** (K1–K9) | Matched stretch by stretch through the shift, so requirement **time windows**, **part-day absences with known times** and **booked training time** are handled; one person never fills two positions at once but can cover two that follow each other; shared roles; flexible tasks fit into free time or show as competing demands; trainees only next to a supervisor; certificates judged on the planned date; templates and day/week adjustments; the day panel shows **Qualified → Available → Possible** as three numbers; leave planning with gaps and replacements; skill gaps count demand at the same time | **Digital line assignments** (optional toggle). A part-day absence given only as hours (no times) can't be placed: the person still counts and is flagged. The trainee step does not steer a trainer toward the process that needs supervising |
+| **Attendance and reports** (A1–A6) | Day register; configurable reasons; partial days by hours or times; comment-only entries flagged, never given a duration; month review; **receipt-style summaries on screen**, per person and as a Receipts view for the team; grouping by employment; no locking; change log with old and new values; OB from configurable rules with priority, holidays and a CSV preview | **OB rules are not configured**: the owner supplies them later. Until then every OB figure reads "OB rules not configured", never zero. Breaks are not deducted from OB. No printing (removed on request) |
+| **Profiles** (P1–P5) | One profile per operator; **Vacations operators are linked to profiles by id**, names follow the profile, nothing is matched by name; employment filter, grouping and marker; nickname use per view; CSV/paste import with preview | Vacations still keeps its own S1/S2 and process list for its week view. Older Vacations operators stay "unlinked" until linked by hand |
+| **Training** (T1–T3) | Thin spots per team and competency with correct concurrent demand; planned training with trainer, period, progress; optional time off the line that takes trainee and trainer out of coverage; expiring certificates | Training does not appear as its own block in the schedule grid |
+| **Events and existing tools** (E1–E3) | Weekly/monthly activities on the dashboard, calendar and day panel, never affecting staffing; dashboard planning cards; Shift HQ, Vacations and Boards working | Turning a shift task into a board item; a weekly review across all tools |
+| **Design and interaction** (D1–D6) | Three themes; **motion throughout**: panels slide in and out (from the bottom on phones), sections open by height, views rise in, dragged shifts lift and glide to their place, changed cells pulse (also after Undo or a colleague's edit), hover and press states, toasts slide out; all instant with reduced motion; drag with mouse and long-press; Undo/Redo that never overwrites a colleague; keyboard and changeable shortcuts | A fourth "cartoon/pop" theme; theme saved per user on the server; Shift HQ, Vacations and Boards keep their older look and have no new motion; no formal accessibility audit |
+| **Languages** (L1) | English and Swedish for the planning screens, sign-in, dashboard and theme switcher, with a test that fails on a missing translation | **Shift HQ, Vacations and Boards are English only.** Server error messages are English. Printing was removed from scope |
+| **Login and permissions** (S1–S5) | Production is **locked** until an admin is configured: no anonymous access. Only Google sessions count (a password login is refused even on a Google-linked account). Uninvited accounts are refused and queued for approval; invitations, roles, a permission table; all enforced on the server; team-limited team leads; sign-out clears cached data and the session stops working within 20 seconds; offline read-only with banner. Preview deployments use their own table | **Google is not switched on in Supabase** (owner's step). Operator screens and vacation requests. Shift HQ and Vacations keep their own older offline caches |
+| **Excalidraw** (X1–X4) | The real Excalidraw editor; named boards saved and reopened; private until shared, no admin bypass; sharing; outside guests behind an admin switch; links | **Not live collaboration.** Saved changes from others appear within seconds; simultaneous saves are detected, not merged. The app says so on the Sketches page |
+| **Optional AI** (AI1–AI3) | Nothing depends on AI | **Not built** |
+| **Platforms** (W1–W3) | Responsive web app for the phone's browser with bottom tabs and full-screen panels; offline read-only kept | No install prompt or app icon (removed on request). iOS app sidelined |
 
 ### Excalidraw collaboration: the honest assessment
 
@@ -56,19 +56,20 @@ the phone (it can be added to the home screen).
 
 ## Next
 
-In order. Each is independent enough to pick up alone.
+In order.
 
-1. **Owner decisions** in `REQUIREMENTS.md` §16 (sick/late data, hosting
-   plan, OB rules).
-2. **Go live safely**: the steps in `HANDOFF.md` (migration, `ADMIN_EMAIL`,
-   Google provider), then verify sign-in on a phone.
-3. **Merge people**: make Vacations read the shared profiles.
-4. **Translate and restyle the three older tools** and the old dashboard cards.
-5. **Digital assignments** (optional toggle) and time windows for line positions.
+1. **Owner: switch Google sign-in on and name the admin** (`HANDOFF.md`).
+   Then verify the real Google login on a computer and a phone.
+2. **Owner: supply the OB rules.**
+3. **Translate and restyle Shift HQ, Vacations and Boards**, with the same
+   motion as the planning screens.
+4. **Vacations on the planning model**: replace its S1/S2 and process list
+   with teams, shifts and competencies from planning.
+5. **Digital assignments** (optional toggle).
 6. **Operator screens**: own schedule, training, competencies, leave requests.
 7. **Live Excalidraw collaboration** over Supabase Realtime.
 8. **Optional AI settings** (off and hidden by default).
-9. Hour-level day grid, holidays in the schedule, training time reservations.
+9. Hour-level day grid, holidays in the schedule.
 
 ## Tech debt
 
@@ -128,3 +129,11 @@ In order. Each is independent enough to pick up alone.
 | 2026-11-09 | Excalidraw boards are private to the owner with no admin bypass; live collaboration deferred to Supabase Realtime | Vercel can't host a relay; no paid service needed, but it is real security work |
 | 2026-11-09 | New dependency: `@excalidraw/excalidraw` (MIT), loaded only when a board is opened; fonts served from our own site | Requirement X1; no outside requests |
 | 2026-11-09 | The web app is the product (installable PWA); the iOS app is sidelined | The brief; the iOS app would slow the web release |
+| 2026-11-10 | Printing and install prompts removed from scope; receipts are an on-screen format | Owner's correction |
+| 2026-11-10 | The production site is locked until an admin is configured; open access only on a home computer and on Vercel-protected previews | Owner: never release with anonymous admin access |
+| 2026-11-10 | Preview deployments use their own table (`app_state_preview`) | Trying a branch must never touch production data |
+| 2026-11-10 | The admin can be named in the database (`owners` in the admin section) as well as with `ADMIN_EMAIL`; the API cannot change either | The Vercel connector can't edit environment variables; the database route needs no redeploy |
+| 2026-11-10 | Only OAuth (Google) sessions are accepted, checked on the server from the verified token | Email sign-up is open in Supabase by default; a password must never be a way in |
+| 2026-11-10 | Coverage is matched per stretch of the shift | Time windows, part-day absences and training need time, not just head counts |
+| 2026-11-10 | Vacations operators link to profiles by id; no name matching anywhere | Owner's correction |
+| 2026-11-10 | The paused free Supabase project was restored; migrations 002 and 003 applied after a backup copy (`app_state_backup_20261110`) | Production was failing because the database had auto-paused; migrations verified byte-identical for existing data |

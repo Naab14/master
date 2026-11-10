@@ -1,6 +1,7 @@
 # Requirements
 
-The consolidated product requirements, from the owner's brief of 2026-11-09.
+The consolidated product requirements, from the owner's brief of 2026-11-09
+and the corrections of 2026-11-10 (marked "Corrected 2026-11-10").
 Where this file and older documents disagree (`docs/STRATEGY.md`,
 `docs/IDEAS.md`, the backlog), **this file wins**. Progress per requirement
 is tracked in [`ROADMAP.md`](ROADMAP.md); the exact resume point is in
@@ -62,9 +63,14 @@ assignments are an optional, admin-toggleable extra, never a prerequisite.
   flagged.
 - **A4** OB is calculated from configurable workplace rules, with guided
   settings and a way to prepare rules from supplied documents/spreadsheets
-  for review. No invented collective-agreement rates.
+  for review. No invented collective-agreement rates. *Corrected 2026-11-10:*
+  the owner supplies the rules later. Until then the app says "OB rules not
+  configured" and never shows a missing calculation as zero. This does not
+  block other work or the release.
 - **A5** Reports: receipt-style individual summary, whole-team summary,
-  optional grouping by consultant/permanent, on screen and as PDF.
+  optional grouping by consultant/permanent, **on screen**. *Corrected
+  2026-11-10:* "receipt" is about the on-screen look and feel. No printing or
+  PDF workflow is wanted now.
 - **A6** No approval or month-locking. Records stay editable, with a change
   log of who changed what and when, keeping old and new values.
 
@@ -135,6 +141,12 @@ assignments are an optional, admin-toggleable extra, never a prerequisite.
   picks their own.
 - **D3** Thoughtful motion and feedback; collapsible panels; remembered
   preferences; good on computers, phones and large shared screens.
+  *Added 2026-11-10:* animation is an important part of the finished
+  product: opening and closing panels, expanding sections, switching views,
+  drag-and-drop, placement and undo feedback, subtle hover and press states.
+  Smooth and restrained (Apple-like); it must never slow everyday work; it
+  must work on phones and with the keyboard and respect reduced motion; it
+  is verified in the running app.
 - **D4** Calendar drag-and-drop: clear previews and drop targets, touch
   support, immediate simple moves, confirmation for recurring or
   consequential changes, visible Undo, Ctrl/Cmd+Z, broad keyboard support
@@ -145,18 +157,20 @@ assignments are an optional, admin-toggleable extra, never a prerequisite.
   restores the previous view and scroll position; phone-friendly fullscreen
   details.
 
-## 10. Printing and languages (L)
+## 10. Languages (L)
 
-- **L1** Everything user-facing in English and Swedish, including
-  printouts, with matching date, time and number formats.
-- **L2** Real A4/A3 print layouts (portrait and landscape where useful) for
-  the major planning and reporting views: headings, date ranges, legends,
-  sensible page breaks. Not the interactive page with clipped columns.
+- **L1** Everything user-facing in English and Swedish, with matching date,
+  time and number formats, used consistently.
+- **L2** *Removed 2026-11-10.* Printing (A4/A3 layouts) is not wanted now.
+  No print controls; no time spent on printing.
 
 ## 11. Login, permissions, offline (S)
 
 - **S1** Google login. The admin is a specifically configured Google email;
-  the first signup never becomes admin automatically.
+  the first signup never becomes admin automatically. *Corrected
+  2026-11-10:* sign-in is set up and verified **before** the new app is
+  exposed. The production site never runs with anonymous admin access; a
+  convenience for local development must not leave production open.
 - **S2** Other accounts get nothing until invited or approved.
 - **S3** Admin-configurable permissions (including competency editing and
   team access), **enforced on the server**.
@@ -188,10 +202,29 @@ assignments are an optional, admin-toggleable extra, never a prerequisite.
 
 ## 14. Platforms (W)
 
-- **W1** Web first: a published, responsive app that works well on phones;
-  an installable PWA is the preferred first delivery.
-- **W2** The SwiftUI app is secondary and must not block the web release.
+- **W1** A responsive web app in the phone's browser. *Corrected
+  2026-11-10:* no installation, install prompts, App Store or native iOS
+  work is wanted now. The offline read-only behaviour and its banner stay.
+- **W2** The SwiftUI app is sidelined.
 - **W3** Keep Vercel + Supabase unless there is a concrete need to change.
+
+## 14b. Planning foundations to get right first (2026-11-10)
+
+- One shared operator identity across workforce planning and Vacations,
+  never by matching names.
+- Correct coverage for time windows, part-day duties and training.
+- A clear distinction between qualified, available and possible coverage.
+- Skill gaps count demand that runs at the same time, and never add up
+  shifts or time windows that don't overlap.
+- Unfinished features are labelled as unfinished (Excalidraw refreshes saved
+  changes; it is not simultaneous live collaboration).
+
+## 14c. Release (2026-11-10)
+
+The owner authorised finishing the release checks, applying the reviewed,
+data-preserving database migration, merging PR #6 and deploying to the
+existing production site, provided it adds no cost and sign-in is on
+before the new functionality is exposed.
 
 ## 15. Validation scenarios
 
@@ -207,4 +240,5 @@ shifts and pattern changes; concurrent edits and offline read-only.
 | --- | --- | --- |
 | 1 | **Sick and late records.** The 2026-10-27 strategy said *not* to store absence reasons or lateness, because sickness is health data under GDPR and lateness is employee monitoring. This brief asks for both, so they are built. Before entering real people's sick/late records, get your employer's (HR / data protection / union) go-ahead, or use the app with made-up or coded names. | A private hobby app on personal accounts holding colleagues' health data is a real compliance risk for you personally. |
 | 2 | Vercel Hobby is for non-commercial use. Daily use by a team at work may need the employer's own account. | Same question as in `STRATEGY.md`; still open. |
-| 3 | OB rules: the app ships with **no** rates. Supply your workplace rules (document or spreadsheet) to load them. | We don't invent collective-agreement terms. |
+| 3 | OB rules: the app ships with **no** rates. The owner will supply the workplace rules later; until then the app shows "OB rules not configured". | We don't invent collective-agreement terms. |
+| 4 | **Google sign-in** needs a Google OAuth client created in the owner's Google account and entered in Supabase (steps in `HANDOFF.md`). Nothing reusable existed: Google was never switched on in Supabase. | Only the owner can create it; secrets go into Supabase settings, never into chat. |

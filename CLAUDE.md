@@ -75,7 +75,7 @@ apps/web/           React 19 + Vite + Tailwind 3 (plain JS, no TypeScript)
   src/i18n/           English and Swedish (sv.js); t('English text')
   src/ui/, src/theme/ shared controls and the three themes
   src/api.js, access.js, auth.js   API client, credentials, Supabase login
-  public/             PWA manifest, icons, service worker (app shell only)
+  public/             icon and service worker (keeps the app shell loadable offline; not installable)
 apps/ios/           SwiftUI app with haptics (Xcode 16+, can't be built on Linux)
 supabase/migrations/  database schema
 docs/AUDIT.md       how the three source apps mapped in
@@ -124,20 +124,31 @@ controls live in `src/ui/` (review page: `#/ui`).
   (region `arn1`, Stockholm).
 - **Supabase** project `master`, ref `wsqpjlhhfonkqhrxqgre`, region eu-north-1.
 - **Vercel environment variables** (names only; never commit values):
-  `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (secret), `SUPABASE_PUBLISHABLE_KEY`,
-  `ADMIN_EMAIL` (the admin's Google account; turns Google login on),
-  `ALLOWED_EMAILS` (older allow list, treated as managers), `APP_ACCESS_CODE`
-  (optional).
+  `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (secret), and optionally
+  `SUPABASE_PUBLISHABLE_KEY`, `ADMIN_EMAIL`, `ALLOWED_EMAILS` (older allow
+  list, treated as managers), `APP_ACCESS_CODE`. The Vercel connector can't
+  read or change these; the owner edits them in the Vercel dashboard.
+- **Sign-in settings can also live in the database**: the `admin` row's
+  `owners` (admin Google addresses) and `authConfig.publishableKey`. Only a
+  hand-run SQL statement changes them; the API never does.
+- **Production is locked without an admin.** With `VERCEL_ENV=production`
+  and no admin configured, every API route answers 503 "locked" and the web
+  app shows a closed page. Open, no-sign-in access exists only for
+  `node backend/server.js` and for preview deployments.
+- **Preview deployments** (`VERCEL_ENV=preview`) use the table
+  `app_state_preview`, never `app_state`. They sit behind Vercel login.
 - **Database migrations** in `supabase/migrations` are run by hand, with the
-  owner's go-ahead. `002_more_sections.sql` is needed before the planning
-  screens can save in production.
+  owner's go-ahead. 001–003 are applied. Take a backup copy first and
+  compare checksums after, as done for 002 (`app_state_backup_20261110`).
+- The free Supabase project **pauses after about a week without use**;
+  restoring it is free and keeps the data.
 - **Sign-in:** see `backend/auth.js`. Current state is in the roadmap.
 
 ## Commands
 
 ```sh
 npm --prefix apps/web install
-npm --prefix apps/web run test:ci   # vitest (215 tests)
+npm --prefix apps/web run test:ci   # vitest (231 tests)
 npm --prefix apps/web run lint
 npm --prefix apps/web run build
 node backend/server.js              # self-hosted API + built web app on :3000
@@ -160,7 +171,15 @@ npm --prefix apps/web run dev       # Vite dev server, proxies /api to :3000
   `src/ui` and `src/workforce/ui.jsx`. Lint is strict about React rules: no
   refs or `Date.now()` during render, components in their own files.
 - Coverage wording is always "possible", never "assigned": positions are
-  decided at the whiteboard. No OB rates or rules are built in.
+  decided at the whiteboard. No OB rates or rules are built in; without
+  rules the app says "OB rules not configured", never zero.
+- No printing and no install prompt: both were removed on the owner's
+  request. Receipts are an on-screen format.
+- Motion is part of the product: use the helpers in
+  `src/workforce/motion.js` and the motion block in `workforce.css`, keep
+  it quick, and make sure it is instant under `prefers-reduced-motion`.
+- Nothing matches people by name. Vacations operators carry the profile's
+  id (`personId`).
 - Demo and test data use made-up names.
 - Swift can't be compiled in the Linux container: keep iOS changes small,
   mirror the API contract exactly, and say they're unverified.

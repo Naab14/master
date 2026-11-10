@@ -22,7 +22,8 @@ operators, 3 shifts and 4 processes:
 | **Sketches** | Excalidraw drawing boards, private until shared |
 | **Setup / Access** | Shifts, patterns, requirements, OB rules; who may sign in and what each role may do |
 
-It is a planning aid in English and Swedish. It is not the payroll,
+It is a planning aid in English and Swedish, used in the browser on a
+computer or phone. It is not the payroll,
 time-approval or official training system.
 
 A home **Dashboard** joins it all: today's possible coverage and who's away,
@@ -59,16 +60,19 @@ in two places:
 
 **Sign-in** (`backend/auth.js`):
 
-- **Google login** turns on when `ADMIN_EMAIL` is set (the admin's Google
-  account). The web app shows "Sign in with Google" (Supabase Auth). Nobody
+- **Google login** turns on when an admin account is configured: `ADMIN_EMAIL`
+  in the environment, or `owners` in the database's `admin` row. Nobody
   becomes admin by signing up first: everyone else is invited by the admin
-  inside the app (Access), with a role. Roles and permissions are enforced
-  by the API (`backend/access.js`). `ALLOWED_EMAILS`, the older allow list,
-  still works and gives manager rights.
+  inside the app (Access), with a role. Only Google sessions are accepted.
+  Roles and permissions are enforced by the API (`backend/access.js`).
+- **The production site is locked until an admin is configured.** It never
+  runs open. Open access is only for a home computer and for Vercel preview
+  deployments, which use their own test table.
 - **Access code:** `APP_ACCESS_CODE`, if set, is accepted as well. The iOS app
   uses it (field in Settings) until it gets Google sign-in. With Google login
   off, the web app asks for the code instead.
-- With neither set, the API is open to anyone with the URL.
+- With neither set, the API is open on a home computer and on previews, and
+  locked on production.
 
 ## Running
 
@@ -118,6 +122,6 @@ it at your computer's LAN address in the app's Settings tab.
 ## Tests
 
 ```sh
-npm --prefix apps/web run test:ci   # 215 vitest tests
+npm --prefix apps/web run test:ci   # 231 vitest tests
 npm --prefix apps/web run lint
 ```
