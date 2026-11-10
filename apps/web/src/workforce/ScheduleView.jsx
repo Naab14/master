@@ -18,6 +18,7 @@ import { eventsOn } from './logic/events';
 import CellSheet from './CellSheet';
 import DaySheet from './DaySheet';
 import LeaveSheet from './LeaveSheet';
+import { flyTo, pulse } from './motion';
 
 const MIN_CELL = 14;
 const MAX_CELL = 130;
@@ -64,6 +65,20 @@ export default function ScheduleView() {
     for (const p of people) out.set(p.id, days.map(d => resolveShift(wf, idx, p.id, d)));
     return out;
   }, [wf, idx, people, days]);
+
+  // Feedback for anything that changes a shift (a drop, a key, Undo, a
+  // colleague's edit): the cells that changed give a short pulse.
+  const shown = useRef(null);
+  useEffect(() => {
+    const now = new Map();
+    for (const [pid, cells] of grid) cells.forEach((r, i) => now.set(`${pid}_${days[i]}`, r.shiftTypeId || ''));
+    const before = shown.current;
+    shown.current = { key: `${days[0]}|${days.length}`, cells: now };
+    if (!before || before.key !== `${days[0]}|${days.length}`) return;
+    const changed = [...now].filter(([k, v]) => before.cells.has(k) && before.cells.get(k) !== v).map(([k]) => k);
+    if (!changed.length || changed.length > 40) return;
+    requestAnimationFrame(() => changed.forEach(k => pulse(document.querySelector(`[data-cell="${k}"]`))));
+  }, [grid, days]);
 
   const coverage = useMemo(() => {
     const out = {};
@@ -206,7 +221,7 @@ export default function ScheduleView() {
       </div>
 
       {pref.view === 'people' ? (
-        <div ref={scroller} className="sch" data-density={pref.density} style={{ '--cell': `${pref.cell}px`, '--days': days.length }} onScroll={onScroll}>
+        <div key="people" ref={scroller} className="sch wf-view" data-density={pref.density} style={{ '--cell': `${pref.cell}px`, '--days': days.length }} onScroll={onScroll}>
           <div className="sch__grid" role="grid" aria-label={t('Schedule')}>
             <div className="sch__corner" style={{ gridRow: 'span 2' }} />
             <MonthBand days={days} fmt={fmt} />
@@ -238,7 +253,7 @@ export default function ScheduleView() {
           </div>
         </div>
       ) : (
-        <div ref={scroller} className="wf-scroll" onScroll={onScroll}>
+        <div key="calendar" ref={scroller} className="wf-scroll wf-view" onScroll={onScroll}>
           <div className="wf-body">
             <MonthCalendar days={days} month={pref.anchor.slice(0, 7)} today={today} shiftTypes={shiftTypes} coverage={coverage} wf={wf} onPick={setDaySheet} />
           </div>
@@ -372,9 +387,11 @@ function startDrag(e, from, label, draggable, onDrop, onOpen) {
     window.removeEventListener('pointercancel', end);
     document.removeEventListener('touchmove', blockScroll);
     delete source.dataset.dragging;
-    ghost?.remove();
     const dropOn = target;
     setTarget(null);
+    // The lifted shift glides to where it lands, or back home if dropped nowhere.
+    const lands = dragging && ev.type !== 'pointercancel' && dropOn && dropOn !== source;
+    flyTo(ghost, lands ? dropOn : source, { fade: !lands });
     if (ev.type === 'pointercancel') return;
     if (dragging) { if (dropOn && dropOn !== source) onDrop(from, { personId: dropOn.dataset.pid, date: dropOn.dataset.date }); }
     else if (!cancelled) onOpen(from);

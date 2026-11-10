@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { useState } from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Segmented, TextField, Toggle, Checkbox, ToastProvider, useToast } from './index.js';
 
@@ -75,7 +75,8 @@ describe('Toast', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Task deleted');
     await user.click(screen.getByRole('button', { name: 'Undo' }));
     expect(onUndo).toHaveBeenCalledOnce();
-    expect(screen.queryByText('Task deleted')).toBeNull();
+    // It slides out first (160 ms), then is gone.
+    await waitFor(() => expect(screen.queryByText('Task deleted')).toBeNull());
   });
 
   it('closes by itself after five seconds', () => {
@@ -85,6 +86,7 @@ describe('Toast', () => {
       act(() => { screen.getByText('Delete').click(); });
       expect(screen.getByText('Task deleted')).toBeInTheDocument();
       act(() => { vi.advanceTimersByTime(5000); });
+      act(() => { vi.advanceTimersByTime(200); }); // the slide-out
       expect(screen.queryByText('Task deleted')).toBeNull();
     } finally {
       vi.useRealTimers();

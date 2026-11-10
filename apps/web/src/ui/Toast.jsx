@@ -29,27 +29,31 @@ export default function ToastProvider({ children }) {
 
 function ToastItem({ toast, onDismiss }) {
   const [paused, setPaused] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  // Slide out before going (ui.css); the short wait is skipped by the CSS
+  // when reduced motion is on, and harmless then.
+  const leave = useCallback(() => { setLeaving(true); setTimeout(() => onDismiss(toast.id), 160); }, [onDismiss, toast.id]);
   useEffect(() => {
-    if (paused) return undefined;
-    const timer = setTimeout(() => onDismiss(toast.id), DURATION);
+    if (paused || leaving) return undefined;
+    const timer = setTimeout(leave, DURATION);
     return () => clearTimeout(timer);
-  }, [paused, toast.id, onDismiss]);
+  }, [paused, leaving, leave]);
 
   const pause = () => setPaused(true);
   const resume = () => setPaused(false);
   return (
-    <div className="ui-toast" onMouseEnter={pause} onMouseLeave={resume} onFocus={pause} onBlur={resume}>
+    <div className="ui-toast" data-leaving={leaving || undefined} onMouseEnter={pause} onMouseLeave={resume} onFocus={pause} onBlur={resume}>
       <span>{toast.message}</span>
       {toast.action && (
         <button
           type="button"
           className="ui-toast__btn"
-          onClick={() => { toast.action.onClick(); onDismiss(toast.id); }}
+          onClick={() => { toast.action.onClick(); leave(); }}
         >
           {toast.action.label}
         </button>
       )}
-      <button type="button" className="ui-toast__btn ui-toast__close" aria-label="Dismiss" onClick={() => onDismiss(toast.id)}>
+      <button type="button" className="ui-toast__btn ui-toast__close" aria-label="Dismiss" onClick={leave}>
         ✕
       </button>
     </div>

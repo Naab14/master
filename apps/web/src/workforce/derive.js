@@ -3,13 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { getFullState } from '../api';
 import { useWorkforce } from './store-context';
 import { absencesFromEntries } from './logic/attendance';
-import { reasonsOf, list } from './logic/model';
+import { reasonsOf } from './logic/model';
 import { addDays, dateRange, isoWeekStart, todayIn } from './logic/time';
 
 /**
- * Approved (and pending) leave from the Vacations tool, as dated absences
- * for people whose name matches a profile. Vacation blocks are stored by ISO
- * week, so they are read for the current year.
+ * Approved (and pending) leave from the Vacations tool, as dated absences.
+ * An operator there carries the id of its People profile (`personId`), so
+ * this never matches by name; unlinked operators are left out. Vacation
+ * blocks are stored by ISO week, so they are read for the current year.
  */
 export function useVacationToolAbsences() {
   const { wf, offline } = useWorkforce();
@@ -22,13 +23,12 @@ export function useVacationToolAbsences() {
   }, [offline]);
   return useMemo(() => {
     if (!vacation?.operators) return [];
-    const byName = new Map(list(wf.people).map(p => [p.name.trim().toLowerCase(), p.id]));
     const year = Number(todayIn().slice(0, 4));
     const out = [];
     for (const b of vacation.vacationBlocks || []) {
       const op = vacation.operators.find(o => o.id === b.operatorId);
-      const personId = op && byName.get(String(op.name).trim().toLowerCase());
-      if (!personId || b.status === 'draft') continue;
+      const personId = op?.personId;
+      if (!personId || !wf.people[personId] || b.status === 'draft') continue;
       const from = isoWeekStart(year, b.startWeek);
       const to = addDays(isoWeekStart(year, b.endWeek), 6);
       for (const date of dateRange(from, to)) {

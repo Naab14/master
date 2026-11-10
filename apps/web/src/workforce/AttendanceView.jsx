@@ -104,7 +104,7 @@ export default function AttendanceView() {
         <span className="flex-1" />
       </div>
 
-      <div className="wf-scroll">
+      <div key={pref.tab} className="wf-scroll wf-view">
         {pref.tab === 'day' && <DayRegister date={date} people={people} />}
         {pref.tab === 'month' && (
           !can('reports.view') ? <Empty title={t('Reports are not available for your role')} /> : (

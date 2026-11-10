@@ -85,6 +85,7 @@
   background: var(--surface-soft);
 }
 .ui-seg button {
+  transition: background var(--motion) var(--ease), color var(--motion-fast) var(--ease), box-shadow var(--motion) var(--ease), transform var(--motion-fast) var(--ease);
   min-height: 30px;
   padding: 0 12px;
   border: 0;
@@ -97,6 +98,7 @@
   font-weight: 500;
   cursor: pointer;
 }
+.ui-seg button:active { transform: scale(.97); }
 .ui-seg button[aria-checked='true'] {
   background: var(--surface-panel);
   color: var(--ink);
@@ -214,13 +216,15 @@
 }
 .ui-toast__btn:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }
 .ui-toast__close { text-decoration: none; opacity: .8; }
+.ui-toast[data-leaving] { animation: ui-toast-out 160ms var(--ease) forwards; }
+@keyframes ui-toast-out { to { opacity: 0; transform: translateY(8px) scale(.98); } }
 @keyframes ui-toast-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ui-btn, .ui-toggle, .ui-toggle::after { transition: none; }
-  .ui-toast { animation: none; }
+  .ui-toast, .ui-toast[data-leaving] { animation: none; }
 }
 
 /* Small segmented control (nav rail) */

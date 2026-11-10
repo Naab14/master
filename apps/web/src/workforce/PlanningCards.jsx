@@ -44,7 +44,7 @@ export default function PlanningCards({ onNavigate }) {
   const card = 'flex flex-col gap-2 rounded-panel border border-line bg-panel p-4';
 
   return (
-    <div className="mb-6 grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+    <div className="wf-stagger mb-6 grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
       <section className={card}>
         <header className="flex items-center justify-between gap-2">
           <h2 className="t-section">{t('Coverage today')}</h2>

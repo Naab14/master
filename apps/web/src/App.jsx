@@ -249,7 +249,7 @@ function Workspace({ email, onSignOut, needCode }) {
       {/* ── Active section ──────────────────────────────────────────────── */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <OfflineBanner />
-        <div className="min-h-0 flex-1 overflow-hidden">
+        <div key={section} className="wf-view min-h-0 flex-1 overflow-hidden">
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center text-sm" style={{ color: 'var(--text-secondary)' }}>

@@ -1,10 +1,26 @@
 /* Small shared pieces for the workforce screens. */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePref } from './prefs';
 import { createPortal } from 'react-dom';
 import { Button } from '../ui';
 import { useI18n } from '../i18n';
 import { initials } from './logic/model';
+import { reducedMotion } from './motion';
+
+/* Close with an exit animation: mark the element as closing, then tell the
+ * owner once the animation has run (or at once with reduced motion). */
+function useAnimatedClose(onClose, ms = 220) {
+  const [closing, setClosing] = useState(false);
+  const timer = useRef(null);
+  const close = useCallback(() => {
+    if (reducedMotion()) { onClose(); return; }
+    setClosing(true);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(onClose, ms);
+  }, [onClose, ms]);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  return [closing, close];
+}
 
 /**
  * Details panel: a drawer on wide screens, full screen on phones, with a
@@ -14,16 +30,29 @@ import { initials } from './logic/model';
 export function Sheet({ title, subtitle, onClose, children, footer, wide = false }) {
   const { t } = useI18n();
   const [full, setFull] = useState(false);
+  const [closing, close] = useAnimatedClose(onClose);
   const ref = useRef(null);
+  const pressedBackdrop = useRef(false);
+  const openedAt = useRef(0);
   useEffect(() => {
     const opener = document.activeElement;
+    openedAt.current = performance.now();
     ref.current?.focus();
-    const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
+    return () => { opener?.focus?.(); };
+  }, []);
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
     document.addEventListener('keydown', onKey);
-    return () => { document.removeEventListener('keydown', onKey); opener?.focus?.(); };
-  }, [onClose]);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [close]);
   return createPortal(
-    <div className="wf-sheet-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="wf-sheet-backdrop" data-state={closing ? 'closing' : 'open'} onPointerDown={e => { pressedBackdrop.current = e.target === e.currentTarget; }}
+      onClick={e => {
+        // Close only for a press that began and ended on the dimmed area, and
+        // not for the tail of the very tap that opened the panel (on phones
+        // that tap would otherwise land here while the panel is still rising).
+        if (e.target === e.currentTarget && pressedBackdrop.current && performance.now() - openedAt.current > 400) close();
+      }}>
       <section ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title}
         className={`wf-sheet ${full ? 'wf-sheet--full' : ''} ${wide ? 'wf-sheet--wide' : ''}`}>
         <header className="flex items-start gap-2 border-b border-line px-4 py-3">
@@ -34,7 +63,7 @@ export function Sheet({ title, subtitle, onClose, children, footer, wide = false
           <Button variant="ghost" icon className="wf-sheet__fullbtn" aria-label={full ? t('Exit full screen') : t('Full screen')} title={full ? t('Exit full screen') : t('Full screen')} onClick={() => setFull(f => !f)}>
             {full ? '⤡' : '⤢'}
           </Button>
-          <Button variant="ghost" icon aria-label={t('Close')} title={t('Close')} onClick={onClose}>✕</Button>
+          <Button variant="ghost" icon aria-label={t('Close')} title={t('Close')} onClick={close}>✕</Button>
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">{children}</div>
         {footer && <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-line px-4 py-3">{footer}</footer>}
@@ -46,20 +75,21 @@ export function Sheet({ title, subtitle, onClose, children, footer, wide = false
 
 export function Confirm({ title, body, confirmLabel, onConfirm, onCancel, danger = false }) {
   const { t } = useI18n();
+  const [closing, cancel] = useAnimatedClose(onCancel, 160);
   const ref = useRef(null);
+  useEffect(() => { ref.current?.focus(); }, []);
   useEffect(() => {
-    ref.current?.focus();
-    const onKey = e => { if (e.key === 'Escape') onCancel(); };
+    const onKey = e => { if (e.key === 'Escape') cancel(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [onCancel]);
+  }, [cancel]);
   return createPortal(
-    <div className="wf-sheet-backdrop wf-sheet-backdrop--center" onMouseDown={e => { if (e.target === e.currentTarget) onCancel(); }}>
+    <div className="wf-sheet-backdrop wf-sheet-backdrop--center" data-state={closing ? 'closing' : 'open'} onMouseDown={e => { if (e.target === e.currentTarget) cancel(); }}>
       <div role="alertdialog" aria-modal="true" aria-label={title} className="wf-dialog">
         <h2 className="t-section">{title}</h2>
         <div className="mt-2 text-sm text-ink-2">{body}</div>
         <div className="mt-4 flex justify-end gap-2">
-          <Button onClick={onCancel}>{t('Cancel')}</Button>
+          <Button onClick={cancel}>{t('Cancel')}</Button>
           <Button ref={ref} variant={danger ? 'danger' : 'primary'} onClick={onConfirm}>{confirmLabel}</Button>
         </div>
       </div>
@@ -125,7 +155,11 @@ export function Collapsible({ id, title, children, defaultOpen = true, right }) 
         </button>
         {right}
       </div>
-      {pref.open && <div className="border-t border-line p-3">{children}</div>}
+      {/* Height animates open and shut; closed content is out of reach of
+          keyboard and screen readers. */}
+      <div className="wf-collapse" data-open={pref.open} inert={!pref.open}>
+        <div><div className="border-t border-line p-3">{children}</div></div>
+      </div>
     </section>
   );
 }

@@ -82,7 +82,7 @@ export default function PeopleView() {
         </div>
       )}
 
-      <div className="wf-scroll">
+      <div key={pref.tab} className="wf-scroll wf-view">
         {list(wf.people).length === 0 ? (
           <Empty title={t('No people yet')} action={can('people.edit') && <><Button variant="primary" onClick={add}>+ {t('Add person')}</Button><Button onClick={() => setImporting(true)}>{t('Import…')}</Button></>}>
             {t('Add operators one by one, or import them from Excel or CSV. They don’t need a login.')}
