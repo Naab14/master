@@ -1,6 +1,7 @@
 /* global process */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createRequire } from 'node:module';
+import { Buffer } from 'node:buffer';
 
 /* The Vercel function (api/index.js) against a stand-in for Supabase's REST
  * API, so the production path is exercised without touching real data. */
@@ -105,13 +106,18 @@ describe('Vercel adapter', () => {
   it('with Google sign-in on: admin from the database, uninvited refused, password accounts refused', async () => {
     process.env.VERCEL_ENV = 'production';
     const google = email => ({ email, email_confirmed_at: '2026-11-10T00:00:00Z', app_metadata: { provider: 'google', providers: ['google'] } });
+    // Tokens shaped like Supabase's: the middle part says how the session began.
+    const jwt = (name, method) => `h.${Buffer.from(JSON.stringify({ sub: name, amr: [{ method }] })).toString('base64url')}.sig`;
+    const T = { owner: jwt('owner', 'oauth'), lead: jwt('lead', 'oauth'), stranger: jwt('stranger', 'oauth'), password: jwt('password', 'password'), unconfirmed: jwt('unconfirmed', 'oauth'), linked: jwt('linked', 'password') };
     const sb = fakeSupabase({
       allowNewKeys: true,
       seed: { admin: { owners: ['Owner@Example.com'], authConfig: { publishableKey: 'sb_publishable_test' }, users: { 'lead@example.com': { email: 'lead@example.com', role: 'teamlead', teams: [] } }, requests: {}, permissions: {}, settings: {} } },
       authUsers: {
-        'tok-owner': google('owner@example.com'), 'tok-lead': google('lead@example.com'), 'tok-stranger': google('stranger@example.com'),
-        'tok-password': { email: 'owner@example.com', email_confirmed_at: '2026-11-10T00:00:00Z', app_metadata: { provider: 'email', providers: ['email'] } },
-        'tok-unconfirmed': { email: 'owner@example.com', email_confirmed_at: null, app_metadata: { provider: 'google', providers: ['google'] } },
+        [T.owner]: google('owner@example.com'), [T.lead]: google('lead@example.com'), [T.stranger]: google('stranger@example.com'),
+        [T.password]: { email: 'owner@example.com', email_confirmed_at: '2026-11-10T00:00:00Z', app_metadata: { provider: 'email', providers: ['email'] } },
+        [T.unconfirmed]: { email: 'owner@example.com', email_confirmed_at: null, app_metadata: { provider: 'google', providers: ['google'] } },
+        // The owner's account with a password added later, used through a password login.
+        [T.linked]: { email: 'owner@example.com', email_confirmed_at: '2026-11-10T00:00:00Z', app_metadata: { provider: 'google', providers: ['google', 'email'] } },
       },
     });
     vi.stubGlobal('fetch', sb.fetchMock);
@@ -120,20 +126,22 @@ describe('Vercel adapter', () => {
     expect(cfg).toMatchObject({ locked: false, auth: { provider: 'google', publishableKey: 'sb_publishable_test', providerEnabled: true } });
     expect((await call(handler, 'GET', 'me')).status).toBe(401);                          // no token
     expect((await call(handler, 'GET', 'state', undefined, 'forged')).status).toBe(401);  // made-up token
-    expect((await call(handler, 'GET', 'me', undefined, 'tok-owner')).body).toMatchObject({ role: 'admin', email: 'owner@example.com' });
-    const stranger = await call(handler, 'GET', 'me', undefined, 'tok-stranger');
+    expect((await call(handler, 'GET', 'me', undefined, T.owner)).body).toMatchObject({ role: 'admin', email: 'owner@example.com' });
+    const stranger = await call(handler, 'GET', 'me', undefined, T.stranger);
     expect([stranger.status, stranger.body.code]).toEqual([403, 'not-invited']);
     expect(sb.rows.get('admin').data.requests['stranger@example.com']).toBeTruthy();       // queued for approval
     expect(sb.rows.get('admin').data.owners).toEqual(['Owner@Example.com']);               // untouched by the API
-    const pw = await call(handler, 'GET', 'me', undefined, 'tok-password');
+    const pw = await call(handler, 'GET', 'me', undefined, T.password);
     expect([pw.status, pw.body.code]).toEqual([403, 'wrong-provider']);                    // same address, not Google
-    expect((await call(handler, 'GET', 'me', undefined, 'tok-unconfirmed')).status).toBe(401);
+    expect((await call(handler, 'GET', 'me', undefined, T.unconfirmed)).status).toBe(401);
+    const linked = await call(handler, 'GET', 'me', undefined, T.linked);
+    expect([linked.status, linked.body.code]).toEqual([403, 'wrong-provider']);              // Google account, password session
     // Team lead: may record attendance, may not edit people or open Access.
-    expect((await call(handler, 'GET', 'me', undefined, 'tok-lead')).body.role).toBe('teamlead');
-    expect((await call(handler, 'POST', 'workforce/ops', { ops: [{ op: 'put', col: 'people', id: 'p1', value: { id: 'p1', name: 'X' } }] }, 'tok-lead')).status).toBe(403);
-    expect((await call(handler, 'GET', 'admin/state', undefined, 'tok-lead')).status).toBe(403);
-    expect((await call(handler, 'POST', 'admin/users', { email: 'lead@example.com', role: 'manager' }, 'tok-lead')).status).toBe(403);
-    expect((await call(handler, 'POST', 'workforce/ops', { ops: [{ op: 'put', col: 'people', id: 'p1', value: { id: 'p1', name: 'X' } }] }, 'tok-owner')).status).toBe(200);
+    expect((await call(handler, 'GET', 'me', undefined, T.lead)).body.role).toBe('teamlead');
+    expect((await call(handler, 'POST', 'workforce/ops', { ops: [{ op: 'put', col: 'people', id: 'p1', value: { id: 'p1', name: 'X' } }] }, T.lead)).status).toBe(403);
+    expect((await call(handler, 'GET', 'admin/state', undefined, T.lead)).status).toBe(403);
+    expect((await call(handler, 'POST', 'admin/users', { email: 'lead@example.com', role: 'manager' }, T.lead)).status).toBe(403);
+    expect((await call(handler, 'POST', 'workforce/ops', { ops: [{ op: 'put', col: 'people', id: 'p1', value: { id: 'p1', name: 'X' } }] }, T.owner)).status).toBe(200);
   });
 
   it('keeps preview deployments on their own table', async () => {

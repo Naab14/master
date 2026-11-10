@@ -115,6 +115,22 @@ async function userForToken(token, settings) {
   return entry;
 }
 
+/**
+ * How this particular session was started, from the token's `amr` claim
+ * (Supabase has already verified the token itself). With Google only, the
+ * session must come from an OAuth sign-in.
+ */
+function sessionMethodAccepted(token, providers) {
+  if (providers.includes('email')) return true; // password sign-in is allowed (test setups only)
+  try {
+    const payload = JSON.parse(Buffer.from(String(token).split('.')[1] || '', 'base64url').toString('utf8'));
+    const methods = (Array.isArray(payload.amr) ? payload.amr : []).map((m) => (m && typeof m === 'object' ? m.method : m));
+    return methods.includes('oauth');
+  } catch {
+    return false;
+  }
+}
+
 const deny = (status, error, code) => ({ status, body: code ? { error, code } : { error } });
 
 /**
@@ -140,8 +156,9 @@ async function authenticate(headers, settings) {
   const user = await userForToken(token, settings);
   if (!user) return { denied: deny(401, 'sign in required') };
   // The account must have signed in with an accepted provider (Google). An
-  // email-and-password account with the same address doesn't count.
-  if (!user.providers.some((p) => settings.providers.includes(p))) {
+  // email-and-password account with the same address doesn't count, and
+  // neither does a password login on an account that also has Google.
+  if (!user.providers.some((p) => settings.providers.includes(p)) || !sessionMethodAccepted(token, settings.providers)) {
     return { denied: deny(403, 'Sign in with Google to use this site.', 'wrong-provider') };
   }
   return { identity: { via: 'google', email: user.email } };
