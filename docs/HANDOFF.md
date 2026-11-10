@@ -8,70 +8,68 @@ work. Last updated 2026-11-10.
 
 | | |
 | --- | --- |
-| Branch | `claude/naab14-shift-management-qmu4s9` |
-| Pull request | https://github.com/Naab14/master/pull/6 — the only PR for this work; merged to `main` on 2026-11-10 (its description holds the post-release check results) |
-| Production | https://master-mocha-pi.vercel.app — deploys from `main`. **Locked**: it shows "Sign-in is not set up yet" and the API refuses everything until the owner's steps below are done |
-| Preview | https://master-git-claude-naab14-shift-manageme-f00fc0-naab14s-projects.vercel.app — behind Vercel login, uses the test table `app_state_preview` with the made-up demo plant |
-| Database | Supabase project `master` (free plan). Restored from auto-pause on 2026-11-10. Migrations 002 and 003 applied. Backup copy of the original three sections: table `app_state_backup_20261110` |
+| Production | https://master-mocha-pi.vercel.app — commit `b472699` (merge of PR #6), deployed 2026-11-10 and not redeployed since. **Google sign-in is active**; the admin is the owner's Google address |
+| Pull requests | #6 merged (the whole build). This file's update is in a docs-only follow-up PR from the same branch name |
+| Preview | https://master-git-claude-naab14-shift-manageme-f00fc0-naab14s-projects.vercel.app — behind Vercel login, uses the test table `app_state_preview` with the made-up demo plant, open without sign-in (by design, for previews only) |
+| Database | Supabase project `master` (free plan). Migrations 001–003 applied. Backup copy of the original three sections: table `app_state_backup_20261110` |
 | Uncommitted files | None |
 
-Any follow-up work after the merge starts from the latest `main` on the same
-branch name and opens a new PR (a merged PR can't take more commits).
+Any further work starts from the latest `main` and opens a new PR.
 
-## What the owner must do to open the site
+## Configuration completed on 2026-11-10 (no secret values here)
 
-Nothing else is needed; no secret goes through chat.
+| What | Where | By |
+| --- | --- | --- |
+| Google OAuth web client, with the Supabase callback as redirect address | Google Cloud | Owner |
+| Google provider switched on, client ID and secret saved | Supabase → Authentication → Providers | Owner |
+| Site URL set to the production address | Supabase → Authentication → URL Configuration | Owner |
+| Admin account named (`owners`) and the public sign-in key saved (`authConfig.publishableKey`) | Production `admin` row in `app_state` | Claude, one SQL insert |
 
-1. **Create a Google sign-in client** (about five minutes, free):
-   Google Cloud Console → *APIs & Services* → *Credentials* → *Create
-   credentials* → *OAuth client ID* → type **Web application**.
-   Under *Authorized redirect URIs* add exactly
-   `https://wsqpjlhhfonkqhrxqgre.supabase.co/auth/v1/callback`.
-   If Google first asks for a consent screen: type *External*, app name
-   "Master", your own email; then set it to **In production** (Publish) so
-   invited colleagues can sign in. Only name and email are requested, so
-   Google needs no review.
-2. **Enter it in Supabase**: project `master` → *Authentication* → *Sign In
-   / Providers* → *Google* → switch on, paste the **Client ID** and **Client
-   secret** from step 1, Save.
-3. **Tell Supabase where the site is**: *Authentication* → *URL
-   Configuration* → *Site URL* = `https://master-mocha-pi.vercel.app`.
-4. **Name the admin account.** Either tell Claude which Google address is
-   the admin (it is then stored in the database, no redeploy), or add
-   `ADMIN_EMAIL` yourself in Vercel → project `master` → Settings →
-   Environment Variables (Production) and press Redeploy.
+No Vercel environment variable was added and nothing was redeployed: the
+API reads the `admin` row on every request. The service-role key stays only
+in Vercel; the OAuth client secret stays only in Supabase.
 
-Then: open the site, sign in with Google, open **Access** to invite team
-leads, and **Setup** to enter shifts, people and requirements.
+## Temporary test accounts: removed
 
-Recommended, optional: in Supabase → *Authentication* → *Sign In /
-Providers* → *Email*, switch off sign-ups. The app already refuses password
-logins; this just keeps strangers from creating unused accounts.
+The three accounts created for the access tests were deleted on 2026-11-10,
+selected by their exact ids, email addresses and a test marker set at
+creation (`admin-test`, `lead-test` and `stranger-test` at
+`master-test.invalid`). Their test-only access records (the preview table's
+`admin` and `attendance` rows, which held nothing else) were removed too.
 
-## Waiting on the owner in this session
+Checked afterwards: Supabase Auth holds no users, identities or sessions;
+`boards`, `manageclip` and `vacation` in production are byte-identical to
+the backup; the backup table has its three rows; the preview keeps its demo
+rows (`boards`, `manageclip`, `workforce`).
 
-- **A database clean-up needs confirming.** The Supabase connector asked for
-  confirmation before deleting the three temporary test accounts
-  (`…-test@master-test.invalid`) and got no answer. Until it runs: those
-  accounts still exist (password logins, refused by the app), the preview
-  shows the sign-in page instead of the open demo, and production has no
-  stored public sign-in key yet. The statement to run again is in
-  "Database statements" below.
+## What still needs the owner
+
+1. **Sign in once.** Open https://master-mocha-pi.vercel.app, press "Sign in
+   with Google" and use the admin address. Google's page says "continue to
+   wsqpjlhhfonkqhrxqgre.supabase.co": that is expected (Supabase handles
+   the sign-in). This is the one check Claude cannot do.
+2. If Google says the app is in testing and blocks a colleague later:
+   Google Cloud → OAuth consent screen → Publish app.
+3. Supply the OB rules when ready.
+4. Merge the docs follow-up PR when convenient (it changes no code).
 
 ## Checks run, with results
 
-| Check | Result |
-| --- | --- |
-| `npm --prefix apps/web run test:ci` | 231 passed, 20 files |
-| `npm --prefix apps/web run lint` | clean |
-| `npm --prefix apps/web run build` | builds |
-| Migration 002 on production | applied after a backup; the three existing sections are byte-identical (same md5 and version) before and after |
-| Preview in a browser | Same Schedule as the earlier screenshot (with "Plan leave" where "Print" was); reads and writes only the preview table |
-| Access, on the deployed preview with real Supabase tokens | No sign-in: every route refused. Made-up token refused. Configured admin is admin. Uninvited account refused and queued. Stranger can't approve themselves. Team lead (limited to one team): can record attendance for own team only, can't edit people, competencies, setup or Access. Sign-out clears the browser and the session stops working on the API. Google-only setting refuses a password account using the admin's address |
-| Motion, in a running browser | 22 checks on desktop, phone and reduced motion: panel in/out, section height, view changes, drag lift/target/glide, pulse after drop and Undo, toast, hover, confirm dialog |
+| Check | Where | Result |
+| --- | --- | --- |
+| Tests, lint, build | Repository at `b472699` | 231 tests pass, lint clean, builds |
+| Sign-in page replaces the locked page | Production, desktop and phone | Yes; button enabled; no app content or stored data before sign-in |
+| Button → Supabase → Google | Production | Return address is the production site; callback is `…supabase.co/auth/v1/callback`; Google accepts the request and shows its sign-in form (no redirect or client error) |
+| Anonymous requests | Production, 15 read and write routes | All refused (401) |
+| Invalid tokens: random text, a forged token claiming the admin address, the public key | Production, same 15 routes each | All refused (401) |
+| Old access-code header; direct links to `#/schedule`, `#/admin`, … | Production | Refused; only the sign-in page shows |
+| The build served contains the new Schedule, no print controls, no install manifest | Production bundle | Yes |
+| Existing Shift HQ, Vacations and Boards data | Database | Byte-identical to the backup |
+| Admin recognised, uninvited account refused and queued, team-lead limits, sign-out clears the browser and ends the session, password account refused | **Preview**, with real Supabase tokens for temporary accounts (since deleted) | Passed. Not repeated on production: that needs real Google accounts |
 
-**Not verified:** a real Google login (Google is not switched on in
-Supabase), a real phone, the iOS app.
+**Not verified by Claude:** the owner's own Google login on production, and
+therefore the signed-in production screens (Schedule with real data, Access,
+sign-out). An uninvited real Google account on production. A real phone.
 
 ## Recovery
 
@@ -91,24 +89,11 @@ Supabase), a real phone, the iOS app.
 Run by hand in the Supabase SQL editor, or through Claude.
 
 ```sql
--- Clean up after the access tests (waiting for confirmation, see above)
-delete from auth.users where email like '%@master-test.invalid';
-delete from public.app_state_preview where key = 'admin';
-insert into public.app_state (key, data, version)
-values ('admin', jsonb_build_object('owners', '[]'::jsonb, 'authConfig',
-  jsonb_build_object('publishableKey', '<the project''s publishable key>'),
-  'users', '{}'::jsonb, 'requests', '{}'::jsonb, 'permissions', '{}'::jsonb, 'settings', '{}'::jsonb), 1)
-on conflict (key) do nothing;
-
--- Name the admin without a redeploy (replace the address)
+-- Change or add an admin without a redeploy (replace the address)
 update public.app_state
 set data = jsonb_set(data, '{owners}', '["you@example.com"]'::jsonb), version = version + 1
 where key = 'admin';
 ```
-
-The publishable key is the public one (Supabase → Project Settings → API
-Keys → "publishable"); it is meant to be visible to browsers. The secret
-service key stays only in Vercel.
 
 ## Start it locally
 
@@ -123,20 +108,23 @@ Local mode has no sign-in and treats you as admin. That is only possible
 off the production site: with `VERCEL_ENV=production` the API is locked
 unless an admin is configured.
 
-## Spending
+## Spending and availability
 
 No paid service, plan, credit or domain was added. Supabase stays on the
-free plan (restoring a paused project is free; it pauses again after about
-a week without use). One free open-source package (`@excalidraw/excalidraw`).
+free plan. One free open-source package (`@excalidraw/excalidraw`).
+
+The free Supabase project pauses after about a week without use; then the
+site can't load data until it is restored (free, a few minutes, data
+kept; Claude or the Supabase dashboard can do it). No automatic keep-alive
+was added. Avoiding the pause entirely needs the paid Supabase plan: that
+is a spending decision for the owner, not taken here.
 
 ## Exact next action
 
-1. When the owner confirms: run the clean-up statement above.
-2. When the owner has done steps 1–3 and named the admin: check
-   `/api/config` on production shows Google ready, ask the owner to sign in,
-   then verify Access, an uninvited account and sign-out on production.
-3. Then continue with `ROADMAP.md` → Next (translate and restyle the three
-   older tools).
+1. After the owner has signed in: confirm with them that Schedule, Access
+   and sign-out work on production, and that their existing Shift HQ,
+   Vacations and Boards data shows.
+2. Then continue with `ROADMAP.md` → Next.
 
 ## Map of the code added in this work
 

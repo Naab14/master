@@ -50,12 +50,12 @@ Rules so threads don't collide:
   progress** (with the thread name) before starting, and record decisions in
   its **Decisions** log with a date. Don't keep important context only in a
   chat.
-- **The workforce build uses one branch and one draft PR**
-  (`claude/naab14-shift-management-qmu4s9`, PR #6) until the owner says
-  otherwise. Don't open extra or stacked PRs for it, don't merge or push to
-  `main` without the owner's instruction, and don't force-push.
-- For unrelated work: one branch and one PR per piece, from the latest
-  `main`. Check open PRs first so you don't edit the same files.
+- **The workforce build was released** through PR #6 (merged 2026-11-10).
+  New work starts from the latest `main` on its own branch with one PR;
+  keep related changes together instead of scattering small PRs. Don't
+  merge or push to `main` without the owner's instruction, and don't
+  force-push.
+- Check open PRs first so you don't edit the same files as another thread.
 - When a thread changes something every thread should know (architecture,
   conventions, deploy setup), update this file in the same PR.
 
