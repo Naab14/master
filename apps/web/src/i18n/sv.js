@@ -187,4 +187,19 @@ export default {
   '{n} of the days already have an absence recorded.': '{n} av dagarna har redan en frånvaro registrerad.', 'No new gaps: every requirement can still be met.': 'Inga nya luckor: alla krav kan fortfarande uppfyllas.',
   'Could step in without opening a gap': 'Kan hoppa in utan att öppna en lucka', 'day off': 'ledig dag', 'Qualified, but moving them opens a gap on their own shift': 'Behöriga, men att flytta dem öppnar en lucka på deras eget skift',
   'Some people are ruled out by a certificate that has expired by this date.': 'Vissa personer faller bort på grund av ett certifikat som gått ut detta datum.', 'This is information for your decision. You can still save the leave.': 'Detta är underlag för ditt beslut. Du kan fortfarande spara ledigheten.',
+  // Round 2
+  'Receipts': 'Kvitton', 'OB rules not configured': 'OB-regler inte inlagda', 'OB is not calculated until your workplace rules are entered in Setup. Nothing here means zero OB.': 'OB räknas inte förrän arbetsplatsens regler är inlagda under Inställningar. Inget här betyder noll OB.',
+  'n/a': 'saknas', 'Away part of the shift': 'Borta en del av skiftet', 'training': 'upplärning', 'time not known': 'tid okänd', 'Could be': 'Kan vara',
+  'Qualified, available and possible': 'Behöriga, tillgängliga och möjliga', 'On this shift and qualified, whether here or away': 'På detta skift och behöriga, oavsett om de är här eller borta',
+  'Qualified and not away': 'Behöriga och inte borta', 'Available': 'Tillgängliga', 'Positions that can be filled at the same time, after other positions have taken their people': 'Positioner som kan fyllas samtidigt, efter att andra positioner tagit sina personer',
+  'Not possible {when}; the rest of the time it is.': 'Inte möjligt {when}; resten av tiden går det.', 'Time off the line (optional)': 'Tid från linjen (valfritt)',
+  'With times set, trainee and trainer are both counted as off the line then, on the chosen days of the period. Without times, training takes no capacity in the plan.': 'Med tider inlagda räknas både den som lärs upp och handledaren som borta från linjen då, på valda dagar i perioden. Utan tider tar upplärningen ingen kapacitet i planen.',
+  'How a trainee counts on the line is set per level and process in Setup.': 'Hur en person under upplärning räknas på linjen ställs in per nivå och process under Inställningar.',
+  // Sign-in
+  'Shift planning for the team': 'Skiftplanering för laget', 'Opening Google…': 'Öppnar Google…', 'Sign in with Google': 'Logga in med Google',
+  'Google sign-in is not switched on yet. The site owner needs to finish the setup.': 'Google-inloggning är inte påslagen ännu. Sidans ägare behöver slutföra inställningen.',
+  'Only invited people can sign in. Ask your shift manager for access.': 'Bara inbjudna kan logga in. Be din skiftchef om åtkomst.', 'No access yet': 'Ingen åtkomst ännu',
+  'This Google account has not been invited. Your request has been sent to the admin; try again once they have approved it.': 'Det här Google-kontot är inte inbjudet. Din förfrågan har skickats till admin; försök igen när den har godkänts.',
+  'Use a different account': 'Använd ett annat konto', 'Sign-in is not set up yet': 'Inloggning är inte inställd ännu',
+  'This site stays closed until the owner has set up Google sign-in and an admin account. Nothing can be opened without signing in.': 'Sidan är stängd tills ägaren har ställt in Google-inloggning och ett adminkonto. Inget kan öppnas utan inloggning.',
 };

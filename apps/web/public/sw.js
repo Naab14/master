@@ -6,7 +6,7 @@
  *   last loaded planning data lives in the app's own storage, which is
  *   cleared on sign-out.
  */
-const CACHE = 'master-shell-v1';
+const CACHE = 'master-shell-v2';
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(c => c.addAll(['/', '/icon.svg'])).then(() => self.skipWaiting()));
@@ -33,7 +33,7 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-  if (url.pathname.startsWith('/assets/') || /\.(svg|png|webmanifest)$/.test(url.pathname)) {
+  if (url.pathname.startsWith('/assets/') || /\.(svg|png)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
         if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); }

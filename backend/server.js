@@ -15,7 +15,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { route, sectionsFor, normalizeSection, SECTION_KEYS } = require('./core');
-const { authenticate, accessEnv, publicConfig } = require('./auth');
+const { authSettings, authenticate, accessEnv, publicConfig } = require('./auth');
 
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -87,8 +87,9 @@ function readBody(req) {
 }
 
 async function handleApi(req, res, pathname) {
-  if (pathname === '/api/config') return json(res, 200, publicConfig());
-  const { identity, denied } = await authenticate(req.headers);
+  const settings = authSettings(db.admin);
+  if (pathname === '/api/config') return json(res, 200, await publicConfig(settings));
+  const { identity, denied } = await authenticate(req.headers, settings);
   if (denied) return json(res, denied.status, denied.body);
 
   const body = req.method === 'GET' ? {} : await readBody(req);
@@ -97,7 +98,7 @@ async function handleApi(req, res, pathname) {
     sections[key] = key === 'boards' ? { members: db.members, boards: db.boards } : db[key];
   }
 
-  const result = route(req.method, pathname, body, sections, { identity, env: accessEnv() });
+  const result = route(req.method, pathname, body, sections, { identity, env: accessEnv(settings) });
 
   if (result.dirty.length) {
     for (const key of result.dirty) {

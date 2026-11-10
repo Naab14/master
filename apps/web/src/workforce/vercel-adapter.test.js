@@ -6,11 +6,20 @@ import { createRequire } from 'node:module';
  * API, so the production path is exercised without touching real data. */
 const require = createRequire(import.meta.url);
 
-function fakeSupabase({ allowNewKeys }) {
+function fakeSupabase({ allowNewKeys, authUsers = {}, googleOn = true, seed = {} }) {
   const rows = new Map([['boards', { key: 'boards', data: null, version: 0 }], ['manageclip', { key: 'manageclip', data: null, version: 0 }], ['vacation', { key: 'vacation', data: null, version: 0 }]]);
+  for (const [k, data] of Object.entries(seed)) rows.set(k, { key: k, data, version: 1 });
   const json = (status, body) => ({ ok: status < 400, status, json: async () => body, text: async () => JSON.stringify(body) });
+  const calls = [];
   const fetchMock = async (url, options = {}) => {
     const u = new URL(url);
+    calls.push(u.pathname);
+    // Supabase Auth: who does this token belong to?
+    if (u.pathname === '/auth/v1/user') {
+      const user = authUsers[String(options.headers.Authorization).replace('Bearer ', '')];
+      return user ? json(200, user) : json(401, { message: 'invalid token' });
+    }
+    if (u.pathname === '/auth/v1/settings') return json(200, { external: { google: googleOn } });
     const method = options.method || 'GET';
     if (method === 'GET') {
       const keys = /in\.\((.*)\)/.exec(u.searchParams.get('key'))[1].split(',');
@@ -30,13 +39,13 @@ function fakeSupabase({ allowNewKeys }) {
     Object.assign(row, body);
     return json(200, [row]);
   };
-  return { rows, fetchMock };
+  return { rows, fetchMock, calls };
 }
 
-async function call(handler, method, path, body) {
+async function call(handler, method, path, body, token) {
   let status; let payload;
   const res = { writeHead: s => { status = s; }, end: d => { payload = JSON.parse(d); } };
-  await handler({ method, url: `/api?path=${path}`, headers: {}, body }, res);
+  await handler({ method, url: `/api?path=${path}`, headers: token ? { authorization: `Bearer ${token}` } : {}, body }, res);
   return { status, body: payload };
 }
 
@@ -44,13 +53,14 @@ describe('Vercel adapter', () => {
   let handler;
   const load = () => {
     vi.resetModules();
-    delete require.cache[require.resolve('../../../../api/index.js')];
+    for (const f of ['../../../../api/index.js', '../../../../backend/auth.js']) delete require.cache[require.resolve(f)];
     handler = require('../../../../api/index.js');
   };
   beforeEach(() => {
     process.env.SUPABASE_URL = 'https://example.supabase.co';
     process.env.SUPABASE_SERVICE_ROLE_KEY = 'sb_secret_test';
     delete process.env.ADMIN_EMAIL; delete process.env.ALLOWED_EMAILS; delete process.env.APP_ACCESS_CODE;
+    delete process.env.VERCEL_ENV; delete process.env.AUTH_PROVIDERS;
   });
   afterEach(() => { vi.unstubAllGlobals(); delete process.env.SUPABASE_URL; delete process.env.SUPABASE_SERVICE_ROLE_KEY; });
 
@@ -77,5 +87,63 @@ describe('Vercel adapter', () => {
     const put = await call(handler, 'POST', 'workforce/ops', { ops: [{ op: 'put', col: 'people', id: 'p1', value: { id: 'p1', name: 'Test' } }] });
     expect(put.status).toBe(503);
     expect(put.body.error).toMatch(/002_more_sections/);
+  });
+
+  it('locks the production site until an admin is configured: no anonymous access', async () => {
+    process.env.VERCEL_ENV = 'production';
+    const sb = fakeSupabase({ allowNewKeys: true });
+    vi.stubGlobal('fetch', sb.fetchMock);
+    load();
+    expect((await call(handler, 'GET', 'config')).body).toMatchObject({ auth: null, locked: true });
+    for (const path of ['me', 'state', 'workforce/state', 'admin/state', 'sketches']) {
+      const r = await call(handler, 'GET', path);
+      expect([path, r.status, r.body.code]).toEqual([path, 503, 'locked']);
+    }
+    expect((await call(handler, 'POST', 'workforce/ops', { ops: [] })).status).toBe(503);
+  });
+
+  it('with Google sign-in on: admin from the database, uninvited refused, password accounts refused', async () => {
+    process.env.VERCEL_ENV = 'production';
+    const google = email => ({ email, email_confirmed_at: '2026-11-10T00:00:00Z', app_metadata: { provider: 'google', providers: ['google'] } });
+    const sb = fakeSupabase({
+      allowNewKeys: true,
+      seed: { admin: { owners: ['Owner@Example.com'], authConfig: { publishableKey: 'sb_publishable_test' }, users: { 'lead@example.com': { email: 'lead@example.com', role: 'teamlead', teams: [] } }, requests: {}, permissions: {}, settings: {} } },
+      authUsers: {
+        'tok-owner': google('owner@example.com'), 'tok-lead': google('lead@example.com'), 'tok-stranger': google('stranger@example.com'),
+        'tok-password': { email: 'owner@example.com', email_confirmed_at: '2026-11-10T00:00:00Z', app_metadata: { provider: 'email', providers: ['email'] } },
+        'tok-unconfirmed': { email: 'owner@example.com', email_confirmed_at: null, app_metadata: { provider: 'google', providers: ['google'] } },
+      },
+    });
+    vi.stubGlobal('fetch', sb.fetchMock);
+    load();
+    const cfg = (await call(handler, 'GET', 'config')).body;
+    expect(cfg).toMatchObject({ locked: false, auth: { provider: 'google', publishableKey: 'sb_publishable_test', providerEnabled: true } });
+    expect((await call(handler, 'GET', 'me')).status).toBe(401);                          // no token
+    expect((await call(handler, 'GET', 'state', undefined, 'forged')).status).toBe(401);  // made-up token
+    expect((await call(handler, 'GET', 'me', undefined, 'tok-owner')).body).toMatchObject({ role: 'admin', email: 'owner@example.com' });
+    const stranger = await call(handler, 'GET', 'me', undefined, 'tok-stranger');
+    expect([stranger.status, stranger.body.code]).toEqual([403, 'not-invited']);
+    expect(sb.rows.get('admin').data.requests['stranger@example.com']).toBeTruthy();       // queued for approval
+    expect(sb.rows.get('admin').data.owners).toEqual(['Owner@Example.com']);               // untouched by the API
+    const pw = await call(handler, 'GET', 'me', undefined, 'tok-password');
+    expect([pw.status, pw.body.code]).toEqual([403, 'wrong-provider']);                    // same address, not Google
+    expect((await call(handler, 'GET', 'me', undefined, 'tok-unconfirmed')).status).toBe(401);
+    // Team lead: may record attendance, may not edit people or open Access.
+    expect((await call(handler, 'GET', 'me', undefined, 'tok-lead')).body.role).toBe('teamlead');
+    expect((await call(handler, 'POST', 'workforce/ops', { ops: [{ op: 'put', col: 'people', id: 'p1', value: { id: 'p1', name: 'X' } }] }, 'tok-lead')).status).toBe(403);
+    expect((await call(handler, 'GET', 'admin/state', undefined, 'tok-lead')).status).toBe(403);
+    expect((await call(handler, 'POST', 'admin/users', { email: 'lead@example.com', role: 'manager' }, 'tok-lead')).status).toBe(403);
+    expect((await call(handler, 'POST', 'workforce/ops', { ops: [{ op: 'put', col: 'people', id: 'p1', value: { id: 'p1', name: 'X' } }] }, 'tok-owner')).status).toBe(200);
+  });
+
+  it('keeps preview deployments on their own table', async () => {
+    process.env.VERCEL_ENV = 'preview';
+    const sb = fakeSupabase({ allowNewKeys: true });
+    const seen = [];
+    vi.stubGlobal('fetch', (url, o) => { seen.push(new URL(url).pathname); return sb.fetchMock(url, o); });
+    load();
+    await call(handler, 'GET', 'state');
+    expect(seen.every(p => p === '/rest/v1/app_state_preview')).toBe(true);
+    expect(seen.length).toBeGreaterThan(0);
   });
 });

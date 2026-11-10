@@ -18,7 +18,7 @@ function usedTexts() {
     }
   };
   walk(path.resolve(here, '../workforce'));
-  files.push(path.resolve(here, '../App.jsx'));
+  files.push(path.resolve(here, '../App.jsx'), path.resolve(here, '../shell/SignIn.jsx'), path.resolve(here, '../dashboard/Dashboard.jsx'), path.resolve(here, '../theme/ThemeSwitcher.jsx'));
   const out = new Set();
   for (const file of files) {
     const src = fs.readFileSync(file, 'utf8');

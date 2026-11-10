@@ -6,8 +6,6 @@ import { useI18n } from '../i18n';
 import { useWorkforce } from './store-context';
 import { Avatar, Confirm, EmploymentMark, Empty, Field, Input, PageHeader, Select, Sheet } from './ui';
 import { usePref } from './prefs';
-import { PrintPreview, PrintPage } from './print';
-import { chunk } from './print-util';
 import { addDays, dateRange, todayIn } from './logic/time';
 import { displayName, levelsOf, list, settingsOf, uid } from './logic/model';
 import { confirmMoveOps, moveTeamOps, resolveShift, teamOf } from './logic/schedule';
@@ -26,7 +24,6 @@ export default function PeopleView() {
   const [q, setQ] = useState('');
   const [openId, setOpenId] = useState(personFromHash);
   const [importing, setImporting] = useState(false);
-  const [printing, setPrinting] = useState(false);
   const levels = levelsOf(wf);
   const skills = list(wf.skills);
   const certs = list(wf.certs);
@@ -62,7 +59,6 @@ export default function PeopleView() {
     <div className="wf-page">
       <PageHeader title={t('People')}>
         <Segmented label={t('View')} value={pref.tab} onChange={tab => setPref({ tab })} options={[{ value: 'list', label: t('List') }, { value: 'matrix', label: t('Competency matrix') }]} />
-        {pref.tab === 'matrix' && <Button onClick={() => setPrinting(true)}>{t('Print')}</Button>}
         {can('people.edit') && <Button onClick={() => setImporting(true)}>{t('Import…')}</Button>}
         {can('people.edit') && <Button variant="primary" onClick={add}>+ {t('Add person')}</Button>}
       </PageHeader>
@@ -131,29 +127,6 @@ export default function PeopleView() {
 
       {openId && wf.people[openId] && <Profile personId={openId} onClose={() => open(null)} />}
       {importing && <ImportSheet onClose={() => setImporting(false)} />}
-      {printing && (
-        <PrintPreview id="matrix" onClose={() => setPrinting(false)}>
-          {({ height }) => {
-            const pages = chunk(people, Math.max(10, Math.floor((height - 60) / 5.2)));
-            return pages.map((rows, i) => (
-              <PrintPage key={i} page={i + 1} pages={pages.length} title={t('Competency matrix')} range={`${fmt.date(today, 'full')} · ${t('{n} people', { n: people.length })}`}
-                legend={<>{levels.map(l => <span key={l.id}><b>{l.rank}</b>{fmt.name(l.name)}</span>)}<span><b>ᶜ</b>{t('Consultant')}</span></>}>
-                <table>
-                  <colgroup><col style={{ width: '48mm' }} /><col style={{ width: '22mm' }} /></colgroup>
-                  <thead><tr><th className="l">{t('Name')}</th><th className="l">{t('Team')}</th>{skills.map(s => <th key={s.id}>{s.name}</th>)}{certs.map(c => <th key={c.id}>{c.name}</th>)}</tr></thead>
-                  <tbody>{rows.map(p => (
-                    <tr key={p.id}>
-                      <td className="l">{p.name}{p.employment === 'consultant' ? ' ᶜ' : ''}</td><td className="l">{wf.teams[p.teamId]?.name || ''}</td>
-                      {skills.map(s => <td key={s.id}>{levels.find(l => l.id === wf.qualifications[p.id]?.skills?.[s.id])?.rank || ''}</td>)}
-                      {certs.map(c => { const st = certState(p.id, c); return <td key={c.id} className={st?.tone === 'bad' ? 'gap' : st?.tone === 'warn' ? 'risk' : ''}>{st?.text || ''}</td>; })}
-                    </tr>
-                  ))}</tbody>
-                </table>
-              </PrintPage>
-            ));
-          }}
-        </PrintPreview>
-      )}
     </div>
   );
 }

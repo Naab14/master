@@ -15,6 +15,8 @@ import { shiftTimes } from './logic/schedule';
 import { eventsOn } from './logic/events';
 import { noteText, reqLabel } from './labels';
 
+const clock = min => `${String(Math.floor((min % 1440) / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+
 export default function DaySheet({ date, onClose, onDate }) {
   const { t, fmt } = useI18n();
   const { wf, idx, can, commit } = useWorkforce();
@@ -65,6 +67,11 @@ export default function DaySheet({ date, onClose, onDate }) {
                   {t('{a} of {s} scheduled people available', { a: c.available.length, s: c.scheduled.length })}
                   {c.absent.length > 0 && <> · {t('Away')}: {names(c.absent)}</>}
                 </p>
+                {c.partial.size > 0 && (
+                  <p className="mb-2 text-xs text-warn-fg">
+                    {t('Away part of the shift')}: {[...c.partial].map(([id, x]) => `${name(id)} ${x.windows.map(w => `${clock(w.a)}–${clock(w.b)}${w.kind === 'training' ? ` (${t('training')})` : ''}`).join(', ')}${x.unknown ? ` ${fmt.hours(x.hours)} (${t('time not known')})` : ''}`).join(' · ')}
+                  </p>
+                )}
                 {c.results.length === 0 && <p className="text-sm text-ink-3">{t('No requirements: this shift is not running for any process.')}</p>}
                 <ul className="flex flex-col gap-2">
                   {c.results.map(r => (
@@ -73,7 +80,8 @@ export default function DaySheet({ date, onClose, onDate }) {
                         <strong className="text-sm">{reqLabel(wf, r.req)}</strong>
                         <span className="text-xs text-ink-3">
                           {r.req.kind === 'task' ? t('Task') : r.req.kind === 'shared' ? t('Shared role') : t('Line position')}
-                          {r.req.kind === 'task' && r.req.hours ? ` · ${fmt.hours(r.req.hours)} ${r.req.window ? `${r.req.window.start}–${r.req.window.end}` : t('any time in the shift')}` : ''}
+                          {r.req.kind === 'task' && r.req.hours && !r.req.window ? ` · ${fmt.hours(r.req.hours)} ${t('any time in the shift')}` : ''}
+                          {r.req.window ? ` · ${r.req.window.start}–${r.req.window.end}` : ''}
                           {r.req.adjusted ? ` · ${t('adjusted for this day (normally {n})', { n: r.req.baseCount })}` : ''}
                         </span>
                         <span className="flex-1" />
@@ -86,9 +94,13 @@ export default function DaySheet({ date, onClose, onDate }) {
                         <Pill tone={STATUS_TONE[r.status]}>{r.filled}{r.competing ? `+${r.competing}?` : ''} / {r.required}</Pill>
                       </div>
                       {(r.people.length > 0 || r.supervised.length > 0) && (
-                        <p className="mt-1 text-xs text-ink-2">{t('Possible')}: {names(r.people)}{r.supervised.length ? ` · ${t('trainee')}: ${names(r.supervised)}` : ''}</p>
+                        <p className="mt-1 text-xs text-ink-2">{t('Could be')}: {names(r.people)}{r.supervised.length ? ` · ${t('trainee')}: ${names(r.supervised)}` : ''}</p>
                       )}
-                      <p className="text-xs text-ink-3">{t('{n} qualified and available in total', { n: r.qualified.length })}</p>
+                      <dl className="wf-qap" aria-label={t('Qualified, available and possible')}>
+                        <div title={t('On this shift and qualified, whether here or away')}><dt>{t('Qualified')}</dt><dd>{r.qualifiedScheduled.length}</dd></div>
+                        <div title={t('Qualified and not away')}><dt>{t('Available')}</dt><dd>{r.qualified.length}</dd></div>
+                        <div data-status={r.status} title={t('Positions that can be filled at the same time, after other positions have taken their people')}><dt>{t('Possible')}</dt><dd>{r.filled}{r.competing ? `+${r.competing}?` : ''} / {r.required}</dd></div>
+                      </dl>
                       {noteText(t, fmt, wf, r).map(n => <p key={n} className="mt-1 text-xs font-semibold text-warn-fg">⚠ {n}</p>)}
                     </li>
                   ))}

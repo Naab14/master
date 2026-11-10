@@ -110,11 +110,26 @@ function TrainingForm({ value, onClose, exists }) {
           <Field label={t('From')}><Input type="date" value={f.from || ''} onChange={e => set({ from: e.target.value })} /></Field>
           <Field label={t('To')}><Input type="date" value={f.to || ''} onChange={e => set({ to: e.target.value })} /></Field>
         </div>
+        <fieldset className="rounded-control border border-line p-3">
+          <legend className="px-1 text-xs font-semibold text-ink-3">{t('Time off the line (optional)')}</legend>
+          <div className="flex flex-wrap items-end gap-2">
+            <Field label={t('From')}><Input type="time" value={f.reserve?.start || ''} onChange={e => set({ reserve: { weekdays: [1, 2, 3, 4, 5], ...(f.reserve || {}), start: e.target.value } })} /></Field>
+            <Field label={t('To')}><Input type="time" value={f.reserve?.end || ''} onChange={e => set({ reserve: { weekdays: [1, 2, 3, 4, 5], ...(f.reserve || {}), end: e.target.value } })} /></Field>
+            {(f.reserve?.start || f.reserve?.end) && <Button variant="ghost" onClick={() => set({ reserve: null })}>{t('Clear')}</Button>}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {[1, 2, 3, 4, 5, 6, 7].map(d => {
+              const days = f.reserve?.weekdays || [1, 2, 3, 4, 5];
+              return <button type="button" key={d} className="wf-chip" aria-pressed={days.includes(d)} onClick={() => set({ reserve: { ...(f.reserve || {}), weekdays: days.includes(d) ? days.filter(x => x !== d) : [...days, d].sort() } })}>{fmt.date(`2026-11-0${d + 1}`, 'weekday')}</button>;
+            })}
+          </div>
+          <p className="mt-2 text-xs text-ink-3">{t('With times set, trainee and trainer are both counted as off the line then, on the chosen days of the period. Without times, training takes no capacity in the plan.')}</p>
+        </fieldset>
         <Field label={`${t('Progress')}: ${f.progress || 0}%`}><input type="range" min="0" max="100" step="10" value={f.progress || 0} onChange={e => set({ progress: Number(e.target.value), status: Number(e.target.value) >= 100 ? 'done' : Number(e.target.value) > 0 ? 'ongoing' : f.status === 'done' ? 'ongoing' : f.status })} /></Field>
         <Field label={t('Status')}><Select value={f.status} onChange={e => set({ status: e.target.value })}>{Object.entries(statusLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Select></Field>
         <Field label={t('Note')}><Input value={f.note || ''} onChange={e => set({ note: e.target.value })} /></Field>
       </fieldset>
-      <p className="mt-3 text-xs text-ink-3">{t('Training time is not taken from staffing automatically. How a trainee counts on the line is set per level and process in Setup.')}</p>
+      <p className="mt-3 text-xs text-ink-3">{t('How a trainee counts on the line is set per level and process in Setup.')}</p>
       {exists && f.status === 'done' && can('competencies.edit') && q.skills?.[f.skillId] !== f.targetLevelId && (
         <div className="mt-3 rounded-control bg-soft p-3 text-sm">
           {t('Completed here. After the official sign-off, you can update the matrix.')}

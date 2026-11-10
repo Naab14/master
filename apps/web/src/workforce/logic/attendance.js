@@ -40,8 +40,9 @@ export function absencesFromEntries(wf, entries) {
   for (const e of entries) {
     const cat = reasons[e.reasonId]?.category;
     if (!['sick', 'vacation', 'absence', 'late'].includes(cat)) continue;
-    const hours = e.start && e.end ? (shiftMinutes(e.start, e.end).e - shiftMinutes(e.start, e.end).s) / 60 : e.hours || null;
-    out.push({ personId: e.personId, date: e.date, fullDay: !!e.fullDay && !hours, hours, reasonId: e.reasonId, category: cat, tentative: !!e.tentative });
+    const timed = !!(e.start && e.end);
+    const hours = timed ? (shiftMinutes(e.start, e.end).e - shiftMinutes(e.start, e.end).s) / 60 : e.hours || null;
+    out.push({ personId: e.personId, date: e.date, fullDay: !!e.fullDay && !hours, hours, start: timed ? e.start : null, end: timed ? e.end : null, reasonId: e.reasonId, category: cat, tentative: !!e.tentative });
   }
   return out;
 }

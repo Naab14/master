@@ -6,7 +6,7 @@
  * returns to ?code=…, which doesn't collide with the app's #/section routing.
  */
 
-let config = { auth: null, accessCode: false };
+let config = { auth: null, accessCode: false, locked: false };
 let client = null;
 
 export async function loadAuth() {
@@ -33,6 +33,10 @@ export async function loadAuth() {
 }
 
 export const googleLoginEnabled = () => !!client;
+/** The site refuses everyone until sign-in is set up (production only). */
+export const siteLocked = () => !!config.locked && !client;
+/** false when Google is not switched on in Supabase yet; null when unknown. */
+export const googleProviderReady = () => (config.auth ? config.auth.providerEnabled : null);
 
 export async function getSession() {
   if (!client) return null;

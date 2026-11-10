@@ -9,7 +9,6 @@ export const SHORTCUT_ACTIONS = [
   { id: 'zoomOut', label: 'Zoom out', key: '-' },
   { id: 'prev', label: 'Earlier', key: '[' },
   { id: 'next', label: 'Later', key: ']' },
-  { id: 'print', label: 'Print', key: 'p' },
   { id: 'off', label: 'Selected shift: day off', key: 'o' },
   { id: 'reset', label: 'Selected shift: back to pattern', key: 'r' },
 ];

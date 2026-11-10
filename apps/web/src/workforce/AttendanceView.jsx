@@ -8,8 +8,6 @@ import { useWorkforce } from './store-context';
 import { useReasons } from './derive';
 import { Avatar, EmploymentMark, Empty, Input, PageHeader, Select, Sheet } from './ui';
 import { usePref } from './prefs';
-import { PrintPreview, PrintPage } from './print';
-import { chunk } from './print-util';
 import EntryForm from './EntryForm';
 import { addDays, addMonths, endOfMonth, todayIn, utcToZoned } from './logic/time';
 import { displayName, list, settingsOf, uid } from './logic/model';
@@ -43,7 +41,6 @@ export default function AttendanceView() {
   const [pref, setPref] = usePref('attendance', { tab: 'day', team: 'all', month: today.slice(0, 7), group: false, emp: 'all' });
   const [date, setDate] = useState(today);
   const [receipt, setReceipt] = useState(null);
-  const [printing, setPrinting] = useState(null); // 'team' | 'receipts'
   const settings = settingsOf(wf);
   const rules = list(wf.obRules).filter(r => r.active !== false).sort((a, b) => (b.priority || 0) - (a.priority || 0));
   const holidays = useHolidays(pref.month, rules.some(r => r.holidays || r.notOnHolidays));
@@ -56,9 +53,9 @@ export default function AttendanceView() {
     .sort((a, b) => (pref.group ? String(a.employment).localeCompare(String(b.employment)) : 0) || a.name.localeCompare(b.name, fmt.locale)),
   [wf, idx, pref, date, monthFrom, fmt.locale]);
 
-  const months = useMemo(() => (pref.tab === 'month' || printing || receipt
+  const months = useMemo(() => (pref.tab === 'month' || pref.tab === 'receipts' || receipt
     ? people.map(p => ({ person: p, m: personMonth(wf, idx, entries, p.id, pref.month, { holidays, utcToDate }) })).filter(x => x.m.totals.scheduledShifts || x.m.days.length)
-    : []), [people, wf, idx, entries, pref.month, pref.tab, holidays, printing, receipt]);
+    : []), [people, wf, idx, entries, pref.month, pref.tab, holidays, receipt]);
 
   if (phase !== 'ready') return null;
   if (!list(wf.people).length) return <div className="wf-page"><PageHeader title={t('Attendance')} /><Empty title={t('No people yet')}>{t('Add people and shift patterns in Setup, or load the demo plant there to look around.')}</Empty></div>;
@@ -80,7 +77,7 @@ export default function AttendanceView() {
     <div className="wf-page">
       <PageHeader title={t('Attendance')}>
         <Segmented label={t('View')} value={pref.tab} onChange={tab => setPref({ tab })}
-          options={[{ value: 'day', label: t('Day register') }, { value: 'month', label: t('Month review') }, { value: 'log', label: t('Change log') }]} />
+          options={[{ value: 'day', label: t('Day register') }, { value: 'month', label: t('Month review') }, { value: 'receipts', label: t('Receipts') }, { value: 'log', label: t('Change log') }]} />
       </PageHeader>
       <div className="wf-toolbar">
         {pref.tab === 'day' ? (
@@ -103,9 +100,8 @@ export default function AttendanceView() {
         <Select value={pref.emp} onChange={e => setPref({ emp: e.target.value })} aria-label={t('Employment')}>
           <option value="all">{t('All employment types')}</option><option value="permanent">{t('Permanent')}</option><option value="consultant">{t('Consultant')}</option>
         </Select>
-        {pref.tab === 'month' && <button type="button" className="wf-chip" aria-pressed={pref.group} onClick={() => setPref({ group: !pref.group })}>{t('Group by employment')}</button>}
+        {(pref.tab === 'month' || pref.tab === 'receipts') && <button type="button" className="wf-chip" aria-pressed={pref.group} onClick={() => setPref({ group: !pref.group })}>{t('Group by employment')}</button>}
         <span className="flex-1" />
-        {pref.tab === 'month' && can('reports.view') && <><Button onClick={() => setPrinting('team')}>{t('Print team summary')}</Button><Button onClick={() => setPrinting('receipts')}>{t('Print all receipts')}</Button></>}
       </div>
 
       <div className="wf-scroll">
@@ -113,28 +109,29 @@ export default function AttendanceView() {
         {pref.tab === 'month' && (
           !can('reports.view') ? <Empty title={t('Reports are not available for your role')} /> : (
             <>
-              <p className="px-4 pt-3 text-xs text-ink-3">{t('Deviations from the regular schedule. A planning aid for your review: time is approved in the other system, and nothing here is locked.')}{!rules.length ? ` ${t('No OB rules are set up, so OB is not shown.')}` : ''}</p>
+              <p className="px-4 pt-3 text-xs text-ink-3">{t('Deviations from the regular schedule. A planning aid for your review: time is approved in the other system, and nothing here is locked.')}</p>
+              {!rules.length && <p className="mx-4 mt-2 w-fit rounded-control bg-warn-bg px-3 py-1.5 text-xs font-semibold text-warn-fg" role="status">{t('OB rules not configured')} · {t('OB is not calculated until your workplace rules are entered in Setup. Nothing here means zero OB.')}</p>}
               <table className="wf-table">
                 <thead><tr>
                   <th>{t('Name')}</th><th className="num">{t('Scheduled h')}</th><th className="num">{t('Worked h')}</th><th className="num">{t('Overtime h')}</th>
                   <th className="num">{t('Sick h')}</th><th className="num">{t('Vacation h')}</th><th className="num">{t('Other absence h')}</th><th className="num">{t('Late')}</th>
-                  {rules.map(r => <th key={r.id} className="num">OB {r.name}</th>)}<th>{t('To check')}</th>
+                  {rules.map(r => <th key={r.id} className="num">OB {r.name}</th>)}{!rules.length && <th className="num">OB</th>}<th>{t('To check')}</th>
                 </tr></thead>
                 <tbody>
                   {groupsOf(months).map(g => (
-                    <GroupRows key={g.label || 'all'} label={g.label} span={9 + rules.length}>
+                    <GroupRows key={g.label || 'all'} label={g.label} span={9 + Math.max(1, rules.length)}>
                       {g.rows.map(({ person, m }) => (
                         <tr key={person.id} className="wf-rowbtn" tabIndex={0} onClick={() => setReceipt(person.id)} onKeyDown={e => { if (e.key === 'Enter') setReceipt(person.id); }}>
                           <td><span className="flex items-center gap-2"><Avatar person={person} size={22} />{displayName(person, settings.nicknameIn.reports)}{settings.nicknameIn.reports && person.nickname ? <span className="text-xs text-ink-3">({person.name})</span> : null}<EmploymentMark person={person} mode={settings.employmentIndicator} /></span></td>
                           <td className="num">{h(m.totals.scheduledHours)}</td><td className="num">{h(m.totals.workedHours)}</td><td className="num">{h(m.totals.overtimeHours)}</td>
                           <td className="num">{h(m.totals.sick.hours)}</td><td className="num">{h(m.totals.vacation.hours)}</td><td className="num">{h(m.totals.absence.hours)}</td>
                           <td className="num">{m.totals.lateCount ? `${m.totals.lateCount} × · ${h(m.totals.lateHours)}` : '–'}</td>
-                          {rules.map(r => <td key={r.id} className="num">{h(m.ob[r.id])}{m.obUncertain ? ' ?' : ''}</td>)}
+                          {rules.map(r => <td key={r.id} className="num">{h(m.ob[r.id])}{m.obUncertain ? ' ?' : ''}</td>)}{!rules.length && <td className="num text-ink-3" title={t('OB rules not configured')}>{t('n/a')}</td>}
                           <td>{m.flags.length ? <Pill tone="bad">{t('{n} to check', { n: m.flags.length })}</Pill> : m.deviations ? <Pill tone="idle">{t('Deviations: {n}', { n: m.deviations })}</Pill> : ''}</td>
                         </tr>
                       ))}
                       {g.rows.length > 1 && (() => { const s = totalsRow(g.rows); return (
-                        <tr><th style={{ position: 'static' }}>{t('Total')}</th><th className="num" style={{ position: 'static' }}>{h(s.scheduledHours)}</th><th className="num" style={{ position: 'static' }}>{h(s.workedHours)}</th><th className="num" style={{ position: 'static' }}>{h(s.overtimeHours)}</th><th className="num" style={{ position: 'static' }}>{h(s.sick)}</th><th className="num" style={{ position: 'static' }}>{h(s.vacation)}</th><th className="num" style={{ position: 'static' }}>{h(s.absence)}</th><th className="num" style={{ position: 'static' }}>{h(s.late)}</th>{rules.map(r => <th key={r.id} className="num" style={{ position: 'static' }}>{h(s.ob[r.id])}</th>)}<th style={{ position: 'static' }} /></tr>
+                        <tr><th style={{ position: 'static' }}>{t('Total')}</th><th className="num" style={{ position: 'static' }}>{h(s.scheduledHours)}</th><th className="num" style={{ position: 'static' }}>{h(s.workedHours)}</th><th className="num" style={{ position: 'static' }}>{h(s.overtimeHours)}</th><th className="num" style={{ position: 'static' }}>{h(s.sick)}</th><th className="num" style={{ position: 'static' }}>{h(s.vacation)}</th><th className="num" style={{ position: 'static' }}>{h(s.absence)}</th><th className="num" style={{ position: 'static' }}>{h(s.late)}</th>{rules.map(r => <th key={r.id} className="num" style={{ position: 'static' }}>{h(s.ob[r.id])}</th>)}{!rules.length && <th style={{ position: 'static' }} />}<th style={{ position: 'static' }} /></tr>
                       ); })()}
                     </GroupRows>
                   ))}
@@ -143,45 +140,26 @@ export default function AttendanceView() {
             </>
           )
         )}
+        {pref.tab === 'receipts' && (
+          !can('reports.view') ? <Empty title={t('Reports are not available for your role')} /> : (
+            <div className="wf-body">
+              <p className="text-xs text-ink-3">{monthLabel} · {teamLabel} · {t('For review only. Not a pay or time-approval document.')}</p>
+              {groupsOf(months).map(g => (
+                <section key={g.label || 'all'}>
+                  {g.label && <h2 className="mb-2 text-sm font-semibold">{g.label}</h2>}
+                  <div className="receipt-grid">{g.rows.map(x => <Receipt key={x.person.id} data={x} rules={rules} month={monthFrom} />)}</div>
+                </section>
+              ))}
+            </div>
+          )
+        )}
         {pref.tab === 'log' && <ChangeLog log={att.log || []} month={pref.month} />}
       </div>
 
       {receipt && months.find(x => x.person.id === receipt) && (
-        <Sheet wide title={wf.people[receipt]?.name} subtitle={monthLabel} onClose={() => setReceipt(null)}
-          footer={<Button variant="primary" onClick={() => setPrinting(`one:${receipt}`)}>{t('Print / Save as PDF')}</Button>}>
+        <Sheet wide title={wf.people[receipt]?.name} subtitle={monthLabel} onClose={() => setReceipt(null)}>
           <div className="flex justify-center"><Receipt data={months.find(x => x.person.id === receipt)} rules={rules} month={monthFrom} /></div>
         </Sheet>
-      )}
-      {printing === 'team' && (
-        <PrintPreview id="att-team" onClose={() => setPrinting(null)}>
-          {({ height }) => {
-            const flat = groupsOf(months).flatMap(g => [...(g.label ? [{ label: g.label }] : []), ...g.rows, ...(g.rows.length > 1 ? [{ total: totalsRow(g.rows) }] : [])]);
-            const pages = chunk(flat, Math.max(10, Math.floor((height - 55) / 5.4)));
-            return pages.map((rows, i) => (
-              <PrintPage key={i} page={i + 1} pages={pages.length} title={t('Attendance: month review')} range={`${monthLabel} · ${teamLabel}`}
-                legend={<><span><b>?</b>{t('OB uncertain: an entry has hours but no times')}</span><span><b>ᶜ</b>{t('Consultant')}</span></>}>
-                <table>
-                  <colgroup><col style={{ width: '46mm' }} /></colgroup>
-                  <thead><tr><th className="l">{t('Name')}</th><th className="r">{t('Scheduled h')}</th><th className="r">{t('Worked h')}</th><th className="r">{t('Overtime h')}</th><th className="r">{t('Sick h')}</th><th className="r">{t('Vacation h')}</th><th className="r">{t('Other absence h')}</th><th className="r">{t('Late')}</th>{rules.map(r => <th key={r.id} className="r">OB {r.name}</th>)}<th>{t('To check')}</th></tr></thead>
-                  <tbody>{rows.map((x, k) => x.label ? <tr key={k}><th className="l" colSpan={9 + rules.length}>{x.label}</th></tr> : x.total ? (
-                    <tr key={k}><th className="l">{t('Total')}</th><th className="r">{h(x.total.scheduledHours)}</th><th className="r">{h(x.total.workedHours)}</th><th className="r">{h(x.total.overtimeHours)}</th><th className="r">{h(x.total.sick)}</th><th className="r">{h(x.total.vacation)}</th><th className="r">{h(x.total.absence)}</th><th className="r">{h(x.total.late)}</th>{rules.map(r => <th key={r.id} className="r">{h(x.total.ob[r.id])}</th>)}<th /></tr>
-                  ) : (
-                    <tr key={x.person.id}><td className="l">{x.person.name}{x.person.employment === 'consultant' ? ' ᶜ' : ''}</td><td className="r">{h(x.m.totals.scheduledHours)}</td><td className="r">{h(x.m.totals.workedHours)}</td><td className="r">{h(x.m.totals.overtimeHours)}</td><td className="r">{h(x.m.totals.sick.hours)}</td><td className="r">{h(x.m.totals.vacation.hours)}</td><td className="r">{h(x.m.totals.absence.hours)}</td><td className="r">{x.m.totals.lateCount ? `${x.m.totals.lateCount}× ${h(x.m.totals.lateHours)}` : '–'}</td>{rules.map(r => <td key={r.id} className="r">{h(x.m.ob[r.id])}{x.m.obUncertain ? ' ?' : ''}</td>)}<td>{x.m.flags.length || ''}</td></tr>
-                  ))}</tbody>
-                </table>
-              </PrintPage>
-            ));
-          }}
-        </PrintPreview>
-      )}
-      {printing && printing !== 'team' && (
-        <PrintPreview id="att-receipt" defaultOrientation="portrait" onClose={() => setPrinting(null)}>
-          {() => months.filter(x => printing === 'receipts' || printing === `one:${x.person.id}`).map((x, i, arr) => (
-            <PrintPage key={x.person.id} page={i + 1} pages={arr.length} title={t('Attendance summary')} range={`${x.person.name} · ${monthLabel}`}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4mm' }}><Receipt data={x} rules={rules} month={monthFrom} /></div>
-            </PrintPage>
-          ))}
-        </PrintPreview>
       )}
     </div>
   );
@@ -230,7 +208,7 @@ function Receipt({ data, rules, month }) {
       {row(t('Late'), `${T.lateCount} × · ${fmt.hours(T.lateHours)}`)}
       {row(t('Overtime'), fmt.hours(T.overtimeHours))}
       <hr />
-      {rules.length === 0 ? <div className="sub">{t('No OB rules are set up, so OB is not shown.')}</div> : rules.map(r => <div key={r.id}>{row(`OB ${r.name}${r.rate ? ` (${r.rate})` : ''}`, fmt.hours(m.ob[r.id] || 0))}</div>)}
+      {rules.length === 0 ? <div className="row flag"><span>OB</span><span>{t('OB rules not configured')}</span></div> : rules.map(r => <div key={r.id}>{row(`OB ${r.name}${r.rate ? ` (${r.rate})` : ''}`, fmt.hours(m.ob[r.id] || 0))}</div>)}
       {m.obUncertain && <div className="sub flag">{t('OB uncertain: an entry has hours but no times')}</div>}
       <hr />
       {row(t('Worked hours (schedule ± deviations)'), fmt.hours(T.workedHours))}

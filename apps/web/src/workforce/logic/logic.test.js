@@ -5,6 +5,7 @@ import { list } from './model';
 import { buildIndex, resolveShift, shiftTimes, assignPatternOps, editPatternFromOps, overrideOps, moveTeamOps, confirmMoveOps } from './schedule';
 import { computeCoverage, absenceImpact, requirementsFor, runningShifts, templateFor, matchPeople, qualification } from './coverage';
 import { personMonth, obHours, entryTime, parseObRows } from './attendance';
+import { skillGaps } from './training';
 import { levelsOf } from './model';
 
 const apply = (wf, ops) => {
@@ -234,3 +235,114 @@ describe('attendance and OB', () => {
     expect(rows[1].errors.length).toBeGreaterThan(1);
   });
 });
+
+describe('time windows, part-day absence and training', () => {
+  // Two people on red's day shift (06:00–14:00), one line with one position.
+  const tiny = () => {
+    const w = buildSample();
+    for (const p of list(w.people)) if (!['p01', 'p04'].includes(p.id)) delete w.people[p.id];
+    for (const r of list(w.requirements)) delete w.requirements[r.id];
+    w.qualifications.p01.skills = { insp: 'independent' };
+    w.qualifications.p04.skills = {};
+    return w;
+  };
+  const req = (w, id, extra) => { w.requirements[id] = { id, templateId: 'normal', processId: 'insp', shiftTypeId: 'day', weekdays: [1, 2, 3, 4, 5], kind: 'dedicated', count: 1, skillId: 'insp', minLevelId: 'independent', certIds: [], window: null, hours: null, ...extra }; };
+  const day = '2026-11-03';
+
+  it('lets one person cover two positions that follow each other, but not two at once', () => {
+    const w = tiny();
+    req(w, 'am', { window: { start: '06:00', end: '10:00' } });
+    req(w, 'pm', { processId: 'caps', window: { start: '10:00', end: '14:00' } });
+    let c = computeCoverage(w, buildIndex(w), day, 'day');
+    expect(c.results.map(r => r.status)).toEqual(['met', 'met']);
+    expect(c.segments).toBe(2);
+    w.requirements.pm.window = { start: '09:00', end: '14:00' }; // now they overlap 09–10
+    c = computeCoverage(w, buildIndex(w), day, 'day');
+    expect(c.level).toBe('short');
+    const gaps = c.results.flatMap(r => r.gaps);
+    expect(gaps).toEqual([{ startMin: 540, endMin: 600, missing: 1 }]);
+    expect(c.results.find(r => r.gaps.length).notes).toContain('partTime');
+  });
+
+  it('opens a gap only for the hours of a part-day absence with known times', () => {
+    const w = tiny();
+    req(w, 'line');
+    const abs = [{ personId: 'p01', date: day, fullDay: false, hours: 2, start: '10:00', end: '12:00' }];
+    const c = computeCoverage(w, buildIndex(w), day, 'day', abs);
+    const r = c.results[0];
+    expect(r.status).toBe('short');
+    expect(r.gaps).toEqual([{ startMin: 600, endMin: 720, missing: 1 }]);
+    expect(r.gapHours).toBe(2);
+    // Hours without times can't be placed: the person still counts, flagged as uncertain.
+    const vague = computeCoverage(w, buildIndex(w), day, 'day', [{ personId: 'p01', date: day, fullDay: false, hours: 2, start: null, end: null }]).results[0];
+    expect(vague.status).toBe('risk');
+    expect(vague.notes).toContain('partlyAway');
+  });
+
+  it('takes trainee and trainer off the line during booked training time', () => {
+    const w = tiny();
+    req(w, 'line');
+    w.trainings.t1 = { id: 't1', personId: 'p04', trainerId: 'p01', skillId: 'insp', status: 'ongoing', from: '2026-11-01', to: '2026-11-30', reserve: { weekdays: [2], start: '08:00', end: '09:00' } };
+    const tue = computeCoverage(w, buildIndex(w), day, 'day').results[0];
+    expect(tue.gaps).toEqual([{ startMin: 480, endMin: 540, missing: 1 }]);
+    expect(computeCoverage(w, buildIndex(w), '2026-11-04', 'day').results[0].status).toBe('met'); // not a training day
+    w.trainings.t1.status = 'done';
+    expect(computeCoverage(w, buildIndex(w), day, 'day').results[0].status).toBe('met');
+  });
+
+  it('fits a flexible task into time the person is not needed on a line', () => {
+    const w = tiny();
+    w.qualifications.p01.skills = { insp: 'independent', docs: 'independent' };
+    req(w, 'am', { window: { start: '06:00', end: '12:00' } });
+    req(w, 'docs', { processId: null, kind: 'task', skillId: 'docs', hours: 1 });
+    let docs = computeCoverage(w, buildIndex(w), day, 'day').results.find(r => r.req.id === 'docs');
+    expect(docs).toMatchObject({ filled: 1, competing: 0, status: 'met' });      // free 12–14
+    w.requirements.am.window = null;                                            // on the line all shift
+    docs = computeCoverage(w, buildIndex(w), day, 'day').results.find(r => r.req.id === 'docs');
+    expect(docs).toMatchObject({ filled: 0, competing: 1, status: 'risk' });
+  });
+
+  it('keeps qualified, available and possible apart', () => {
+    const w = tiny();
+    w.qualifications.p04.skills = { insp: 'independent' };
+    req(w, 'line');
+    const r = computeCoverage(w, buildIndex(w), day, 'day', [{ personId: 'p04', date: day, fullDay: true }]).results[0];
+    expect(r.qualifiedScheduled).toHaveLength(2); // both can do it
+    expect(r.qualified).toEqual(['p01']);         // one is away
+    expect(r.filled).toBe(1);                     // one position possible
+  });
+});
+
+describe('skill gaps: demand at the same time', () => {
+  const base = () => {
+    const w = buildSample();
+    for (const r of list(w.requirements)) delete w.requirements[r.id];
+    return w;
+  };
+  const req = (w, id, extra) => { w.requirements[id] = { id, templateId: 'normal', processId: 'insp', shiftTypeId: 'day', weekdays: [1, 2, 3, 4, 5], kind: 'dedicated', count: 1, skillId: 'insp', minLevelId: 'independent', certIds: [], window: null, hours: null, ...extra }; };
+  const needed = w => skillGaps(w, buildIndex(w), '2026-11-10').find(g => g.skillId === 'insp').required;
+
+  it('adds up two processes that need the same skill on the same shift', () => {
+    const w = base();
+    req(w, 'a'); req(w, 'b', { processId: 'caps' });
+    expect(needed(w)).toBe(2); // was 1: the largest single requirement
+  });
+  it('does not add up different shifts', () => {
+    const w = base();
+    req(w, 'a'); req(w, 'b', { shiftTypeId: 'eve' }); req(w, 'c', { shiftTypeId: 'night', count: 2 });
+    expect(needed(w)).toBe(2);
+  });
+  it('does not add up time windows that do not overlap, and does add ones that do', () => {
+    const w = base();
+    req(w, 'a', { window: { start: '06:00', end: '10:00' } }); req(w, 'b', { processId: 'caps', window: { start: '10:00', end: '14:00' } });
+    expect(needed(w)).toBe(1);
+    w.requirements.b.window = { start: '09:00', end: '14:00' };
+    expect(needed(w)).toBe(2);
+  });
+  it('does not add up different weekdays', () => {
+    const w = base();
+    req(w, 'a', { weekdays: [1, 2] }); req(w, 'b', { processId: 'caps', weekdays: [3, 4, 5] });
+    expect(needed(w)).toBe(1);
+  });
+});
+

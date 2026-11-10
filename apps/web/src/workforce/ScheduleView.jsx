@@ -17,7 +17,6 @@ import { computeCoverage, matchPeople } from './logic/coverage';
 import { eventsOn } from './logic/events';
 import CellSheet from './CellSheet';
 import DaySheet from './DaySheet';
-import SchedulePrint from './SchedulePrint';
 import LeaveSheet from './LeaveSheet';
 
 const MIN_CELL = 14;
@@ -32,7 +31,6 @@ export default function ScheduleView() {
   const [sel, setSel] = useState(null);          // { personId, date }
   const [cellSheet, setCellSheet] = useState(null);
   const [daySheet, setDaySheet] = useState(null);
-  const [printing, setPrinting] = useState(false);
   const [swap, setSwap] = useState(null);
   const [leave, setLeave] = useState(false);
   const settings = settingsOf(wf);
@@ -133,7 +131,6 @@ export default function ScheduleView() {
     month: () => setPref({ view: 'calendar' }),
     zoomIn: () => zoom(1.25), zoomOut: () => zoom(0.8),
     prev: () => go(-1), next: () => go(1),
-    print: () => setPrinting(true),
     off: () => sel && setShift(sel.personId, sel.date, null),
     reset: () => sel && resetShift(sel.personId, sel.date),
     other: e => {
@@ -167,7 +164,6 @@ export default function ScheduleView() {
         <Segmented label={t('View')} value={pref.view} onChange={view => setPref({ view })}
           options={[{ value: 'people', label: t('People') }, { value: 'calendar', label: t('Calendar') }]} />
         {can('attendance.edit') && <Button onClick={() => setLeave(true)}>{t('Plan leave')}</Button>}
-        <Button onClick={() => setPrinting(true)}>{t('Print')}</Button>
       </PageHeader>
 
       <div className="wf-toolbar no-print">
@@ -251,7 +247,6 @@ export default function ScheduleView() {
 
       {cellSheet && <CellSheet personId={cellSheet.personId} date={cellSheet.date} onClose={() => setCellSheet(null)} />}
       {daySheet && <DaySheet date={daySheet} onClose={() => setDaySheet(null)} onDate={setDaySheet} />}
-      {printing && <SchedulePrint groups={groups} days={days} grid={grid} coverage={coverage} shiftTypes={shiftTypes} absences={absences.map} nick={settings.nicknameIn.reports} onClose={() => setPrinting(false)} />}
       {leave && <LeaveSheet personId={sel?.personId} date={sel?.date} onClose={() => setLeave(false)} />}
       {swap && (
         <Confirm

@@ -2,9 +2,9 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useBreakpoint } from './tools/vacation/hooks/useBreakpoint';
 import { AUTH_PROBLEM_EVENT, waitForPendingRequests } from './access';
-import { loadAuth, googleLoginEnabled, getSession, onSessionChange, signOut } from './auth';
+import { loadAuth, googleLoginEnabled, siteLocked, getSession, onSessionChange, signOut } from './auth';
 import AccessGate from './shell/AccessGate';
-import { SignIn, NoAccess } from './shell/SignIn';
+import { SignIn, NoAccess, Locked } from './shell/SignIn';
 import ThemeSwitcher from './theme/ThemeSwitcher';
 import { ToastProvider, useToast } from './ui';
 import { I18nProvider, useI18n, LANGUAGES } from './i18n';
@@ -69,6 +69,7 @@ function AppInner() {
   useEffect(() => {
     let unsubscribe = () => {};
     loadAuth().then(async () => {
+      if (siteLocked()) return setAuth({ phase: 'locked' });
       if (!googleLoginEnabled()) return setAuth({ phase: 'ready' });
       const session = await getSession();
       setAuth(session ? { phase: 'ready', email: session.user?.email } : { phase: 'signedOut' });
@@ -106,6 +107,7 @@ function AppInner() {
   if (auth.phase === 'loading' || auth.phase === 'signingOut') {
     return <div className="h-screen" style={{ background: 'var(--topbar-bg)' }} aria-busy="true" />;
   }
+  if (auth.phase === 'locked') return <Locked />;
   if (auth.phase === 'signedOut') return <SignIn />;
   if (auth.phase === 'denied') return <NoAccess message={auth.message} />;
   return (
