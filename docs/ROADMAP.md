@@ -8,15 +8,16 @@ the bottom with a date.
 
 | What | Where | Status |
 | --- | --- | --- |
-| Workforce planning build (brief of 2026-11-09, corrections of 2026-11-10) | Branch `claude/naab14-shift-management-qmu4s9`, PR #6. **One branch, one PR** | Released to production on 2026-11-10 in a **locked** state: the site refuses everyone until Google sign-in and an admin are set up. See `HANDOFF.md` for what the owner must do |
+| Workforce planning build (brief of 2026-11-09, corrections of 2026-11-10) | PR #6, merged | **Live on production** at commit `b472699`. Google sign-in is active and the owner's Google address is the admin (2026-11-10). Waiting for the owner's first sign-in to confirm the signed-in screens |
 | Design foundation (PR #4), Strategy docs (PR #5) | Included in PR #6 | Their commits are part of PR #6; the two PRs were left untouched |
 
 ## Status by requirement
 
 "Built" means it works in the app and was driven in a real browser. The
 planning screens were also checked on the Vercel preview with real sign-in
-tokens. **Google sign-in itself has not been exercised**: it is not switched
-on in Supabase yet.
+tokens. Google sign-in is switched on and the hand-off to Google was checked
+on production; **a real Google login has not been done by anyone yet** (it
+needs the owner).
 
 | Area | Built | Not built yet |
 | --- | --- | --- |
@@ -28,7 +29,7 @@ on in Supabase yet.
 | **Events and existing tools** (E1–E3) | Weekly/monthly activities on the dashboard, calendar and day panel, never affecting staffing; dashboard planning cards; Shift HQ, Vacations and Boards working | Turning a shift task into a board item; a weekly review across all tools |
 | **Design and interaction** (D1–D6) | Three themes; **motion throughout**: panels slide in and out (from the bottom on phones), sections open by height, views rise in, dragged shifts lift and glide to their place, changed cells pulse (also after Undo or a colleague's edit), hover and press states, toasts slide out; all instant with reduced motion; drag with mouse and long-press; Undo/Redo that never overwrites a colleague; keyboard and changeable shortcuts | A fourth "cartoon/pop" theme; theme saved per user on the server; Shift HQ, Vacations and Boards keep their older look and have no new motion; no formal accessibility audit |
 | **Languages** (L1) | English and Swedish for the planning screens, sign-in, dashboard and theme switcher, with a test that fails on a missing translation | **Shift HQ, Vacations and Boards are English only.** Server error messages are English. Printing was removed from scope |
-| **Login and permissions** (S1–S5) | Production is **locked** until an admin is configured: no anonymous access. Only Google sessions count (a password login is refused even on a Google-linked account). Uninvited accounts are refused and queued for approval; invitations, roles, a permission table; all enforced on the server; team-limited team leads; sign-out clears cached data and the session stops working within 20 seconds; offline read-only with banner. Preview deployments use their own table | **Google is not switched on in Supabase** (owner's step). Operator screens and vacation requests. Shift HQ and Vacations keep their own older offline caches |
+| **Login and permissions** (S1–S5) | Production is **locked** until an admin is configured: no anonymous access. Only Google sessions count (a password login is refused even on a Google-linked account). Uninvited accounts are refused and queued for approval; invitations, roles, a permission table; all enforced on the server; team-limited team leads; sign-out clears cached data and the session stops working within 20 seconds; offline read-only with banner. Preview deployments use their own table | The owner's first real Google login is still to be done. Operator screens and vacation requests. Shift HQ and Vacations keep their own older offline caches |
 | **Excalidraw** (X1–X4) | The real Excalidraw editor; named boards saved and reopened; private until shared, no admin bypass; sharing; outside guests behind an admin switch; links | **Not live collaboration.** Saved changes from others appear within seconds; simultaneous saves are detected, not merged. The app says so on the Sketches page |
 | **Optional AI** (AI1–AI3) | Nothing depends on AI | **Not built** |
 | **Platforms** (W1–W3) | Responsive web app for the phone's browser with bottom tabs and full-screen panels; offline read-only kept | No install prompt or app icon (removed on request). iOS app sidelined |
@@ -58,8 +59,8 @@ the phone (it can be added to the home screen).
 
 In order.
 
-1. **Owner: switch Google sign-in on and name the admin** (`HANDOFF.md`).
-   Then verify the real Google login on a computer and a phone.
+1. **Owner: sign in once on production** with the admin Google address, on
+   a computer and a phone. Then confirm the signed-in screens together.
 2. **Owner: supply the OB rules.**
 3. **Translate and restyle Shift HQ, Vacations and Boards**, with the same
    motion as the planning screens.
@@ -79,6 +80,8 @@ In order.
   people and a few years; move attendance to its own table if it grows.
 - The access-code prompt stays as a fallback for local use.
 - The planning screens poll every 30 seconds; there is no push.
+- A few unused Swedish texts from the removed print screens remain in
+  `src/i18n/sv.js`.
 
 ## Done
 
@@ -137,3 +140,6 @@ In order.
 | 2026-11-10 | Coverage is matched per stretch of the shift | Time windows, part-day absences and training need time, not just head counts |
 | 2026-11-10 | Vacations operators link to profiles by id; no name matching anywhere | Owner's correction |
 | 2026-11-10 | The paused free Supabase project was restored; migrations 002 and 003 applied after a backup copy (`app_state_backup_20261110`) | Production was failing because the database had auto-paused; migrations verified byte-identical for existing data |
+| 2026-11-10 | Production sign-in activated by naming the admin in the database, with no redeploy and no new environment variable | The owner finished the Google and Supabase steps; the app reads the `admin` row on every request |
+| 2026-11-10 | The three temporary test accounts and their test-only records were deleted by exact id; no further test accounts were created on production | Owner's instruction; the owner's own login is the remaining check |
+| 2026-11-10 | No keep-alive job for the free Supabase project | Owner: no automated activity just to avoid pausing; the paid plan is a separate spending decision |
