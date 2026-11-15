@@ -76,8 +76,8 @@ export default function CalendarView({ state, patchTask, onEdit }) {
       patchTask(id, { due_date: dateStr });
       landed(id);
       toast(t('Moved to {date}', { date: `${fmt.date(dateStr, 'weekday')} ${fmt.date(dateStr)}` }), {
-        // Only the date goes back: anything done to the task since stays.
-        action: { label: t('Undo'), onClick: () => { patchTask(id, { due_date: from }); landed(id); } },
+        // Only the date goes back, and only if nobody has moved it again since.
+        action: { label: t('Undo'), onClick: () => { patchTask(id, { due_date: from }, { due_date: dateStr }); landed(id); } },
       });
     }
   };

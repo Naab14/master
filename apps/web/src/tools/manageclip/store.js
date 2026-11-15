@@ -159,9 +159,10 @@ export function useManageclip() {
 
   /* Change some fields of a task as it is now. Unlike saveTask this never
    * writes an older copy over newer edits, and a deleted task stays deleted,
-   * so it is safe from a callback that fires later (drag, Undo). */
-  const patchTask = useCallback((id, patch) => setState(s => (
-    s.tasks.some(t => t.id === id)
+   * so it is safe from a callback that fires later (drag, Undo). With
+   * `only`, it applies only while those fields still hold those values. */
+  const patchTask = useCallback((id, patch, only) => setState(s => (
+    s.tasks.some(t => t.id === id && (!only || Object.keys(only).every(k => t[k] === only[k])))
       ? { ...s, tasks: s.tasks.map(t => (t.id === id ? { ...t, ...patch } : t)) }
       : s
   )), []);

@@ -17,6 +17,7 @@ function Harness() {
     <ToastProvider>
       <CalendarView state={mc.state} patchTask={mc.patchTask} onEdit={() => {}} />
       <button type="button" onClick={() => mc.deleteTask('t1')}>delete-t1</button>
+      <button type="button" onClick={() => mc.patchTask('t1', { due_date: '2030-01-01' })}>move-t1</button>
     </ToastProvider>
   );
 }
@@ -59,5 +60,14 @@ describe('Shift HQ task calendar: undoing a move', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
     expect(saved()).toHaveLength(0);
+  });
+
+  it('does not undo over a later move', () => {
+    render(<Harness />);
+    dragToAnotherDay();
+    fireEvent.click(screen.getByText('move-t1'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(saved()[0].due_date).toBe('2030-01-01');
   });
 });
