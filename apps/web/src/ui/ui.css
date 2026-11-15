@@ -96,6 +96,7 @@
   font-family: var(--font-ui);
   font-size: var(--text-body);
   font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
 }
 .ui-seg button:active { transform: scale(.97); }

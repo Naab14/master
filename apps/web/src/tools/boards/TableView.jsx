@@ -84,7 +84,7 @@ export default function TableView({ board, search, updateBoard }) {
               <input
                 defaultValue={group.title}
                 aria-label={t('Group name')}
-                className="tl-inline min-w-0 px-1 text-sm font-bold"
+                className="tl-inline w-36 min-w-0 px-1 text-sm font-bold sm:w-56"
                 style={{ color: group.color }}
                 onBlur={e => {
                   const v = e.target.value.trim();
@@ -95,7 +95,7 @@ export default function TableView({ board, search, updateBoard }) {
                 }}
                 onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }}
               />
-              <span className="t-num text-xs text-ink-3">
+              <span className="t-num whitespace-nowrap text-xs text-ink-3">
                 {items.length === 1 ? t('1 item') : t('{n} items', { n: items.length })}
               </span>
               <button type="button" className="tl-icon tl-icon--danger tl-reveal"

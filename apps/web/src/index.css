@@ -115,13 +115,13 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
   pointer-events: none;
   z-index: 40;
   background:
-    linear-gradient(rgba(79, 70, 229, 0.08), rgba(79, 70, 229, 0.08)),
+    linear-gradient(color-mix(in srgb, var(--focus) 8%, transparent), color-mix(in srgb, var(--focus) 8%, transparent)),
     repeating-linear-gradient(
       90deg,
       transparent 0,
       transparent 99px,
-      rgba(79, 70, 229, 0.35) 99px,
-      rgba(79, 70, 229, 0.35) 100px
+      color-mix(in srgb, var(--focus) 35%, transparent) 99px,
+      color-mix(in srgb, var(--focus) 35%, transparent) 100px
     );
   animation: zoomFade 0.25s ease-out forwards;
 }

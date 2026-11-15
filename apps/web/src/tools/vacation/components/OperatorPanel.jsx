@@ -34,11 +34,11 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
           aria-expanded={!collapsed}>
           {collapsed ? '▶' : '◀'}
         </button>
-        <span className="sidebar-full-only tl-heading flex-1">{t('Operators')}</span>
+        <span className="sidebar-full-only tl-heading min-w-0 flex-1 truncate">{t('Operators')}</span>
         <div className="sidebar-full-only flex gap-1">
-          <Button onClick={onDownloadTemplate} title={t('Download a CSV template')} className="!min-h-[30px] !px-2 text-xs">CSV</Button>
+          <Button onClick={onDownloadTemplate} title={t('Download a CSV template')} className="!min-h-[30px] whitespace-nowrap !px-2 text-xs">CSV</Button>
           {!showMgmt && (
-            <Button variant="primary" onClick={onToggleMgmt} className="!min-h-[30px] !px-2 text-xs">+ {t('Add')}</Button>
+            <Button variant="primary" onClick={onToggleMgmt} className="!min-h-[30px] whitespace-nowrap !px-2 text-xs">+ {t('Add')}</Button>
           )}
         </div>
       </div>

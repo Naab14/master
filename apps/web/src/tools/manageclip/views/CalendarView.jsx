@@ -15,7 +15,8 @@ const STATUS_CLASS = {
 export default function CalendarView({ state, saveTask, onEdit }) {
   const { t, fmt } = useI18n();
   const toast = useToast();
-  const [mode, setMode] = useState('month'); // 'month' | 'week'
+  // Phones start in the week view, where each day is a full-width row.
+  const [mode, setMode] = useState(() => (typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)').matches ? 'week' : 'month')); // 'month' | 'week'
   const [anchor, setAnchor] = useState(() => new Date());
   const [dragOver, setDragOver] = useState(null); // dateStr being hovered
   const [dragId, setDragId] = useState(null);
@@ -111,9 +112,9 @@ export default function CalendarView({ state, saveTask, onEdit }) {
       </div>
 
       {/* Grid */}
-      <div key={mode} className="wf-view grid min-h-0 flex-1 auto-rows-fr grid-cols-7 gap-px overflow-y-auto rounded-panel border border-line bg-line">
+      <div key={mode} className={`wf-view tl-cal grid min-h-0 flex-1 gap-px overflow-y-auto rounded-panel border border-line bg-line ${mode === 'week' ? 'tl-cal--week grid-cols-1 sm:grid-cols-7' : 'grid-cols-7'}`}>
         {days.slice(0, 7).map(({ dateStr }) => (
-          <div key={dateStr} className="bg-ground px-2 py-1 text-center text-[11px] font-semibold text-ink-3">
+          <div key={`h${dateStr}`} className={`bg-ground px-2 py-1 text-center text-[11px] font-semibold text-ink-3 ${mode === 'week' ? 'hidden sm:block' : ''}`}>
             {fmt.date(dateStr, 'weekday')}
           </div>
         ))}
@@ -126,11 +127,12 @@ export default function CalendarView({ state, saveTask, onEdit }) {
               onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOver(dateStr); }}
               onDragLeave={() => setDragOver(d => (d === dateStr ? null : d))}
               onDrop={e => drop(e, dateStr)}
-              className={`tl-drop tl-reveal-host flex min-h-[92px] flex-col gap-1 bg-panel p-1.5 ${otherMonth ? 'opacity-50' : ''}`}
+              className={`tl-drop tl-reveal-host flex flex-col gap-1 bg-panel p-1.5 ${mode === 'week' ? 'min-h-[64px] sm:min-h-[92px]' : 'min-h-[72px] sm:min-h-[92px]'} ${otherMonth ? 'opacity-50' : ''}`}
               style={isToday ? { boxShadow: 'inset 0 0 0 2px var(--focus)' } : undefined}
             >
               <div className="flex items-center justify-between">
                 <span className={`t-num text-xs ${isToday ? 'font-bold text-ink' : 'font-semibold text-ink-3'}`}>
+                  {mode === 'week' && <span className="sm:hidden">{fmt.date(dateStr, 'weekdayLong')} </span>}
                   {parseDate(dateStr).getDate()}
                 </span>
                 <button
@@ -165,7 +167,7 @@ export default function CalendarView({ state, saveTask, onEdit }) {
                     <button
                       type="button"
                       onClick={e => { e.stopPropagation(); toggleDone(task); }}
-                      className="tl-icon !min-h-0 !min-w-0 shrink-0 !p-0 text-inherit"
+                      className={`tl-icon !min-h-0 !min-w-0 shrink-0 !p-0 text-inherit ${mode === 'month' ? 'tl-hide-sm' : ''}`}
                       title={st === 'finished' ? t('Reopen') : t('Mark as completed')}
                       aria-label={st === 'finished' ? t('Reopen') : t('Mark as completed')}
                     >

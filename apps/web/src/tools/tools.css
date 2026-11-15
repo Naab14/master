@@ -72,7 +72,7 @@
 .tl-inline:focus { background: var(--surface-panel); box-shadow: 0 0 0 2px var(--focus); }
 
 /* Vacations: operator panel folds away sideways; an operator's details open by height */
-.tl-oppanel { width: 240px; min-width: 240px; transition: width var(--motion) var(--ease-out), min-width var(--motion) var(--ease-out); }
+.tl-oppanel { width: 260px; min-width: 260px; transition: width var(--motion) var(--ease-out), min-width var(--motion) var(--ease-out); }
 .tl-oprow { transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
 .tl-oprow:hover { background-color: var(--surface-soft); }
 .tl-oprow:active { transform: scale(.99); }
@@ -93,8 +93,13 @@
 .tl-status:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
 .tl-strip > div { transition: width var(--motion-slow) var(--ease-out); }
 
+/* Shift HQ task calendar: a slim weekday row, then equal day rows. On phones
+ * the week view is a list of days, each as tall as its tasks. */
+.tl-cal { grid-template-rows: auto; grid-auto-rows: minmax(min-content, 1fr); }
+
 @media (max-width: 640px) {
   .tl-hide-sm { display: none !important; }
+  .tl-cal--week { grid-template-rows: none; grid-auto-rows: auto; }
 }
 
 /* A row of tools that drops in under a toolbar */

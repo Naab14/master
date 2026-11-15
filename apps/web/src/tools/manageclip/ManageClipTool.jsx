@@ -39,7 +39,8 @@ export default function ManageClipTool() {
     <div className="wf-page overflow-hidden">
       <PageHeader title={t('Shift HQ')}>
         <Segmented label={t('View')} options={views} value={view} onChange={setView} />
-        <Button variant="primary" onClick={() => setSheetTask({ due_date: todayStr() })}>{t('New task')}</Button>
+        {/* First on phones, where the header scrolls sideways */}
+        <span className="order-first sm:order-none"><Button variant="primary" onClick={() => setSheetTask({ due_date: todayStr() })}>{t('New task')}</Button></span>
       </PageHeader>
 
       {/* Quick links beside the active view */}
