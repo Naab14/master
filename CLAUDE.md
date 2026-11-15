@@ -70,7 +70,7 @@ backend/server.js   self-hosted server: same routes, data in backend/data/db.jso
 apps/web/           React 19 + Vite + Tailwind 3 (plain JS, no TypeScript)
   src/App.jsx         shell: sign-in phases, nav rail, hash routing (#/dashboard …)
   src/dashboard/      cross-tool dashboard
-  src/tools/manageclip|vacation|boards/
+  src/tools/manageclip|vacation|boards/   (tools.css: their shared look and motion)
   src/workforce/      planning screens; logic/ holds the pure, tested rules
   src/i18n/           English and Swedish (sv.js); t('English text')
   src/ui/, src/theme/ shared controls and the three themes
@@ -165,10 +165,13 @@ npm --prefix apps/web run dev       # Vite dev server, proxies /api to :3000
 - Never commit secrets or keys. Test against real data carefully: don't leave
   test data in production Supabase.
 - The backend stays dependency-free Node (CommonJS). The web app is plain JS.
-- Every user-facing text in `src/workforce` goes through `t('English text')`
-  and needs a Swedish entry in `src/i18n/sv.js`; a test fails otherwise.
+- Every user-facing text in `src/workforce` and `src/tools` goes through
+  `t('English text')` and needs a Swedish entry in `src/i18n/sv.js`; a test
+  fails otherwise. Words saved as data (Shift HQ categories, leave statuses)
+  stay English in the data and are translated when shown.
 - Use the theme tokens (`src/theme/tokens.css`) and the shared controls in
-  `src/ui` and `src/workforce/ui.jsx`. Lint is strict about React rules: no
+  `src/ui` and `src/workforce/ui.jsx`. Messages use the shared `useToast`,
+  questions the in-app `Confirm`; no browser `confirm()` or `alert()`. Lint is strict about React rules: no
   refs or `Date.now()` during render, components in their own files.
 - Coverage wording is always "possible", never "assigned": positions are
   decided at the whiteboard. No OB rates or rules are built in; without
@@ -176,8 +179,10 @@ npm --prefix apps/web run dev       # Vite dev server, proxies /api to :3000
 - No printing and no install prompt: both were removed on the owner's
   request. Receipts are an on-screen format.
 - Motion is part of the product: use the helpers in
-  `src/workforce/motion.js` and the motion block in `workforce.css`, keep
-  it quick, and make sure it is instant under `prefers-reduced-motion`.
+  `src/workforce/motion.js` and the motion block in `workforce.css` (plus
+  `src/tools/tools.css` for the three older tools), keep it quick, and make
+  sure it is instant under `prefers-reduced-motion`: a screen's root carries
+  the `wf-page` class, which the reduced-motion rule covers.
 - Nothing matches people by name. Vacations operators carry the profile's
   id (`personId`).
 - Demo and test data use made-up names.

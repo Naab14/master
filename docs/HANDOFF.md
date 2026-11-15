@@ -2,19 +2,42 @@
 
 The exact checkpoint for the next session. **Read this and run
 `git status` before doing anything else.** Don't restart or redo finished
-work. Last updated 2026-11-10.
+work. Last updated 2026-11-15.
 
 ## Where things are
 
 | | |
 | --- | --- |
-| Production | https://master-mocha-pi.vercel.app — commit `b472699` (merge of PR #6), deployed 2026-11-10 and not redeployed since. **Google sign-in is active**; the admin is the owner's Google address |
-| Pull requests | #6 merged (the whole build). This file's update is in a docs-only follow-up PR from the same branch name |
+| Production | https://master-mocha-pi.vercel.app — the code of PR #6 (commit `b472699`); `main` is at `7731f71` after the docs-only PR #7. **Google sign-in is active**; the admin is the owner's Google address. **The owner signed in on production with their own Google account and confirmed it works (2026-11-15)** |
+| Pull requests | #6 merged (the whole build). #7 merged 2026-11-15 (docs only). **#8 open**: Shift HQ, Vacations and Boards in Swedish, with the shared look and the planning motion, from branch `claude/naab14-shift-management-qmu4s9` |
 | Preview | https://master-git-claude-naab14-shift-manageme-f00fc0-naab14s-projects.vercel.app — behind Vercel login, uses the test table `app_state_preview` with the made-up demo plant, open without sign-in (by design, for previews only) |
 | Database | Supabase project `master` (free plan). Migrations 001–003 applied. Backup copy of the original three sections: table `app_state_backup_20261110` |
 | Uncommitted files | None |
 
-Any further work starts from the latest `main` and opens a new PR.
+Any further work starts from the latest `main` and opens a new PR. While
+PR #8 is open, keep work on those three tools in it instead of opening
+another.
+
+## PR #8: the three older tools (roadmap item 3)
+
+Built on the branch, **not on production until the PR is merged**.
+
+| Part | What was done |
+| --- | --- |
+| Translation | Every text in `src/tools` goes through `t()` with Swedish in `src/i18n/sv.js`; the translation test (`src/i18n/i18n.test.js`) scans `src/tools` too. The weekly-review PDF is written in the chosen language |
+| Look | Shared page header, buttons, segmented control, fields, side panel (`Sheet`), dialog (`Confirm`) and toasts; one stylesheet for the three tools, `src/tools/tools.css`, on theme tokens only |
+| Motion | Views rise in, menus pop, board groups open by height, cards and tasks lift, a dragged item fades back while its target lights up, the landed item pulses. Instant with reduced motion (each tool's root has the `wf-page` class, which the reduced-motion rule covers) |
+| Behaviour | Shift HQ deletes are immediate with Undo; browser pop-ups replaced by the in-app dialog; kanban cards move from a menu as well as by drag; refused board saves are reported; Shift HQ shows a day list on phones |
+
+Checked for PR #8: lint clean, 231 tests pass, builds; driven in Chromium
+against a local server on desktop and phone size, in English and Swedish,
+in Calm and Night shift, and with reduced motion. **Not checked:** a real
+phone, the Vercel preview of the branch, and production (not deployed).
+
+Known limits, also in the roadmap: Vacations keeps its own S1/S2 and
+process list; holiday names stay Swedish; dragging in these three tools
+uses the browser's drag and does not work by touch (tapping does the same
+job).
 
 ## Configuration completed on 2026-11-10 (no secret values here)
 
@@ -44,14 +67,14 @@ rows (`boards`, `manageclip`, `workforce`).
 
 ## What still needs the owner
 
-1. **Sign in once.** Open https://master-mocha-pi.vercel.app, press "Sign in
-   with Google" and use the admin address. Google's page says "continue to
-   wsqpjlhhfonkqhrxqgre.supabase.co": that is expected (Supabase handles
-   the sign-in). This is the one check Claude cannot do.
+1. **Review and merge PR #8** when happy with it. Merging to `main` deploys
+   to production; nothing in the database changes.
 2. If Google says the app is in testing and blocks a colleague later:
    Google Cloud → OAuth consent screen → Publish app.
 3. Supply the OB rules when ready.
-4. Merge the docs follow-up PR when convenient (it changes no code).
+
+Done by the owner: signed in on production and confirmed it works
+(2026-11-15); merged PR #7.
 
 ## Checks run, with results
 
@@ -67,9 +90,13 @@ rows (`boards`, `manageclip`, `workforce`).
 | Existing Shift HQ, Vacations and Boards data | Database | Byte-identical to the backup |
 | Admin recognised, uninvited account refused and queued, team-lead limits, sign-out clears the browser and ends the session, password account refused | **Preview**, with real Supabase tokens for temporary accounts (since deleted) | Passed. Not repeated on production: that needs real Google accounts |
 
-**Not verified by Claude:** the owner's own Google login on production, and
-therefore the signed-in production screens (Schedule with real data, Access,
-sign-out). An uninvited real Google account on production. A real phone.
+**Verified by the owner, not by Claude:** the owner's own Google login on
+production works (confirmed 2026-11-15). Claude has not seen the signed-in
+production screens (Schedule with real data, Access, sign-out).
+
+**Not verified by anyone yet:** an uninvited real Google account on
+production, and inviting a colleague. Whether a real phone was tried is not
+recorded.
 
 ## Recovery
 
@@ -121,10 +148,13 @@ is a spending decision for the owner, not taken here.
 
 ## Exact next action
 
-1. After the owner has signed in: confirm with them that Schedule, Access
-   and sign-out work on production, and that their existing Shift HQ,
-   Vacations and Boards data shows.
-2. Then continue with `ROADMAP.md` → Next.
+1. PR #8: answer review comments (Codex reviews once the PR is marked
+   ready), fix what they find, and wait for the owner to merge. Do not
+   merge without the owner's instruction.
+2. After the merge: check on production that Shift HQ, Vacations and Boards
+   show in both languages and that the owner's existing data in them is
+   intact (the PR changes no stored data).
+3. Then continue with `ROADMAP.md` → Next.
 
 ## Map of the code added in this work
 
@@ -140,4 +170,5 @@ apps/web/src/workforce/*View.jsx Schedule, People, Attendance, Training, Setup, 
 apps/web/src/workforce/motion.js pulse and glide helpers; CSS motion in workforce.css
 apps/web/src/tools/vacation/sharedPeople.js  operators linked to profiles by id
 apps/web/src/i18n/               English/Swedish
+apps/web/src/tools/tools.css     look and motion shared by Shift HQ, Vacations and Boards (PR #8)
 ```

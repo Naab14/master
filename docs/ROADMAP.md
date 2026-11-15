@@ -8,16 +8,20 @@ the bottom with a date.
 
 | What | Where | Status |
 | --- | --- | --- |
-| Workforce planning build (brief of 2026-11-09, corrections of 2026-11-10) | PR #6, merged | **Live on production** at commit `b472699`. Google sign-in is active and the owner's Google address is the admin (2026-11-10). Waiting for the owner's first sign-in to confirm the signed-in screens |
+| Shift HQ, Vacations and Boards: Swedish, the shared look and the planning motion (Next item 3) | PR #8 (Features thread), branch `claude/naab14-shift-management-qmu4s9` | Built and checked in a browser; lint, tests and build pass. **Not merged, so not on production yet** |
+| Workforce planning build (brief of 2026-11-09, corrections of 2026-11-10) | PR #6, merged; docs follow-up PR #7, merged 2026-11-15 | **Live on production** (code from commit `b472699`; `main` is at `7731f71`). Google sign-in is active, the owner's Google address is the admin, and **the owner signed in on production and confirmed it works (2026-11-15)** |
 | Design foundation (PR #4), Strategy docs (PR #5) | Included in PR #6 | Their commits are part of PR #6; the two PRs were left untouched |
 
 ## Status by requirement
 
 "Built" means it works in the app and was driven in a real browser. The
 planning screens were also checked on the Vercel preview with real sign-in
-tokens. Google sign-in is switched on and the hand-off to Google was checked
-on production; **a real Google login has not been done by anyone yet** (it
-needs the owner).
+tokens. Google sign-in is switched on, and **the owner has signed in on
+production with their own Google account and confirmed it works
+(2026-11-15)**. Claude has not seen the signed-in production screens itself.
+
+Rows that mention PR #8 describe work that is built on that branch and
+reaches production when the PR is merged.
 
 | Area | Built | Not built yet |
 | --- | --- | --- |
@@ -26,10 +30,10 @@ needs the owner).
 | **Attendance and reports** (A1–A6) | Day register; configurable reasons; partial days by hours or times; comment-only entries flagged, never given a duration; month review; **receipt-style summaries on screen**, per person and as a Receipts view for the team; grouping by employment; no locking; change log with old and new values; OB from configurable rules with priority, holidays and a CSV preview | **OB rules are not configured**: the owner supplies them later. Until then every OB figure reads "OB rules not configured", never zero. Breaks are not deducted from OB. No printing (removed on request) |
 | **Profiles** (P1–P5) | One profile per operator; **Vacations operators are linked to profiles by id**, names follow the profile, nothing is matched by name; employment filter, grouping and marker; nickname use per view; CSV/paste import with preview | Vacations still keeps its own S1/S2 and process list for its week view. Older Vacations operators stay "unlinked" until linked by hand |
 | **Training** (T1–T3) | Thin spots per team and competency with correct concurrent demand; planned training with trainer, period, progress; optional time off the line that takes trainee and trainer out of coverage; expiring certificates | Training does not appear as its own block in the schedule grid |
-| **Events and existing tools** (E1–E3) | Weekly/monthly activities on the dashboard, calendar and day panel, never affecting staffing; dashboard planning cards; Shift HQ, Vacations and Boards working | Turning a shift task into a board item; a weekly review across all tools |
-| **Design and interaction** (D1–D6) | Three themes; **motion throughout**: panels slide in and out (from the bottom on phones), sections open by height, views rise in, dragged shifts lift and glide to their place, changed cells pulse (also after Undo or a colleague's edit), hover and press states, toasts slide out; all instant with reduced motion; drag with mouse and long-press; Undo/Redo that never overwrites a colleague; keyboard and changeable shortcuts | A fourth "cartoon/pop" theme; theme saved per user on the server; Shift HQ, Vacations and Boards keep their older look and have no new motion; no formal accessibility audit |
-| **Languages** (L1) | English and Swedish for the planning screens, sign-in, dashboard and theme switcher, with a test that fails on a missing translation | **Shift HQ, Vacations and Boards are English only.** Server error messages are English. Printing was removed from scope |
-| **Login and permissions** (S1–S5) | Production is **locked** until an admin is configured: no anonymous access. Only Google sessions count (a password login is refused even on a Google-linked account). Uninvited accounts are refused and queued for approval; invitations, roles, a permission table; all enforced on the server; team-limited team leads; sign-out clears cached data and the session stops working within 20 seconds; offline read-only with banner. Preview deployments use their own table | The owner's first real Google login is still to be done. Operator screens and vacation requests. Shift HQ and Vacations keep their own older offline caches |
+| **Events and existing tools** (E1–E3) | Weekly/monthly activities on the dashboard, calendar and day panel, never affecting staffing; dashboard planning cards; Shift HQ, Vacations and Boards working. In PR #8: deletes in Shift HQ can be undone, kanban cards can be moved from a menu (phones, keyboard), refused board changes are reported, and the app's own dialog replaces browser pop-ups | Turning a shift task into a board item; a weekly review across all tools |
+| **Design and interaction** (D1–D6) | Three themes; **motion throughout**: panels slide in and out (from the bottom on phones), sections open by height, views rise in, dragged shifts lift and glide to their place, changed cells pulse (also after Undo or a colleague's edit), hover and press states, toasts slide out; all instant with reduced motion; drag with mouse and long-press; Undo/Redo that never overwrites a colleague; keyboard and changeable shortcuts | A fourth "cartoon/pop" theme; theme saved per user on the server; no formal accessibility audit. **In PR #8, not merged yet:** Shift HQ, Vacations and Boards use the shared header, controls, side panel and dialogs, and the same motion (views rise in, menus pop, groups open by height, cards lift, dragged items fade back while the target lights up, landed items pulse; instant with reduced motion). Until it is merged, production shows their older look. Dragging tasks, links and kanban cards still needs a mouse; on phones those are changed by tapping |
+| **Languages** (L1) | English and Swedish for the planning screens, sign-in, dashboard and theme switcher, with a test that fails on a missing translation. **In PR #8, not merged yet:** Shift HQ, Vacations and Boards in both languages, including the weekly-review PDF, and the test covers them too | Until PR #8 is merged, production shows the three tools in English (parts of Vacations in Swedish only). Server error messages are English. Holiday names in Vacations are Swedish in both languages. Printing was removed from scope |
+| **Login and permissions** (S1–S5) | Production is **locked** until an admin is configured: no anonymous access. Only Google sessions count (a password login is refused even on a Google-linked account). Uninvited accounts are refused and queued for approval; invitations, roles, a permission table; all enforced on the server; team-limited team leads; sign-out clears cached data and the session stops working within 20 seconds; offline read-only with banner. Preview deployments use their own table | Operator screens and vacation requests. Shift HQ and Vacations keep their own older offline caches. Not yet tried on production: an uninvited real Google account, and inviting a colleague |
 | **Excalidraw** (X1–X4) | The real Excalidraw editor; named boards saved and reopened; private until shared, no admin bypass; sharing; outside guests behind an admin switch; links | **Not live collaboration.** Saved changes from others appear within seconds; simultaneous saves are detected, not merged. The app says so on the Sketches page |
 | **Optional AI** (AI1–AI3) | Nothing depends on AI | **Not built** |
 | **Platforms** (W1–W3) | Responsive web app for the phone's browser with bottom tabs and full-screen panels; offline read-only kept | No install prompt or app icon (removed on request). iOS app sidelined |
@@ -59,18 +63,16 @@ the phone (it can be added to the home screen).
 
 In order.
 
-1. **Owner: sign in once on production** with the admin Google address, on
-   a computer and a phone. Then confirm the signed-in screens together.
+1. **Owner: review and merge PR #8** (Shift HQ, Vacations and Boards in
+   Swedish, with the shared look and motion). Merging deploys it.
 2. **Owner: supply the OB rules.**
-3. **Translate and restyle Shift HQ, Vacations and Boards**, with the same
-   motion as the planning screens.
-4. **Vacations on the planning model**: replace its S1/S2 and process list
+3. **Vacations on the planning model**: replace its S1/S2 and process list
    with teams, shifts and competencies from planning.
-5. **Digital assignments** (optional toggle).
-6. **Operator screens**: own schedule, training, competencies, leave requests.
-7. **Live Excalidraw collaboration** over Supabase Realtime.
-8. **Optional AI settings** (off and hidden by default).
-9. Hour-level day grid, holidays in the schedule.
+4. **Digital assignments** (optional toggle).
+5. **Operator screens**: own schedule, training, competencies, leave requests.
+6. **Live Excalidraw collaboration** over Supabase Realtime.
+7. **Optional AI settings** (off and hidden by default).
+8. Hour-level day grid, holidays in the schedule.
 
 ## Tech debt
 
@@ -82,6 +84,12 @@ In order.
 - The planning screens poll every 30 seconds; there is no push.
 - A few unused Swedish texts from the removed print screens remain in
   `src/i18n/sv.js`.
+- `src/index.css` still holds styles from the old Vacations look
+  (`.kinetic-card`, `.impact-heading`, the `:where(:root)` fallback colors);
+  remove them once nothing uses them.
+- Shift HQ, Vacations and Boards drag with the browser's built-in drag,
+  which does not work by touch; the planning Schedule has its own
+  long-press drag.
 
 ## Done
 
@@ -94,6 +102,8 @@ In order.
   while testing.
 - 2026-11-09: Google login merged (PR #3). It has not been switched on: no admin or allow list is set in Vercel.
 - 2026-11-09: Workforce planning phases 1–6 built on the working branch (PR #6, not merged).
+- 2026-11-10: PR #6 merged and deployed; production sign-in activated; test accounts removed.
+- 2026-11-15: The owner signed in on production with their own Google account and confirmed it works. PR #7 (docs) merged.
 
 ## Decisions
 
@@ -143,3 +153,7 @@ In order.
 | 2026-11-10 | Production sign-in activated by naming the admin in the database, with no redeploy and no new environment variable | The owner finished the Google and Supabase steps; the app reads the `admin` row on every request |
 | 2026-11-10 | The three temporary test accounts and their test-only records were deleted by exact id; no further test accounts were created on production | Owner's instruction; the owner's own login is the remaining check |
 | 2026-11-10 | No keep-alive job for the free Supabase project | Owner: no automated activity just to avoid pausing; the paid plan is a separate spending decision |
+| 2026-11-15 | The three older tools share the planning screens' look and motion through one stylesheet, `src/tools/tools.css`, on top of the theme tokens and `src/ui`; no tool keeps its own colors or toast | One visual language (D1); a theme change reaches every screen |
+| 2026-11-15 | In Shift HQ a delete happens at once and is undone from the message; the app's own dialog is used only where Undo is not possible (deleting a board or a group with items) or the change is large (reset, remove operator) | Everyday work must not be slowed by questions (D3); browser pop-ups were untranslated and unstyled |
+| 2026-11-15 | Shift HQ's weekly-review PDF download is kept and translated | It existed before the brief and is a file download, not the print workflow that was removed |
+| 2026-11-15 | Text stored as data (task and log categories, leave statuses) stays English in the saved data and is translated when shown | No data migration; old data keeps working in both languages |
