@@ -56,13 +56,17 @@ function normalizeHeader(raw) {
   return lower;
 }
 
+/* Messages are English texts with {placeholders}; the caller passes t() to
+ * get them in the chosen language. Without it they stay in English. */
+const plain = (text, vars = {}) => text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+
 /**
  * Parse CSV text into operator objects. Accepts Swedish (Namn/Skift/Certifieringar)
  * or English (Name/Shift/Certifications) headers. Lines starting with `#` are
  * treated as comments and skipped. Returns `{ operators, error, warnings }`
  * where warnings carry per-row hints (unknown certs with fuzzy suggestions).
  */
-export function parseCSV(text) {
+export function parseCSV(text, t = plain) {
   const stripped = text.replace(/^\uFEFF/, '');
   const allLines = stripped.split(/\r?\n/);
   const dataLines = [];
@@ -74,7 +78,7 @@ export function parseCSV(text) {
   });
 
   if (dataLines.length < 2) {
-    return { operators: [], error: 'CSV must have a header row and at least one data row', warnings: [] };
+    return { operators: [], error: t('The CSV file needs a header row and at least one row of data'), warnings: [] };
   }
 
   const header = splitCSVLine(dataLines[0]).map(normalizeHeader);
@@ -83,7 +87,7 @@ export function parseCSV(text) {
   const certIdx = header.indexOf('certifications');
 
   if (nameIdx === -1) {
-    return { operators: [], error: 'Missing "Namn" / "Name" column', warnings: [] };
+    return { operators: [], error: t('The CSV file has no “Namn” / “Name” column'), warnings: [] };
   }
 
   const operators = [];
@@ -105,8 +109,8 @@ export function parseCSV(text) {
         const suggestion = suggestCert(token);
         warnings.push(
           suggestion
-            ? `Rad ${rowNum}: Okänd certifiering "${token}" — menade du "${suggestion}"?`
-            : `Rad ${rowNum}: Okänd certifiering "${token}"`,
+            ? t('Row {row}: unknown certification “{name}”. Did you mean “{suggestion}”?', { row: rowNum, name: token, suggestion })
+            : t('Row {row}: unknown certification “{name}”', { row: rowNum, name: token }),
         );
       }
     }

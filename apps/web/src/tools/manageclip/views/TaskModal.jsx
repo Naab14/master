@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { todayStr, TASK_CATEGORIES } from '../store';
+import { useI18n } from '../../../i18n';
+import { Button } from '../../../ui';
+import { Field, Input, Select, Sheet } from '../../../workforce/ui';
 
+/* A task opens in the same side panel as the planning screens (a full-screen
+ * sheet on phones). Deleting can be undone from the message that follows. */
 export default function TaskModal({ task, onSave, onDelete, onClose }) {
+  const { t } = useI18n();
   const isNew = !task.id;
   const [form, setForm] = useState({
     title: task.title || '',
@@ -12,76 +18,52 @@ export default function TaskModal({ task, onSave, onDelete, onClose }) {
   });
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const valid = !!form.title.trim() && !!form.due_date;
 
   const submit = e => {
-    e.preventDefault();
-    if (!form.title.trim()) return;
+    e?.preventDefault();
+    if (!valid) return;
     onSave({ ...task, ...form, title: form.title.trim(), description: form.description.trim() });
   };
 
-  const field = 'w-full rounded-lg px-3 py-2 text-sm';
-  const fieldStyle = { background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
-  const label = 'flex flex-col gap-1 text-xs font-bold';
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
-      <form
-        onSubmit={submit}
-        onClick={e => e.stopPropagation()}
-        className="flex w-full max-w-md flex-col gap-3 p-5"
-        style={{ background: 'var(--bg-panel)', borderRadius: 'var(--border-radius)', boxShadow: 'var(--shadow-xl)', color: 'var(--text-primary)' }}
-      >
-        <h3 className="text-lg font-extrabold" style={{ fontFamily: 'var(--font-heading)' }}>
-          {isNew ? 'New Task' : 'Edit Task'}
-        </h3>
+    <Sheet title={isNew ? t('New task') : t('Change task')} onClose={onClose}
+      footer={<>
+        {!isNew && <Button variant="danger" className="mr-auto" onClick={() => onDelete(task)}>{t('Delete')}</Button>}
+        <Button onClick={onClose}>{t('Cancel')}</Button>
+        <Button variant="primary" disabled={!valid} onClick={submit}>{t('Save')}</Button>
+      </>}>
+      <form onSubmit={submit} className="flex flex-col gap-3">
+        <Field label={t('Title')}>
+          <Input value={form.title} autoFocus required
+            placeholder={t('e.g. Gemba walk, line 2')} onChange={e => set('title', e.target.value)} />
+        </Field>
 
-        <label className={label}>Title
-          <input className={field} style={fieldStyle} value={form.title} autoFocus required
-            placeholder="e.g. Gemba walk – Line 2" onChange={e => set('title', e.target.value)} />
-        </label>
-
-        <label className={label}>Description
-          <textarea className={field} style={fieldStyle} rows={2} value={form.description}
-            placeholder="Optional details" onChange={e => set('description', e.target.value)} />
-        </label>
+        <Field label={t('Description')}>
+          <textarea className="ui-input tl-textarea" rows={2} value={form.description}
+            placeholder={t('Optional details')} onChange={e => set('description', e.target.value)} />
+        </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <label className={label}>Due Date
-            <input type="date" className={field} style={fieldStyle} value={form.due_date} required
-              onChange={e => set('due_date', e.target.value)} />
-          </label>
-          <label className={label}>Category
-            <select className={field} style={fieldStyle} value={form.category} onChange={e => set('category', e.target.value)}>
-              {TASK_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-          </label>
+          <Field label={t('Due date')}>
+            <Input type="date" value={form.due_date} required onChange={e => set('due_date', e.target.value)} />
+          </Field>
+          <Field label={t('Category')}>
+            <Select value={form.category} onChange={e => set('category', e.target.value)}>
+              {TASK_CATEGORIES.map(c => <option key={c} value={c}>{t(c)}</option>)}
+            </Select>
+          </Field>
         </div>
 
-        <label className={label}>Status
-          <select className={field} style={fieldStyle} value={form.status} onChange={e => set('status', e.target.value)}>
-            <option value="current">In Progress</option>
-            <option value="finished">Completed</option>
-          </select>
-        </label>
-
-        <div className="mt-1 flex items-center gap-2">
-          {!isNew && (
-            <button type="button" className="rounded-lg px-3 py-2 text-xs font-bold text-white"
-              style={{ background: 'var(--coverage-red)' }}
-              onClick={() => { if (confirm('Delete this task?')) onDelete(task.id); }}>
-              Delete
-            </button>
-          )}
-          <span className="flex-1" />
-          <button type="button" className="rounded-lg px-3 py-2 text-xs font-bold"
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }} onClick={onClose}>
-            Cancel
-          </button>
-          <button type="submit" className="rounded-lg px-4 py-2 text-xs font-bold text-white" style={{ background: 'var(--accent)' }}>
-            Save Task
-          </button>
-        </div>
+        <Field label={t('Status')}>
+          <Select value={form.status} onChange={e => set('status', e.target.value)}>
+            <option value="current">{t('In progress')}</option>
+            <option value="finished">{t('Completed')}</option>
+          </Select>
+        </Field>
+        {/* Enter in a field saves, like the Save button */}
+        <button type="submit" hidden />
       </form>
-    </div>
+    </Sheet>
   );
 }

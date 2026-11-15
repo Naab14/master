@@ -1,0 +1,101 @@
+/* Shift HQ, Vacations and Boards: the look and motion of the planning
+ * screens. Theme tokens only (src/theme/tokens.css); the keyframes
+ * (wf-rise, wf-pop, wf-target) come from workforce/workforce.css.
+ *
+ * Each tool's root carries .wf-page, so the reduced-motion rule in
+ * workforce.css makes everything here instant as well.
+ */
+
+/* Panels and cards */
+.tl-panel { background: var(--surface-panel); border: 1px solid var(--line); border-radius: var(--radius-panel); }
+.tl-side { background: var(--surface-sidebar, var(--surface-soft)); border-right: 1px solid var(--line); }
+.tl-heading { font-family: var(--font-ui); font-size: var(--text-label); font-weight: 600; color: var(--ink-3); }
+.tl-textarea { height: auto; padding: 8px 10px; line-height: 1.4; resize: vertical; }
+
+/* Things you can pick up or press: a small lift on hover, a dip on press */
+.tl-lift { transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out), opacity var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out); }
+@media (hover: hover) {
+  .tl-lift:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+  .tl-row:hover { background-color: var(--surface-soft); }
+  .tl-reveal { opacity: 0; }
+  .tl-reveal-host:hover .tl-reveal, .tl-reveal:focus-visible { opacity: .7; }
+  .tl-reveal:hover { opacity: 1 !important; }
+}
+.tl-lift:active { transform: scale(.98); }
+.tl-row { transition: background-color var(--motion-fast) var(--ease-out); }
+.tl-reveal { transition: opacity var(--motion-fast) var(--ease-out); }
+
+/* Dragging: what you hold fades back, the place it would land lights up */
+.tl-lift[data-dragging='true'] { opacity: .4; transform: scale(.97); box-shadow: none; }
+.tl-drop { transition: background-color var(--motion-fast) var(--ease-out); }
+.tl-drop[data-drop='true'] { background-color: color-mix(in srgb, var(--focus) 10%, var(--surface-panel)); animation: wf-target 900ms var(--ease-out) infinite alternate; }
+
+/* Small plain icon button (✓ ✕ ▲ ▼ inside rows and cards) */
+.tl-icon { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; min-height: 24px; padding: 0 4px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--ink-3); font: inherit; cursor: pointer; transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out), opacity var(--motion-fast) var(--ease-out); }
+.tl-icon:hover { background: var(--surface-soft); color: var(--ink); }
+.tl-icon:active { transform: scale(.9); }
+.tl-icon:disabled { opacity: .25; cursor: not-allowed; }
+.tl-icon:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.tl-icon--danger:hover { background: var(--bad-bg); color: var(--bad-fg); }
+@media (pointer: coarse) { .tl-icon { min-width: 36px; min-height: 36px; } }
+
+/* Menus and popovers pop in from where they were opened */
+.tl-pop { background: var(--surface-panel); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-panel); box-shadow: var(--shadow-panel); font-family: var(--font-ui); animation: wf-pop var(--motion-fast) var(--ease-out); transform-origin: top left; }
+.tl-pop--right { transform-origin: top right; }
+.tl-menu-item { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 10px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--ink); font: inherit; font-size: var(--text-body); text-align: left; cursor: pointer; transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
+.tl-menu-item:hover, .tl-menu-item[aria-current='true'] { background: var(--surface-soft); }
+.tl-menu-item:active { transform: scale(.98); }
+.tl-menu-item:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.tl-menu-item--danger { color: var(--bad-fg); }
+.tl-menu-item--danger:hover { background: var(--bad-bg); }
+.tl-menu-label { padding: 4px 10px; font-size: var(--text-label); font-weight: 600; color: var(--ink-3); }
+.tl-menu-rule { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+@media (pointer: coarse) { .tl-menu-item { min-height: var(--touch); } }
+
+/* Sidebar list entries (boards, operators) */
+.tl-nav-item { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 10px; border: 0; border-radius: var(--radius-control); background: transparent; color: var(--ink-2); font: inherit; font-size: var(--text-body); font-weight: 500; text-align: left; cursor: pointer; transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
+.tl-nav-item:hover { background: var(--surface-soft); color: var(--ink); }
+.tl-nav-item:active { transform: scale(.98); }
+.tl-nav-item[aria-current='true'] { background: var(--surface-panel); color: var(--ink); font-weight: 600; box-shadow: inset 2px 0 0 var(--primary); }
+.tl-nav-item:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+/* Stat tiles and the progress bar in the weekly review */
+.tl-tile { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 12px; }
+.tl-tile__value { font-family: var(--font-display); font-weight: var(--display-weight); font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tl-bar { height: 10px; overflow: hidden; border-radius: 999px; background: var(--surface-soft); }
+.tl-bar > div { height: 100%; border-radius: 999px; background: var(--primary); transition: width var(--motion-slow) var(--ease-out), background-color var(--motion) var(--ease-out); }
+.tl-bar[data-met='true'] > div { background: var(--ok-solid); }
+
+/* Inline text that looks like a heading until you click into it */
+.tl-inline { background: transparent; border: 0; border-radius: var(--radius-control); outline: none; color: inherit; font: inherit; transition: background-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out); }
+.tl-inline:hover { background: var(--surface-soft); }
+.tl-inline:focus { background: var(--surface-panel); box-shadow: 0 0 0 2px var(--focus); }
+
+/* Vacations: operator panel folds away sideways; an operator's details open by height */
+.tl-oppanel { width: 240px; min-width: 240px; transition: width var(--motion) var(--ease-out), min-width var(--motion) var(--ease-out); }
+.tl-oprow { transition: background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
+.tl-oprow:hover { background-color: var(--surface-soft); }
+.tl-oprow:active { transform: scale(.99); }
+
+/* Vacations calendar: cells and blocks answer to hover and press */
+[data-week][data-op] { transition: box-shadow var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out), filter var(--motion-fast) var(--ease-out); }
+@media (hover: hover) {
+  [data-week][data-op]:hover { filter: brightness(1.04); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .tl-daycell:hover { filter: brightness(1.05); box-shadow: inset 0 0 0 1px var(--line-strong); }
+}
+.tl-daycell { transition: box-shadow var(--motion-fast) var(--ease-out), filter var(--motion-fast) var(--ease-out); }
+.tl-zoomed { animation: wf-rise var(--motion) var(--ease-out); }
+
+/* Boards: status cells and the strip under each group */
+.tl-status { width: 100%; min-height: 28px; padding: 4px 8px; border: 0; border-radius: var(--radius-control); color: #fff; font: inherit; font-size: var(--text-label); font-weight: 600; text-align: center; cursor: pointer; transition: filter var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
+.tl-status:hover { filter: brightness(1.08); }
+.tl-status:active { transform: scale(.97); }
+.tl-status:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.tl-strip > div { transition: width var(--motion-slow) var(--ease-out); }
+
+@media (max-width: 640px) {
+  .tl-hide-sm { display: none !important; }
+}
+
+/* A row of tools that drops in under a toolbar */
+.tl-drop-in { animation: wf-drop var(--motion) var(--ease-out); }

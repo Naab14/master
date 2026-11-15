@@ -6,10 +6,6 @@ import { apiFetch } from '../../access';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 /* ── Date helpers (all local time, YYYY-MM-DD strings) ─────────────────── */
-export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'];
-export const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
 export function fmtDate(d) {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
@@ -31,10 +27,6 @@ export function startOfWeek(d) { // Monday
   out.setHours(0, 0, 0, 0);
   return out;
 }
-export function niceDate(s) {
-  const d = parseDate(s);
-  return `${DOW[(d.getDay() + 6) % 7]} ${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
-}
 
 /* Effective status: 'finished' sticks; anything unfinished past due is overdue. */
 export function effStatus(task) {
@@ -42,6 +34,7 @@ export function effStatus(task) {
   return task.due_date < todayStr() ? 'overdue' : 'current';
 }
 
+/* Stored as these English words; shown through t() in the chosen language. */
 export const TASK_CATEGORIES = ['Gemba Walk', 'Safety Audit', 'Coaching', 'Meeting', 'Reporting', 'Other'];
 export const LOG_CATEGORIES = ['Safety', 'Quality', 'Delivery', 'Cost', 'People', 'Other'];
 
@@ -201,6 +194,14 @@ export function useManageclip() {
     return { ...s, links };
   }), []);
 
+  /* Put a deleted task, log entry or link back where it was (Undo). */
+  const restore = useCallback((kind, item, index) => setState(s => {
+    if (s[kind].some(x => x.id === item.id)) return s;
+    const list = [...s[kind]];
+    list.splice(Math.max(0, Math.min(index, list.length)), 0, item);
+    return { ...s, [kind]: list };
+  }), []);
+
   const saveSettings = useCallback(patch =>
     setState(s => ({ ...s, settings: { ...s.settings, ...patch } })), []);
 
@@ -209,7 +210,7 @@ export function useManageclip() {
     saveTask, deleteTask,
     addLog, deleteLog,
     saveLink, deleteLink, moveLink, reorderLink,
-    saveSettings,
+    saveSettings, restore,
   };
 }
 

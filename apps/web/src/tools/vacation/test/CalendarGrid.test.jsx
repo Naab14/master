@@ -37,8 +37,8 @@ describe('CalendarGrid', () => {
 
   it('renders week headers', () => {
     render(<CalendarGrid {...defaultProps()} />);
-    expect(screen.getByText('v.15')).toBeInTheDocument();
-    expect(screen.getByText('v.26')).toBeInTheDocument();
+    expect(screen.getByText('w.15')).toBeInTheDocument();
+    expect(screen.getByText('w.26')).toBeInTheDocument();
   });
 
   it('renders the time slider', () => {
@@ -84,7 +84,7 @@ describe('CalendarGrid', () => {
 
   it('shows week label in week zoom', () => {
     render(<CalendarGrid {...defaultProps()} />);
-    expect(screen.getByText('v.15 — v.26')).toBeInTheDocument();
+    expect(screen.getByText('w.15 — w.26')).toBeInTheDocument();
   });
 
   it('renders coverage rows with values', () => {
@@ -105,7 +105,7 @@ describe('CalendarGrid', () => {
     const props = defaultProps();
     props.vacationBlocks = [makeBlock('b1', '1', 16, 18)];
     render(<CalendarGrid {...props} />);
-    expect(screen.getByText('v.16-18')).toBeInTheDocument();
+    expect(screen.getByText('w.16-18')).toBeInTheDocument();
   });
 
   it('shows note indicator on blocks that have a note', () => {
@@ -126,24 +126,24 @@ describe('CalendarGrid', () => {
     const props = defaultProps();
     props.zoom = 'day';
     render(<CalendarGrid {...props} />);
-    expect(screen.getAllByText(/Mån/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/Sön/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Mon/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Sun/).length).toBeGreaterThan(0);
   });
 
   it('day zoom spans 8 weeks (56 day columns per operator)', () => {
     const props = defaultProps();
     props.zoom = 'day';
     render(<CalendarGrid {...props} />);
-    // 8 weeks × 7 days = 56 Mån-Sön instances across header row
-    expect(screen.getAllByText(/Mån/).length).toBe(8);
+    // 8 weeks × 7 days = 56 Mon-Sun instances across header row
+    expect(screen.getAllByText(/Mon/).length).toBe(8);
   });
 
-  it('day zoom shows week labels v.15 .. v.22', () => {
+  it('day zoom shows week labels w.15 .. w.22', () => {
     const props = defaultProps();
     props.zoom = 'day';
     render(<CalendarGrid {...props} />);
-    expect(screen.getAllByText('v.15').length).toBeGreaterThan(0);
-    expect(screen.getByText('v.22')).toBeInTheDocument();
+    expect(screen.getAllByText('w.15').length).toBeGreaterThan(0);
+    expect(screen.getByText('w.22')).toBeInTheDocument();
   });
 
   it('shows tools row when gear button clicked', () => {
@@ -151,8 +151,8 @@ describe('CalendarGrid', () => {
     render(<CalendarGrid {...props} />);
     const gearBtn = screen.getByText('⚙');
     fireEvent.click(gearBtn);
-    expect(screen.getByText('Utkast')).toBeInTheDocument();
-    expect(screen.getByText('Godkänd')).toBeInTheDocument();
+    expect(screen.getByText('Draft')).toBeInTheDocument();
+    expect(screen.getByText('Approved')).toBeInTheDocument();
   });
 
   it('shows demand toggle in tools row', () => {

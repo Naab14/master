@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { todayStr, LOG_CATEGORIES } from '../store';
+import { useI18n } from '../../../i18n';
+import { Button, Pill } from '../../../ui';
+import { Field, Input, Select } from '../../../workforce/ui';
 
-const field = 'rounded-lg px-3 py-2 text-sm';
-const fieldStyle = { background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
-
-export default function LoggerView({ state, addLog, deleteLog, flash }) {
+export default function LoggerView({ state, addLog, onDelete }) {
+  const { t, fmt } = useI18n();
   const [form, setForm] = useState({ entry_date: todayStr(), category: 'Safety', content: '' });
   const [feedback, setFeedback] = useState(false);
 
@@ -19,50 +20,41 @@ export default function LoggerView({ state, addLog, deleteLog, flash }) {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <h2 className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-heading)' }}>Activity Logger</h2>
+      <h2 className="t-section">{t('Activity log')}</h2>
 
-      <form onSubmit={submit} className="grid grid-cols-2 gap-3 p-4"
-        style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)' }}>
-        <label className="flex flex-col gap-1 text-xs font-bold">Date
-          <input type="date" className={field} style={fieldStyle} value={form.entry_date} required
+      <form onSubmit={submit} className="tl-panel grid grid-cols-2 gap-3 p-4">
+        <Field label={t('Date')}>
+          <Input type="date" value={form.entry_date} required
             onChange={e => setForm(f => ({ ...f, entry_date: e.target.value }))} />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-bold">Category
-          <select className={field} style={fieldStyle} value={form.category}
-            onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-            {LOG_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-          </select>
-        </label>
-        <label className="col-span-2 flex flex-col gap-1 text-xs font-bold">Entry
-          <textarea className={field} style={fieldStyle} rows={3} value={form.content} required
-            placeholder="What happened on shift?"
+        </Field>
+        <Field label={t('Category')}>
+          <Select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+            {LOG_CATEGORIES.map(c => <option key={c} value={c}>{t(c)}</option>)}
+          </Select>
+        </Field>
+        <Field label={t('Entry')} className="col-span-2">
+          <textarea className="ui-input tl-textarea" rows={3} value={form.content} required
+            placeholder={t('What happened on the shift?')}
             onChange={e => setForm(f => ({ ...f, content: e.target.value }))} />
-        </label>
+        </Field>
         <div className="col-span-2 flex items-center gap-3">
-          <button type="submit" className="rounded-lg px-4 py-2 text-xs font-bold text-white" style={{ background: 'var(--accent)' }}>
-            Log Entry
-          </button>
-          {feedback && <span className="text-xs font-bold" style={{ color: 'var(--coverage-green)' }} role="status">✔ Entry logged</span>}
+          <Button type="submit" variant="primary">{t('Add entry')}</Button>
+          {feedback && <span className="wf-view !h-auto text-xs font-semibold text-ok-fg" role="status">✓ {t('Entry added')}</span>}
         </div>
       </form>
 
-      <h3 className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>Recent Entries</h3>
+      <h3 className="tl-heading">{t('Latest entries')}</h3>
       {state.logs.length === 0 && (
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          No entries yet — log your first shift event above.
-        </p>
+        <p className="text-sm text-ink-3">{t('No entries yet. Add the first one above.')}</p>
       )}
       <div className="flex flex-col gap-2">
         {state.logs.slice(0, 30).map(log => (
-          <div key={log.id} className="flex items-start gap-3 px-3 py-2 text-sm"
-            style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)' }}>
-            <span className="shrink-0 font-mono text-xs" style={{ color: 'var(--text-secondary)' }}>{log.entry_date}</span>
-            <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: 'var(--accent-secondary)' }}>
-              {log.category}
-            </span>
+          <div key={log.id} className="tl-panel tl-row tl-reveal-host flex items-start gap-3 px-3 py-2 text-sm">
+            <span className="t-num shrink-0 text-xs text-ink-3">{fmt.date(log.entry_date, 'full')}</span>
+            <Pill className="shrink-0">{t(log.category)}</Pill>
             <span className="min-w-0 flex-1">{log.content}</span>
-            <button className="shrink-0 opacity-40 hover:opacity-100" title="Delete entry"
-              onClick={() => { deleteLog(log.id); flash('Entry deleted'); }}>
+            <button type="button" className="tl-icon tl-icon--danger shrink-0" title={t('Delete entry')} aria-label={t('Delete entry')}
+              onClick={() => onDelete(log)}>
               ✕
             </button>
           </div>

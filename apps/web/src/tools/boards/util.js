@@ -19,3 +19,6 @@ export function avatarColor(name) {
   for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return AVATAR_PALETTE[h % AVATAR_PALETTE.length];
 }
+
+/** A date cell holds YYYY-MM-DD; anything else is shown as typed. */
+export const isIsoDate = v => /^\d{4}-\d{2}-\d{2}$/.test(v || '');

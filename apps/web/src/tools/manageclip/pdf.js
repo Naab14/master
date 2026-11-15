@@ -1,7 +1,8 @@
 /* pdf.js — MiniPDF: dependency-free client-side PDF writer (text, rects, lines).
-   Produces ASCII-only PDF 1.4 documents so byte offsets stay trivial and the
-   export works fully offline. Ported unchanged from ManageClip, exposed as an
-   ES module instead of window.MiniPDF. */
+   The file itself is pure ASCII, so byte offsets stay trivial and the export
+   works fully offline. Letters such as å, ä, ö and é are written as octal
+   escapes and drawn through WinAnsiEncoding, so Swedish text comes out right.
+   Ported from ManageClip, exposed as an ES module instead of window.MiniPDF. */
 
 export const W = 595.28; // A4 portrait, points
 export const H = 841.89;
@@ -13,13 +14,17 @@ function hexToRgb(hex) {
 }
 
 // Keep output pure ASCII so string length === byte length for xref offsets.
+// Latin-1 letters become octal escapes; anything else (emoji) becomes "?".
 function esc(s) {
   return String(s)
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\\()]/g, c => '\\' + c)
-    .replace(/[–—]/g, '-')
-    .replace(/[‘’]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[^\x20-\x7E]/g, '?');
+    .replace(/[^\x20-\x7E]/g, c => {
+      const code = c.charCodeAt(0);
+      return code >= 0xA0 && code <= 0xFF ? '\\' + code.toString(8).padStart(3, '0') : '?';
+    });
 }
 
 export function doc() {
@@ -61,8 +66,8 @@ export function doc() {
     const pageObjNums = pages.map((_, i) => 5 + i * 2);
     objs[1] = '<< /Type /Catalog /Pages 2 0 R >>';
     objs[2] = `<< /Type /Pages /Kids [${pageObjNums.map(n => `${n} 0 R`).join(' ')}] /Count ${pages.length} >>`;
-    objs[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>';
-    objs[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>';
+    objs[3] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>';
+    objs[4] = '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
     pages.forEach((p, i) => {
       const n = 5 + i * 2;
       const stream = p.stream.join('\n');

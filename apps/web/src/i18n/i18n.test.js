@@ -4,20 +4,24 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sv from './sv';
 import { translate } from './core';
+import { TASK_CATEGORIES, LOG_CATEGORIES } from '../tools/manageclip/store';
+import { STATUS_LABELS } from '../tools/vacation/components/calendar/constants';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-/* Every text passed to t('…') in the planning screens needs Swedish. */
+/* Every text passed to t('…') in the app needs Swedish: the planning screens,
+ * the shell, and the Shift HQ, Vacations and Boards tools. */
 function usedTexts() {
   const files = [];
   const walk = dir => {
     for (const f of fs.readdirSync(dir)) {
       const p = path.join(dir, f);
-      if (fs.statSync(p).isDirectory()) walk(p);
+      if (fs.statSync(p).isDirectory()) { if (f !== 'test') walk(p); }
       else if (/\.jsx?$/.test(f) && !/\.test\./.test(f)) files.push(p);
     }
   };
   walk(path.resolve(here, '../workforce'));
+  walk(path.resolve(here, '../tools'));
   files.push(path.resolve(here, '../App.jsx'), path.resolve(here, '../shell/SignIn.jsx'), path.resolve(here, '../dashboard/Dashboard.jsx'), path.resolve(here, '../theme/ThemeSwitcher.jsx'));
   const out = new Set();
   for (const file of files) {
@@ -27,11 +31,13 @@ function usedTexts() {
   for (const f of ['../workforce/shortcuts.js', '../App.jsx']) {
     for (const m of fs.readFileSync(path.resolve(here, f), 'utf8').matchAll(/label: '([^']+)'/g)) out.add(m[1]);
   }
+  // Texts stored as data and shown through t(): categories and leave statuses.
+  for (const text of [...TASK_CATEGORIES, ...LOG_CATEGORIES, ...Object.values(STATUS_LABELS)]) out.add(text);
   return [...out];
 }
 
 describe('i18n', () => {
-  it('has Swedish for every text in the planning screens', () => {
+  it('has Swedish for every text in the planning screens and the tools', () => {
     const missing = usedTexts().filter(k => !(k in sv));
     expect(missing).toEqual([]);
   });

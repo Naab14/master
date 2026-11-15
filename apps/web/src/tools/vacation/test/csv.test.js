@@ -106,7 +106,7 @@ describe('parseCSV — cert handling', () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('Avsynng');
     expect(warnings[0]).toContain('Avsyning');
-    expect(warnings[0]).toMatch(/Rad \d+/);
+    expect(warnings[0]).toMatch(/Row \d+/);
   });
 
   it('emits warning without suggestion when cert is too far from any known one', () => {
@@ -115,7 +115,7 @@ describe('parseCSV — cert handling', () => {
     expect(operators[0].certifications).toEqual([]);
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('Xylofon');
-    expect(warnings[0]).not.toContain('menade du');
+    expect(warnings[0]).not.toContain('Did you mean');
   });
 
   it('reports the actual file row number for warnings (after comments)', () => {
@@ -127,7 +127,7 @@ describe('parseCSV — cert handling', () => {
       'Anna,S1,Avsynng',
     ].join('\n');
     const { warnings } = parseCSV(csv);
-    expect(warnings[0]).toContain('Rad 5');
+    expect(warnings[0]).toContain('Row 5');
   });
 });
 

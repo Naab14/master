@@ -20,7 +20,7 @@ const defaultProps = () => ({
 describe('TopBar', () => {
   it('renders the title', () => {
     render(<TopBar {...defaultProps()} />);
-    expect(screen.getByText('Semester Planner')).toBeInTheDocument();
+    expect(screen.getByText('Vacations')).toBeInTheDocument();
   });
 
   it('renders shift mode buttons', () => {
@@ -59,11 +59,11 @@ describe('TopBar', () => {
   it('opens overflow menu and shows actions', () => {
     render(<TopBar {...defaultProps()} />);
     fireEvent.click(screen.getByText('⋮'));
-    expect(screen.getByText('Import CSV')).toBeInTheDocument();
-    expect(screen.getByText('Export')).toBeInTheDocument();
-    expect(screen.getByText('Import JSON')).toBeInTheDocument();
+    expect(screen.getByText('Import people (CSV)')).toBeInTheDocument();
+    expect(screen.getByText('Export a backup file')).toBeInTheDocument();
+    expect(screen.getByText('Import a backup file')).toBeInTheDocument();
     expect(screen.getByText('Save')).toBeInTheDocument();
-    expect(screen.getByText('Reset')).toBeInTheDocument();
+    expect(screen.getByText('Reset…')).toBeInTheDocument();
   });
 
   it('calls onSave from overflow menu', () => {
@@ -78,7 +78,7 @@ describe('TopBar', () => {
     const props = defaultProps();
     render(<TopBar {...props} />);
     fireEvent.click(screen.getByText('⋮'));
-    fireEvent.click(screen.getByText('Export'));
+    fireEvent.click(screen.getByText('Export a backup file'));
     expect(props.onExportJSON).toHaveBeenCalled();
   });
 
@@ -86,7 +86,7 @@ describe('TopBar', () => {
     const props = defaultProps();
     render(<TopBar {...props} />);
     fireEvent.click(screen.getByText('⋮'));
-    fireEvent.click(screen.getByText('Import CSV'));
+    fireEvent.click(screen.getByText('Import people (CSV)'));
     expect(props.onImportCSV).toHaveBeenCalled();
   });
 
@@ -94,7 +94,7 @@ describe('TopBar', () => {
     const props = defaultProps();
     render(<TopBar {...props} />);
     fireEvent.click(screen.getByText('⋮'));
-    fireEvent.click(screen.getByText('Reset'));
+    fireEvent.click(screen.getByText('Reset…'));
     expect(props.onReset).toHaveBeenCalled();
   });
 

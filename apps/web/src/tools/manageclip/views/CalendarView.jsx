@@ -1,20 +1,30 @@
 import { useMemo, useState } from 'react';
-import { fmtDate, parseDate, startOfWeek, todayStr, niceDate, effStatus, MONTHS, DOW } from '../store';
+import { fmtDate, parseDate, startOfWeek, todayStr, effStatus } from '../store';
+import { useI18n } from '../../../i18n';
+import { Button, Segmented, useToast } from '../../../ui';
+import { isoWeek } from '../../../workforce/logic/time';
+import { pulse } from '../../../workforce/motion';
 
-const STATUS_STYLE = {
-  overdue: { dot: 'var(--coverage-red)', bg: 'color-mix(in srgb, var(--coverage-red) 12%, var(--bg-panel))' },
-  current: { dot: 'var(--accent-secondary)', bg: 'color-mix(in srgb, var(--accent-secondary) 10%, var(--bg-panel))' },
-  finished: { dot: 'var(--coverage-green)', bg: 'color-mix(in srgb, var(--coverage-green) 12%, var(--bg-panel))' },
+/* Status is always said in words (legend, tooltip); color only supports it. */
+const STATUS_CLASS = {
+  overdue: { chip: 'bg-bad-bg text-bad-fg', dot: 'bg-bad-solid' },
+  current: { chip: 'bg-soft text-ink', dot: 'bg-warn-solid' },
+  finished: { chip: 'bg-ok-bg text-ok-fg line-through', dot: 'bg-ok-solid' },
 };
 
-export default function CalendarView({ state, saveTask, onEdit, flash }) {
+export default function CalendarView({ state, saveTask, onEdit }) {
+  const { t, fmt } = useI18n();
+  const toast = useToast();
   const [mode, setMode] = useState('month'); // 'month' | 'week'
   const [anchor, setAnchor] = useState(() => new Date());
   const [dragOver, setDragOver] = useState(null); // dateStr being hovered
+  const [dragId, setDragId] = useState(null);
+  const today = todayStr();
+  const statusLabel = { overdue: t('Overdue'), current: t('In progress'), finished: t('Completed') };
 
   const byDate = useMemo(() => {
     const map = {};
-    state.tasks.forEach(t => { (map[t.due_date] = map[t.due_date] || []).push(t); });
+    state.tasks.forEach(task => { (map[task.due_date] = map[task.due_date] || []).push(task); });
     Object.values(map).forEach(list => list.sort((a, b) => a.title.localeCompare(b.title)));
     return map;
   }, [state.tasks]);
@@ -43,103 +53,92 @@ export default function CalendarView({ state, saveTask, onEdit, flash }) {
   }, [mode, anchor]);
 
   const title = mode === 'month'
-    ? `${MONTHS[anchor.getMonth()]} ${anchor.getFullYear()}`
-    : (() => {
-        const start = startOfWeek(anchor);
-        const end = new Date(start); end.setDate(end.getDate() + 6);
-        return `${niceDate(fmtDate(start))} – ${niceDate(fmtDate(end))} ${end.getFullYear()}`;
-      })();
+    ? fmt.date(fmtDate(new Date(anchor.getFullYear(), anchor.getMonth(), 1)), 'month')
+    : `${fmt.date(days[0].dateStr)} – ${fmt.date(days[6].dateStr)} · ${t('week')} ${isoWeek(days[0].dateStr)}`;
 
   const shift = dir => {
     if (mode === 'month') setAnchor(a => new Date(a.getFullYear(), a.getMonth() + dir, 1));
     else setAnchor(a => { const d = new Date(a); d.setDate(d.getDate() + dir * 7); return d; });
   };
 
+  /* Show where a task landed with a short pulse, once it has been drawn there. */
+  const landed = id => requestAnimationFrame(() => pulse(document.querySelector(`[data-task="${id}"]`)));
+
   const drop = (e, dateStr) => {
     e.preventDefault();
     setDragOver(null);
+    setDragId(null);
     const id = e.dataTransfer.getData('text/plain');
-    const task = state.tasks.find(t => t.id === id);
+    const task = state.tasks.find(x => x.id === id);
     if (task && task.due_date !== dateStr) {
+      const from = task.due_date;
       saveTask({ ...task, due_date: dateStr });
-      flash(`Rescheduled to ${niceDate(dateStr)}`);
+      landed(id);
+      toast(t('Moved to {date}', { date: `${fmt.date(dateStr, 'weekday')} ${fmt.date(dateStr)}` }), {
+        action: { label: t('Undo'), onClick: () => { saveTask({ ...task, due_date: from }); landed(id); } },
+      });
     }
   };
 
   const toggleDone = task => {
     const finished = task.status !== 'finished';
     saveTask({ ...task, status: finished ? 'finished' : 'current' });
-    flash(finished ? 'Task completed ✔' : 'Task reopened');
+    landed(task.id);
+    toast(finished ? t('Task completed') : t('Task reopened'));
   };
-
-  const btn = 'rounded-lg px-2.5 py-1 text-xs font-bold';
-  const btnStyle = { background: 'var(--bg-panel)', border: '1px solid var(--border)' };
 
   return (
     <div className="flex h-full flex-col gap-3">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <button className={btn} style={btnStyle} onClick={() => shift(-1)}>◀</button>
-        <button className={btn} style={btnStyle} onClick={() => setAnchor(new Date())}>Today</button>
-        <button className={btn} style={btnStyle} onClick={() => shift(1)}>▶</button>
-        <span className="text-sm font-extrabold" style={{ fontFamily: 'var(--font-heading)' }}>{title}</span>
-        <div className="ml-auto flex overflow-hidden rounded-lg" style={{ border: '1px solid var(--border)' }}>
-          {['month', 'week'].map(m => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`px-3 py-1 text-xs font-bold capitalize ${mode === m ? 'text-white' : ''}`}
-              style={mode === m ? { background: 'var(--accent)' } : { background: 'var(--bg-panel)' }}
-            >
-              {m}
-            </button>
-          ))}
-        </div>
+        <Button icon aria-label={t('Earlier')} title={t('Earlier')} onClick={() => shift(-1)}>‹</Button>
+        <Button onClick={() => setAnchor(new Date())}>{t('Today')}</Button>
+        <Button icon aria-label={t('Later')} title={t('Later')} onClick={() => shift(1)}>›</Button>
+        <span className="t-section">{title}</span>
+        <Segmented className="ml-auto" label={t('View')} value={mode} onChange={setMode}
+          options={[{ value: 'month', label: t('Month') }, { value: 'week', label: t('Week') }]} />
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 text-xs" style={{ color: 'var(--text-secondary)' }}>
-        {[['overdue', 'Overdue'], ['current', 'In Progress'], ['finished', 'Completed']].map(([st, label]) => (
+      <div className="flex flex-wrap items-center gap-4 text-xs text-ink-3">
+        {Object.keys(STATUS_CLASS).map(st => (
           <span key={st} className="flex items-center gap-1.5">
-            <i className="inline-block h-2 w-2 rounded-full" style={{ background: STATUS_STYLE[st].dot }} />
-            {label}
+            <i className={`inline-block h-2 w-2 rounded-full ${STATUS_CLASS[st].dot}`} />
+            {statusLabel[st]}
           </span>
         ))}
-        <span className="hidden md:inline">Drag tasks between days to reschedule · Click a task to edit</span>
+        <span className="hidden md:inline">{t('Drag a task to another day to move it. Click a task to change it.')}</span>
       </div>
 
       {/* Grid */}
-      <div className="grid flex-1 auto-rows-fr grid-cols-7 gap-px overflow-y-auto rounded-xl p-px" style={{ background: 'var(--border)' }}>
-        {DOW.map(d => (
-          <div key={d} className="px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider"
-            style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
-            {d}
+      <div key={mode} className="wf-view grid min-h-0 flex-1 auto-rows-fr grid-cols-7 gap-px overflow-y-auto rounded-panel border border-line bg-line">
+        {days.slice(0, 7).map(({ dateStr }) => (
+          <div key={dateStr} className="bg-ground px-2 py-1 text-center text-[11px] font-semibold text-ink-3">
+            {fmt.date(dateStr, 'weekday')}
           </div>
         ))}
         {days.map(({ dateStr, otherMonth }) => {
-          const isToday = dateStr === todayStr();
+          const isToday = dateStr === today;
           return (
             <div
               key={dateStr}
+              data-drop={dragOver === dateStr || undefined}
               onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOver(dateStr); }}
               onDragLeave={() => setDragOver(d => (d === dateStr ? null : d))}
               onDrop={e => drop(e, dateStr)}
-              className={`group flex min-h-[92px] flex-col gap-1 p-1.5 ${otherMonth ? 'opacity-45' : ''}`}
-              style={{
-                background: dragOver === dateStr ? 'color-mix(in srgb, var(--accent) 12%, var(--bg-panel))' : 'var(--bg-panel)',
-                outline: isToday ? '2px solid var(--accent)' : 'none',
-                outlineOffset: '-2px',
-              }}
+              className={`tl-drop tl-reveal-host flex min-h-[92px] flex-col gap-1 bg-panel p-1.5 ${otherMonth ? 'opacity-50' : ''}`}
+              style={isToday ? { boxShadow: 'inset 0 0 0 2px var(--focus)' } : undefined}
             >
               <div className="flex items-center justify-between">
-                <span className={`text-xs ${isToday ? 'font-black' : 'font-semibold'}`}
-                  style={isToday ? { color: 'var(--accent)' } : { color: 'var(--text-secondary)' }}>
+                <span className={`t-num text-xs ${isToday ? 'font-bold text-ink' : 'font-semibold text-ink-3'}`}>
                   {parseDate(dateStr).getDate()}
                 </span>
                 <button
+                  type="button"
                   onClick={() => onEdit({ due_date: dateStr })}
-                  className="rounded px-1 text-xs opacity-0 transition-opacity group-hover:opacity-60 hover:!opacity-100"
-                  title={`Add task on ${dateStr}`}
+                  className="tl-icon tl-reveal"
+                  title={t('Add a task on {date}', { date: fmt.date(dateStr) })}
+                  aria-label={t('Add a task on {date}', { date: fmt.date(dateStr) })}
                 >
                   +
                 </button>
@@ -149,19 +148,26 @@ export default function CalendarView({ state, saveTask, onEdit, flash }) {
                 return (
                   <div
                     key={task.id}
+                    data-task={task.id}
+                    data-dragging={dragId === task.id || undefined}
                     draggable
-                    onDragStart={e => { e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed = 'move'; }}
+                    onDragStart={e => { e.dataTransfer.setData('text/plain', task.id); e.dataTransfer.effectAllowed = 'move'; setDragId(task.id); }}
+                    onDragEnd={() => { setDragId(null); setDragOver(null); }}
                     onClick={() => onEdit(task)}
-                    title={`${task.title}${task.description ? ' — ' + task.description : ''} [${task.category}]`}
-                    className="flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold leading-tight"
-                    style={{ background: STATUS_STYLE[st].bg, border: '1px solid var(--border)', textDecoration: st === 'finished' ? 'line-through' : 'none' }}
+                    onKeyDown={e => { if (e.key === 'Enter' && e.target === e.currentTarget) onEdit(task); }}
+                    role="button"
+                    tabIndex={0}
+                    title={`${task.title}${task.description ? ' — ' + task.description : ''} · ${t(task.category)} · ${statusLabel[st]}`}
+                    className={`tl-lift ui-focus flex cursor-pointer items-center gap-1 rounded-control px-1.5 py-1 text-[11px] font-semibold leading-tight ${STATUS_CLASS[st].chip}`}
                   >
-                    <i className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: STATUS_STYLE[st].dot }} />
+                    <i className={`h-1.5 w-1.5 shrink-0 rounded-full ${STATUS_CLASS[st].dot}`} />
                     <span className="min-w-0 flex-1 truncate">{task.title}</span>
                     <button
+                      type="button"
                       onClick={e => { e.stopPropagation(); toggleDone(task); }}
-                      className="shrink-0 opacity-40 hover:opacity-100"
-                      title={st === 'finished' ? 'Reopen' : 'Mark completed'}
+                      className="tl-icon !min-h-0 !min-w-0 shrink-0 !p-0 text-inherit"
+                      title={st === 'finished' ? t('Reopen') : t('Mark as completed')}
+                      aria-label={st === 'finished' ? t('Reopen') : t('Mark as completed')}
                     >
                       ✓
                     </button>

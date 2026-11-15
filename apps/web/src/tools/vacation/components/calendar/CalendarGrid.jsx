@@ -3,6 +3,9 @@ import WeekZoomGrid from './WeekZoomGrid';
 import DayZoomGrid from './DayZoomGrid';
 import BlockPopover from './BlockPopover';
 import Legend from './Legend';
+import { useI18n } from '../../../../i18n';
+import { Button } from '../../../../ui';
+import { reducedMotion } from '../../../../workforce/motion';
 
 const ZOOM_DEBOUNCE_MS = 120;
 const ZOOM_TRANSITION_MS = 250;
@@ -14,6 +17,7 @@ export default function CalendarGrid({
   setStartWeek, showDemand, onToggleDemand, updateDemand,
   zoom, onZoomChange,
 }) {
+  const { t } = useI18n();
   const { shiftMode, startWeek, visibleWeeks } = settings;
   const scrollRef = useRef(null);
   const gridWrapperRef = useRef(null);
@@ -33,6 +37,7 @@ export default function CalendarGrid({
 
   const zoomOut = useCallback(() => {
     if (zoom !== 'day') return;
+    if (reducedMotion()) { onZoomChange('week'); return; }
     setZoomTransition(true);
     setTimeout(() => {
       onZoomChange('week');
@@ -205,54 +210,52 @@ export default function CalendarGrid({
   const groups = shiftMode === 'separate'
     ? [{ label: 'S1', ops: operators.filter(o => o.shift === 'S1'), shift: 'S1' },
        { label: 'S2', ops: operators.filter(o => o.shift === 'S2'), shift: 'S2' }]
-    : [{ label: shiftMode === 'summer' ? 'Summer Schedule' : 'All Operators', ops: operators, shift: null }];
+    : [{ label: shiftMode === 'summer' ? t('Summer schedule') : t('All operators'), ops: operators, shift: null }];
 
   const sliderMax = 52 - visibleWeeks + 1;
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-3 px-3 py-2 flex-wrap" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+      <div className="wf-toolbar bg-ground">
         <input type="range" className="time-slider" style={{ width: 180 }}
+          aria-label={t('First week shown')}
           value={startWeek} min={1} max={sliderMax}
           onChange={e => setStartWeek(+e.target.value)} />
-        <span className="text-sm font-medium whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
-          {zoom === 'day' ? `v.${weeks[0]}` : `v.${weeks[0]} — v.${weeks[weeks.length - 1]}`}
+        <span className="t-num whitespace-nowrap text-sm font-semibold">
+          {zoom === 'day' ? t('w.{n}', { n: weeks[0] }) : `${t('w.{n}', { n: weeks[0] })} — ${t('w.{n}', { n: weeks[weeks.length - 1] })}`}
         </span>
-        <div className="flex items-center gap-1 ml-2">
-          <button onClick={zoomOut} disabled={zoom === 'week'}
-            aria-label="Zoom out" title="Zoom out (-)"
-            className="zoom-btn px-2 py-1 text-sm font-bold rounded disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+        <div className="ml-2 flex items-center gap-1">
+          <Button icon onClick={zoomOut} disabled={zoom === 'week'}
+            aria-label={t('Zoom out')} title={`${t('Zoom out')} (−)`}>
             −
-          </button>
-          <button onClick={zoomIn} disabled={zoom === 'day'}
-            aria-label="Zoom in" title="Zoom in (+)"
-            className="zoom-btn px-2 py-1 text-sm font-bold rounded disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{ background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+          </Button>
+          <Button icon onClick={zoomIn} disabled={zoom === 'day'}
+            aria-label={t('Zoom in')} title={`${t('Zoom in')} (+)`}>
             +
-          </button>
+          </Button>
         </div>
-        <button onClick={() => setShowTools(t => !t)}
-          className="px-2 py-1 text-sm rounded ml-auto"
-          style={{ background: showTools ? 'var(--accent)' : 'var(--bg-primary)', color: showTools ? '#fff' : 'var(--text-primary)', border: '1px solid var(--border)' }}>
+        <span className="flex-1" />
+        <button type="button" className="wf-chip" aria-pressed={showTools} aria-expanded={showTools}
+          aria-label={t('Legend and demand')} title={t('Legend and demand')}
+          onClick={() => setShowTools(v => !v)}>
           ⚙
         </button>
       </div>
 
-      {/* Secondary tools row */}
+      {/* Legend and the demand switch */}
       {showTools && (
-        <div className="flex items-center gap-3 px-3 py-1.5 flex-wrap" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
+        <div className="wf-toolbar tl-drop-in bg-ground">
           <Legend />
-          <button onClick={onToggleDemand} className="px-2 py-1 text-xs ml-auto"
-            style={{ background: showDemand ? 'var(--accent)' : 'var(--bg-primary)', color: showDemand ? '#fff' : 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)' }}>
-            Demand
+          <span className="flex-1" />
+          <button type="button" className="wf-chip" aria-pressed={showDemand} onClick={onToggleDemand}>
+            {t('Demand')}
           </button>
         </div>
       )}
 
       {/* Grid */}
-      <div ref={gridWrapperRef} data-testid="grid-wrapper" className="flex-1 relative flex flex-col overflow-hidden">
+      <div ref={gridWrapperRef} data-testid="grid-wrapper" key={zoom} className="tl-zoomed flex-1 relative flex flex-col overflow-hidden">
         {zoom === 'week' ? (
           <WeekZoomGrid
             ref={scrollRef}

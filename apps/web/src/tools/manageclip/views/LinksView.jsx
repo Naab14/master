@@ -1,76 +1,68 @@
 import { useState } from 'react';
+import { useI18n } from '../../../i18n';
+import { Button, useToast } from '../../../ui';
+import { Field, Input, Select } from '../../../workforce/ui';
 
-const MODE_LABELS = { thumbnail: 'Thumbnail', symbol: 'Symbol', name: 'Text Label' };
 const EMPTY = { id: '', url: '', display_name: '', icon_reference: '', display_mode: 'name' };
 
-const field = 'rounded-lg px-3 py-2 text-sm';
-const fieldStyle = { background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-primary)' };
-
-export default function LinksView({ state, saveLink, deleteLink, moveLink, reorderLink, flash }) {
+export default function LinksView({ state, saveLink, onDelete, moveLink, reorderLink }) {
+  const { t } = useI18n();
+  const toast = useToast();
   const [form, setForm] = useState(EMPTY);
   const [dragId, setDragId] = useState(null);
   const [dropId, setDropId] = useState(null);
   const editing = !!form.id;
+  const modes = { thumbnail: t('Large tile'), symbol: t('Icon only'), name: t('Text') };
 
   const submit = e => {
     e.preventDefault();
     if (!form.url.trim() || !form.display_name.trim()) return;
     saveLink({ ...form, url: form.url.trim(), display_name: form.display_name.trim(), icon_reference: form.icon_reference.trim() });
     setForm(EMPTY);
-    flash('Link saved');
+    toast(t('Link saved'));
   };
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4">
-      <h2 className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-heading)' }}>Link Configuration Hub</h2>
+      <h2 className="t-section">{t('Links')}</h2>
 
-      <form onSubmit={submit} className="grid grid-cols-2 gap-3 p-4"
-        style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)' }}>
-        <label className="flex flex-col gap-1 text-xs font-bold">URL
-          <input type="url" className={field} style={fieldStyle} value={form.url} required placeholder="https://…"
+      <form onSubmit={submit} className="tl-panel grid grid-cols-2 gap-3 p-4">
+        <Field label={t('Web address')}>
+          <Input type="url" value={form.url} required placeholder="https://…"
             onChange={e => setForm(f => ({ ...f, url: e.target.value }))} />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-bold">Display Name
-          <input className={field} style={fieldStyle} value={form.display_name} required placeholder="e.g. Andon Board"
+        </Field>
+        <Field label={t('Name')}>
+          <Input value={form.display_name} required placeholder={t('e.g. Andon board')}
             onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))} />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-bold">Icon (emoji or short text)
-          <input className={field} style={fieldStyle} value={form.icon_reference} maxLength={4} placeholder="e.g. 📋"
+        </Field>
+        <Field label={t('Icon (emoji or short text)')}>
+          <Input value={form.icon_reference} maxLength={4} placeholder="📋"
             onChange={e => setForm(f => ({ ...f, icon_reference: e.target.value }))} />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-bold">Display Style
-          <select className={field} style={fieldStyle} value={form.display_mode}
-            onChange={e => setForm(f => ({ ...f, display_mode: e.target.value }))}>
-            <option value="thumbnail">Thumbnail</option>
-            <option value="symbol">Symbol (Icon)</option>
-            <option value="name">Text Label</option>
-          </select>
-        </label>
+        </Field>
+        <Field label={t('Shown as')}>
+          <Select value={form.display_mode} onChange={e => setForm(f => ({ ...f, display_mode: e.target.value }))}>
+            {Object.keys(modes).map(m => <option key={m} value={m}>{modes[m]}</option>)}
+          </Select>
+        </Field>
         <div className="col-span-2 flex gap-2">
-          <button type="submit" className="rounded-lg px-4 py-2 text-xs font-bold text-white" style={{ background: 'var(--accent)' }}>
-            {editing ? 'Update Link' : 'Add Link'}
-          </button>
-          {editing && (
-            <button type="button" className="rounded-lg px-3 py-2 text-xs font-bold"
-              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
-              onClick={() => setForm(EMPTY)}>
-              Cancel Edit
-            </button>
-          )}
+          <Button type="submit" variant="primary">{editing ? t('Save link') : t('Add link')}</Button>
+          {editing && <Button onClick={() => setForm(EMPTY)}>{t('Cancel')}</Button>}
         </div>
       </form>
 
-      <h3 className="text-sm font-bold" style={{ color: 'var(--text-secondary)' }}>
-        Configured Links <span className="font-normal">(drag rows or use ▲▼ to reorder)</span>
+      <h3 className="tl-heading">
+        {t('Your links')} <span className="font-normal">{t('(drag a row, or use the arrows, to change the order)')}</span>
       </h3>
       {state.links.length === 0 && (
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>No links yet — add your first shortcut above.</p>
+        <p className="text-sm text-ink-3">{t('No links yet. Add the first one above.')}</p>
       )}
       <div className="flex flex-col gap-2">
         {state.links.map((link, idx) => (
           <div
             key={link.id}
             draggable
+            data-dragging={dragId === link.id || undefined}
+            data-drop={dropId === link.id || undefined}
             onDragStart={e => { setDragId(link.id); e.dataTransfer.effectAllowed = 'move'; }}
             onDragEnd={() => { setDragId(null); setDropId(null); }}
             onDragOver={e => { if (dragId && dragId !== link.id) { e.preventDefault(); setDropId(link.id); } }}
@@ -80,32 +72,24 @@ export default function LinksView({ state, saveLink, deleteLink, moveLink, reord
               setDropId(null);
               if (dragId && dragId !== link.id) reorderLink(dragId, link.id);
             }}
-            className="flex items-center gap-3 px-3 py-2 text-sm"
-            style={{
-              background: dropId === link.id ? 'color-mix(in srgb, var(--accent) 12%, var(--bg-panel))' : 'var(--bg-panel)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--border-radius)',
-              opacity: dragId === link.id ? 0.5 : 1,
-            }}
+            className="tl-panel tl-lift tl-drop flex items-center gap-3 px-3 py-2 text-sm"
           >
-            <span className="cursor-grab select-none opacity-40" title="Drag to reorder">⋮⋮</span>
-            <span className="w-8 text-center text-lg">{link.icon_reference || link.display_name.charAt(0).toUpperCase()}</span>
-            <span className="w-32 truncate font-bold">{link.display_name}</span>
-            <span className="min-w-0 flex-1 truncate text-xs" style={{ color: 'var(--text-secondary)' }}>{link.url}</span>
-            <span className="hidden shrink-0 text-xs sm:inline" style={{ color: 'var(--text-secondary)' }}>
-              {MODE_LABELS[link.display_mode] || link.display_mode}
+            <span className="cursor-grab select-none text-ink-3" title={t('Drag to change the order')} aria-hidden="true">⋮⋮</span>
+            <span className="w-8 text-center text-lg" aria-hidden="true">{link.icon_reference || link.display_name.charAt(0).toUpperCase()}</span>
+            <a href={link.url} target="_blank" rel="noopener noreferrer" className="ui-focus w-32 truncate font-semibold underline-offset-2 hover:underline">{link.display_name}</a>
+            <span className="tl-hide-sm min-w-0 flex-1 truncate text-xs text-ink-3">{link.url}</span>
+            <span className="hidden shrink-0 text-xs text-ink-3 sm:inline">
+              {modes[link.display_mode] || link.display_mode}
             </span>
-            <span className="flex shrink-0 gap-1">
-              <button className="opacity-40 hover:opacity-100 disabled:opacity-10" disabled={idx === 0}
-                title="Move up" onClick={() => moveLink(link.id, -1)}>▲</button>
-              <button className="opacity-40 hover:opacity-100 disabled:opacity-10" disabled={idx === state.links.length - 1}
-                title="Move down" onClick={() => moveLink(link.id, 1)}>▼</button>
-              <button className="opacity-40 hover:opacity-100" title="Edit"
+            <span className="ml-auto flex shrink-0 gap-1">
+              <button type="button" className="tl-icon" disabled={idx === 0}
+                title={t('Move up')} aria-label={t('Move up')} onClick={() => moveLink(link.id, -1)}>▲</button>
+              <button type="button" className="tl-icon" disabled={idx === state.links.length - 1}
+                title={t('Move down')} aria-label={t('Move down')} onClick={() => moveLink(link.id, 1)}>▼</button>
+              <button type="button" className="tl-icon" title={t('Edit')} aria-label={t('Edit')}
                 onClick={() => setForm({ ...EMPTY, ...link })}>✎</button>
-              <button className="opacity-40 hover:opacity-100" title="Delete"
-                onClick={() => {
-                  if (confirm(`Delete link "${link.display_name}"?`)) { deleteLink(link.id); flash('Link deleted'); }
-                }}>✕</button>
+              <button type="button" className="tl-icon tl-icon--danger" title={t('Delete')} aria-label={t('Delete')}
+                onClick={() => { if (form.id === link.id) setForm(EMPTY); onDelete(link); }}>✕</button>
             </span>
           </div>
         ))}

@@ -2,25 +2,27 @@ import { useState, useMemo } from 'react';
 import { PROCESSES } from '../../data';
 import { getAllCoverageForWeek } from '../../coverage';
 import { CELL_W, CELL_H, LABEL_W } from './constants';
+import { useI18n } from '../../../../i18n';
 
 function CoverageTooltip({ coverageData, week, process, holidayMap, style }) {
+  const { t } = useI18n();
   if (!coverageData) return null;
   const { covered, required, operatorsIn, operatorsOut, isHoliday } = coverageData;
   const holidayNames = holidayMap?.[week]?.holidays?.map(h => h.name) || [];
   return (
     <div className="coverage-tooltip" style={style} role="tooltip">
-      <div className="font-semibold mb-1">{process} — v.{week}</div>
+      <div className="font-semibold mb-1">{process} — {t('w.{n}', { n: week })}</div>
       {isHoliday && <div style={{ color: 'var(--holiday-text)' }} className="text-xs mb-1">🔴 {holidayNames.join(', ')}</div>}
-      <div className="mb-1">{covered} av {required} tillgängliga</div>
+      <div className="mb-1">{t('{covered} of {required} available', { covered, required })}</div>
       {operatorsIn.length > 0 && (
         <div className="mb-1">
-          <span className="font-medium" style={{ color: 'var(--coverage-green)' }}>Inne:</span>
+          <span className="font-medium" style={{ color: 'var(--coverage-green)' }}>{t('In')}:</span>
           {operatorsIn.map(o => <div key={o.id} className="ml-2">{o.name}</div>)}
         </div>
       )}
       {operatorsOut.length > 0 && (
         <div>
-          <span className="font-medium" style={{ color: 'var(--coverage-red)' }}>Borta:</span>
+          <span className="font-medium" style={{ color: 'var(--coverage-red)' }}>{t('Away')}:</span>
           {operatorsOut.map(o => <div key={o.id} className="ml-2">{o.name}</div>)}
         </div>
       )}
@@ -31,6 +33,7 @@ function CoverageTooltip({ coverageData, week, process, holidayMap, style }) {
 const colorMap = { green: 'var(--coverage-green)', yellow: 'var(--coverage-yellow)', red: 'var(--coverage-red)' };
 
 export default function CoverageRows({ operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, label, cellWidth }) {
+  const { t } = useI18n();
   const [tooltip, setTooltip] = useState(null);
   const w = cellWidth ?? CELL_W;
 
@@ -62,7 +65,7 @@ export default function CoverageRows({ operators, vacationBlocks, demand, weeks,
                 className="flex items-center justify-center text-xs font-medium relative"
                 style={{ width: w, minWidth: w, height: CELL_H, borderRight: '1px solid var(--border)', color: colorMap[cov.level], cursor: 'help' }}
                 tabIndex={0} role="button"
-                aria-label={`${proc} v.${wk}: ${cov.covered}/${cov.required}`}
+                aria-label={`${proc} ${t('w.{n}', { n: wk })}: ${cov.covered}/${cov.required}`}
                 onPointerEnter={e => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const x = rect.right + 4 > window.innerWidth ? rect.left - 220 : rect.right + 4;

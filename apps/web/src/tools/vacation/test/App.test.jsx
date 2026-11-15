@@ -28,8 +28,12 @@ vi.mock('../storage', async (importOriginal) => {
 });
 
 import App from '../App';
+import { ToastProvider } from '../../../ui';
 import { seedOperators } from '../data';
 import * as storage from '../storage';
+
+// The tool shows its messages through the app's shared toasts.
+const renderApp = (ui = <App />) => render(<ToastProvider>{ui}</ToastProvider>);
 
 describe('App', () => {
   beforeEach(() => {
@@ -44,7 +48,7 @@ describe('App', () => {
   });
 
   it('renders with seed data and shows operator names', () => {
-    render(<App />);
+    renderApp();
     // Names appear in both sidebar and grid, so use getAllByText
     seedOperators.forEach(op => {
       const matches = screen.getAllByText(op.name);
@@ -53,22 +57,22 @@ describe('App', () => {
   });
 
   it('renders the top bar title', () => {
-    render(<App />);
-    expect(screen.getByText('Semester Planner')).toBeInTheDocument();
+    renderApp();
+    expect(screen.getByText('Vacations')).toBeInTheDocument();
   });
 
   it('renders the calendar grid with week headers', () => {
-    render(<App />);
-    expect(screen.getByText('v.15')).toBeInTheDocument();
+    renderApp();
+    expect(screen.getByText('w.15')).toBeInTheDocument();
   });
 
   it('calls debouncedSave on state changes', () => {
-    render(<App />);
+    renderApp();
     expect(storage.debouncedSave).toHaveBeenCalled();
   });
 
   it('shows shift mode buttons and changes mode', () => {
-    render(<App />);
+    renderApp();
     const combinedBtn = screen.getByText('Combined');
     fireEvent.click(combinedBtn);
     // In combined mode, we should no longer see S1/S2 group labels in the grid
@@ -88,43 +92,44 @@ describe('App', () => {
     vi.resetModules();
     // Re-import after mock change
     const { default: FreshApp } = await import('../App');
-    render(<FreshApp />);
-    expect(screen.getByText('Loaded shared workspace')).toBeInTheDocument();
+    const { ToastProvider: FreshToasts } = await import('../../../ui');
+    render(<FreshToasts><FreshApp /></FreshToasts>);
+    expect(screen.getByText('Opened a shared copy of the plan')).toBeInTheDocument();
   });
 
-  it('flash toast disappears after 3 seconds', () => {
-    render(<App />);
+  it('the saved message goes away by itself', () => {
+    renderApp();
     // Trigger save via top bar menu
     fireEvent.click(screen.getByText('⋮'));
     fireEvent.click(screen.getByText('Save'));
-    expect(screen.getByText('State saved')).toBeInTheDocument();
-    act(() => { vi.advanceTimersByTime(3000); });
-    expect(screen.queryByText('State saved')).not.toBeInTheDocument();
+    expect(screen.getByText('Saved')).toBeInTheDocument();
+    act(() => { vi.advanceTimersByTime(5000); });
+    act(() => { vi.advanceTimersByTime(200); });
+    expect(screen.queryByText('Saved')).not.toBeInTheDocument();
   });
 
   it('reset restores defaults after confirm', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
-    render(<App />);
+    renderApp();
     fireEvent.click(screen.getByText('⋮'));
-    fireEvent.click(screen.getByText('Reset'));
+    fireEvent.click(screen.getByText('Reset…'));
+    expect(storage.clearState).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     expect(storage.clearState).toHaveBeenCalled();
     // Seed operators should still be visible (restored)
     const matches = screen.getAllByText(seedOperators[0].name);
     expect(matches.length).toBeGreaterThanOrEqual(1);
-    window.confirm.mockRestore();
   });
 
   it('reset does not clear when confirm is cancelled', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(false);
-    render(<App />);
+    renderApp();
     fireEvent.click(screen.getByText('⋮'));
-    fireEvent.click(screen.getByText('Reset'));
+    fireEvent.click(screen.getByText('Reset…'));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(storage.clearState).not.toHaveBeenCalled();
-    window.confirm.mockRestore();
   });
 
   it('share calls copyToClipboard', async () => {
-    render(<App />);
+    renderApp();
     await act(async () => {
       fireEvent.click(screen.getByText('Share'));
     });
@@ -133,23 +138,23 @@ describe('App', () => {
   });
 
   it('undo button reverts a shift-mode change', () => {
-    render(<App />);
+    renderApp();
     // Default is 'separate' — coverage rows show S1/S2 labels
-    expect(screen.getByText('COVERAGE (S1)')).toBeInTheDocument();
-    expect(screen.queryByText('COVERAGE (All Operators)')).not.toBeInTheDocument();
+    expect(screen.getByText('Coverage (S1)')).toBeInTheDocument();
+    expect(screen.queryByText('Coverage (All operators)')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Combined'));
-    expect(screen.getByText('COVERAGE (All Operators)')).toBeInTheDocument();
+    expect(screen.getByText('Coverage (All operators)')).toBeInTheDocument();
     fireEvent.click(screen.getByLabelText('Undo'));
-    expect(screen.getByText('COVERAGE (S1)')).toBeInTheDocument();
-    expect(screen.queryByText('COVERAGE (All Operators)')).not.toBeInTheDocument();
+    expect(screen.getByText('Coverage (S1)')).toBeInTheDocument();
+    expect(screen.queryByText('Coverage (All operators)')).not.toBeInTheDocument();
   });
 
   it('Ctrl+Z keyboard shortcut fires undo', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(screen.getByText('Combined'));
-    expect(screen.getByText('COVERAGE (All Operators)')).toBeInTheDocument();
+    expect(screen.getByText('Coverage (All operators)')).toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'z', ctrlKey: true });
-    expect(screen.queryByText('COVERAGE (All Operators)')).not.toBeInTheDocument();
-    expect(screen.getByText('COVERAGE (S1)')).toBeInTheDocument();
+    expect(screen.queryByText('Coverage (All operators)')).not.toBeInTheDocument();
+    expect(screen.getByText('Coverage (S1)')).toBeInTheDocument();
   });
 });

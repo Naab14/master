@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { PROCESSES } from '../data';
+import { useI18n } from '../../../i18n';
+import { Button, Checkbox, Pill } from '../../../ui';
+import { Confirm, Field, Input, Select } from '../../../workforce/ui';
 
 export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, onToggleMgmt, onAddOperator, onRemoveOperator, onDownloadTemplate, collapsed, onToggleCollapse, people = null, onLinkOperator }) {
+  const { t } = useI18n();
   const [editId, setEditId] = useState(null);
   const [newName, setNewName] = useState('');
   const [newShift, setNewShift] = useState('S1');
   const [search, setSearch] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(null);
 
   const handleAdd = () => {
     if (!newName.trim()) return;
@@ -19,173 +24,134 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
     : operators;
 
   return (
-    <div className={`w-[240px] min-w-[240px] overflow-y-auto h-full flex flex-col shadow-[4px_0_15px_-3px_rgba(0,0,0,0.05)] z-20 relative transition-all duration-200 ${collapsed ? 'sidebar-collapsed' : ''}`}
-      style={{ background: 'var(--bg-panel)', borderRight: '1px solid var(--border)' }}>
+    <div className={`tl-oppanel tl-side relative z-20 flex h-full flex-col overflow-y-auto ${collapsed ? 'sidebar-collapsed' : ''}`}>
 
       {/* Header with collapse toggle */}
-      <div className="flex items-center justify-between px-3 py-3" style={{ color: 'var(--text-primary)', borderBottom: '1px solid var(--border)' }}>
-        <button onClick={onToggleCollapse}
-          className="flex items-center justify-center w-7 h-7 rounded-md text-sm font-bold transition-all duration-200 hover:scale-110"
-          style={{ background: 'var(--accent)', color: '#fff', boxShadow: '0 0 8px rgba(79,70,229,0.3)' }}>
+      <div className="flex items-center justify-between gap-2 border-b border-line px-2 py-2">
+        <button type="button" onClick={onToggleCollapse} className="tl-icon"
+          aria-label={collapsed ? t('Show the operator list') : t('Hide the operator list')}
+          title={collapsed ? t('Show the operator list') : t('Hide the operator list')}
+          aria-expanded={!collapsed}>
           {collapsed ? '▶' : '◀'}
         </button>
-        <span className="sidebar-full-only font-bold text-sm tracking-widest uppercase italic" style={{ color: 'var(--accent)' }}>Operators</span>
-        <div className="sidebar-full-only flex gap-2">
-          <button onClick={onDownloadTemplate} className="px-2 py-1 text-xs font-semibold rounded shadow-sm hover:scale-105 active:scale-95 transition-all"
-            style={{ color: 'var(--accent)', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>CSV</button>
+        <span className="sidebar-full-only tl-heading flex-1">{t('Operators')}</span>
+        <div className="sidebar-full-only flex gap-1">
+          <Button onClick={onDownloadTemplate} title={t('Download a CSV template')} className="!min-h-[30px] !px-2 text-xs">CSV</Button>
           {!showMgmt && (
-            <button onClick={onToggleMgmt} className="px-2 py-1 text-xs font-semibold rounded shadow-sm hover:scale-105 active:scale-95 transition-all"
-              style={{ background: 'var(--accent)', color: '#fff', boxShadow: '0 0 8px rgba(79,70,229,0.3)' }}>+ Add</button>
+            <Button variant="primary" onClick={onToggleMgmt} className="!min-h-[30px] !px-2 text-xs">+ {t('Add')}</Button>
           )}
         </div>
       </div>
 
-      {/* Add/Remove Operator Panel */}
+      {/* Add operator */}
       {showMgmt && (
-        <div className="sidebar-full-only p-4 mb-2 shadow-inner" style={{ borderBottom: '1px solid var(--border)', background: 'var(--bg-secondary)' }}>
-          <div className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--text-secondary)' }}>Add Operator</div>
-          <input type="text" placeholder="Name" value={newName} onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            className="w-full px-3 py-2 text-sm mb-2 shadow-sm transition-shadow outline-none"
-            style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}
-            onFocus={e => { e.target.style.boxShadow = '0 0 0 2px var(--accent)'; }}
-            onBlur={e => { e.target.style.boxShadow = 'none'; }} />
-          <div className="flex gap-2 mb-2">
-            <select value={newShift} onChange={e => setNewShift(e.target.value)}
-              className="flex-1 px-3 py-2 text-sm shadow-sm outline-none"
-              style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}
-              onFocus={e => { e.target.style.boxShadow = '0 0 0 2px var(--accent)'; }}
-              onBlur={e => { e.target.style.boxShadow = 'none'; }}>
+        <div className="sidebar-full-only wf-view !h-auto flex flex-col gap-2 border-b border-line bg-soft p-3">
+          <div className="tl-heading">{t('Add operator')}</div>
+          <Input type="text" placeholder={t('Name')} aria-label={t('Name')} value={newName} onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAdd()} />
+          <div className="flex gap-2">
+            <Select value={newShift} aria-label={t('Shift')} onChange={e => setNewShift(e.target.value)} className="flex-1">
               <option value="S1">S1</option><option value="S2">S2</option>
-            </select>
-            <button onClick={handleAdd} className="px-4 py-2 text-sm font-semibold rounded shadow-sm transition-all hover:scale-105"
-              style={{ background: 'var(--accent)', color: '#fff' }}>Add</button>
+            </Select>
+            <Button variant="primary" onClick={handleAdd}>{t('Add')}</Button>
           </div>
-          <button onClick={onDownloadTemplate} className="w-full px-3 py-2 text-xs mt-2 font-medium hover:opacity-80 transition-opacity"
-            style={{ background: 'var(--bg-primary)', border: '1px dashed var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-secondary)' }}>
-            ↓ Download CSV Template
-          </button>
-          <button onClick={onToggleMgmt} className="w-full px-3 py-2 text-xs mt-2 font-semibold rounded transition-all hover:opacity-80"
-            style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-secondary)' }}>
-            Done
-          </button>
+          <Button onClick={onDownloadTemplate} className="text-xs">↓ {t('Download a CSV template')}</Button>
+          <Button onClick={onToggleMgmt}>{t('Done')}</Button>
         </div>
       )}
 
       {/* Search */}
-      <div className="sidebar-full-only px-3 pt-2 pb-1">
+      <div className="sidebar-full-only px-3 pb-1 pt-2">
         <div className="relative">
-          <input type="text" placeholder="Search operators" value={search}
-            aria-label="Search operators"
+          <Input type="text" placeholder={t('Search operators')} value={search}
+            aria-label={t('Search operators')}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-3 pr-8 py-1.5 text-sm shadow-sm outline-none"
-            style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}
-            onFocus={e => { e.target.style.boxShadow = '0 0 0 2px var(--accent)'; }}
-            onBlur={e => { e.target.style.boxShadow = 'none'; }} />
+            className="w-full pr-8" />
           {search && (
-            <button onClick={() => setSearch('')} aria-label="Clear search"
-              className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-xs rounded hover:bg-black/5"
-              style={{ color: 'var(--text-secondary)' }}>
+            <button type="button" onClick={() => setSearch('')} aria-label={t('Clear search')}
+              className="tl-icon absolute right-1 top-1/2 -translate-y-1/2">
               ×
             </button>
           )}
         </div>
       </div>
 
-      {/* Operator List */}
-      <div className="sidebar-full-only flex-1 overflow-y-auto p-2 space-y-1">
+      {/* Operator list */}
+      <div className="sidebar-full-only flex-1 space-y-1 overflow-y-auto p-2">
         {filteredOperators.length === 0 && (
-          <div className="px-3 py-4 text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
-            No matches
-          </div>
+          <div className="px-3 py-4 text-center text-xs text-ink-3">{t('No matches')}</div>
         )}
-        {filteredOperators.map(op => (
-          <div key={op.id} className="rounded-lg transition-colors" style={{ background: editId === op.id ? 'var(--bg-secondary)' : 'transparent' }}>
-            <div className="px-3 py-2.5 flex items-center gap-3 cursor-pointer rounded-md text-sm transition-all duration-200"
-              style={{ opacity: op.active ? 1 : 0.4, color: 'var(--text-primary)' }}
-              onClick={() => setEditId(editId === op.id ? null : op.id)}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.background = 'rgba(79,70,229,0.06)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.background = 'transparent'; }}>
-              <span className="flex-1 truncate font-medium">{op.name}</span>
-              {people && !op.personId && <span className="text-[10px] font-semibold" style={{ color: 'var(--text-secondary)' }} title="Not linked to a profile in People">unlinked</span>}
-              <span className="text-xs px-2.5 py-0.5 rounded-full font-mono font-bold"
-                style={op.shift === 'S1'
-                  ? { background: 'var(--accent)', color: '#fff', boxShadow: '0 0 10px rgba(79,70,229,0.4)' }
-                  : { background: 'var(--accent-secondary)', color: '#fff', boxShadow: '0 0 10px rgba(59,130,246,0.4)' }}>
-                {op.shift}
-              </span>
-            </div>
+        {filteredOperators.map(op => {
+          const open = editId === op.id;
+          const linked = !!(op.personId && people?.some(p => p.id === op.personId));
+          return (
+            <div key={op.id} className={`rounded-control ${open ? 'bg-panel shadow-panel' : ''}`}>
+              <div className="tl-oprow flex cursor-pointer items-center gap-2 rounded-control px-3 py-2 text-sm"
+                style={{ opacity: op.active ? 1 : 0.45 }}
+                role="button" tabIndex={0} aria-expanded={open}
+                onClick={() => setEditId(open ? null : op.id)}
+                onKeyDown={e => { if (e.key === 'Enter' && e.target === e.currentTarget) setEditId(open ? null : op.id); }}>
+                <span className="flex-1 truncate font-medium">{op.name}</span>
+                {people && !op.personId && <span className="text-[10px] font-semibold text-ink-3" title={t('Not linked to a profile in People')}>{t('unlinked')}</span>}
+                <Pill>{op.shift}</Pill>
+              </div>
 
-            {editId === op.id && (
-              <div className="px-3 pb-4 pt-1 space-y-3">
-                <div>
-                  <label className="text-xs block mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>Name</label>
-                  <input type="text" value={op.name} onChange={e => onUpdateOperator(op.id, { name: e.target.value })}
-                    disabled={!!op.personId} title={op.personId ? 'The name comes from the profile in People' : undefined}
-                    className="w-full px-2.5 py-1.5 text-sm shadow-sm outline-none"
-                    style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}
-                    onFocus={e => { e.target.style.boxShadow = '0 0 0 2px var(--accent)'; }}
-                    onBlur={e => { e.target.style.boxShadow = 'none'; }} />
-                </div>
-                {op.personId && (
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                    Linked to the profile in <a href={`#/people/${op.personId}`} className="underline">People</a>. Change the name there.
-                  </p>
-                )}
-                {!op.personId && people && (
+              {open && (
+                <div className="wf-view !h-auto flex flex-col gap-3 px-3 pb-4 pt-1">
+                  <Field label={t('Name')}>
+                    <Input type="text" value={op.name} onChange={e => onUpdateOperator(op.id, { name: e.target.value })}
+                      disabled={!!op.personId} title={op.personId ? t('The name comes from the profile in People') : undefined} />
+                  </Field>
+                  {op.personId && (
+                    <p className="text-xs text-ink-3">
+                      {t('Linked to a profile; change the name there.')}{' '}
+                      <a href={`#/people/${op.personId}`} className="ui-focus underline">{t('Open in People')}</a>
+                    </p>
+                  )}
+                  {!op.personId && people && (
+                    <Field label={t('Not linked to a profile')}>
+                      <Select value="" aria-label={t('Link {name} to a profile', { name: op.name })} onChange={e => e.target.value && onLinkOperator(op.id, e.target.value)}>
+                        <option value="">{t('Link to a profile…')}</option>
+                        {people.slice().sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </Select>
+                    </Field>
+                  )}
+                  <Field label={t('Shift')}>
+                    <Select value={op.shift} onChange={e => onUpdateOperator(op.id, { shift: e.target.value })}>
+                      <option value="S1">S1</option><option value="S2">S2</option>
+                    </Select>
+                  </Field>
+                  <Checkbox checked={op.active} onChange={e => onUpdateOperator(op.id, { active: e.target.checked })}>{t('Active')}</Checkbox>
                   <div>
-                    <label className="text-xs block mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>Not linked to a profile</label>
-                    <select value="" aria-label={`Link ${op.name} to a profile`} onChange={e => e.target.value && onLinkOperator(op.id, e.target.value)}
-                      className="w-full px-2.5 py-1.5 text-sm shadow-sm outline-none"
-                      style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}>
-                      <option value="">Link to a profile…</option>
-                      {people.slice().sort((a, b) => a.name.localeCompare(b.name)).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                  </div>
-                )}
-                <div>
-                  <label className="text-xs block mb-1 font-medium" style={{ color: 'var(--text-secondary)' }}>Shift</label>
-                  <select value={op.shift} onChange={e => onUpdateOperator(op.id, { shift: e.target.value })}
-                    className="w-full px-2.5 py-1.5 text-sm shadow-sm outline-none"
-                    style={{ background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)', color: 'var(--text-primary)' }}
-                    onFocus={e => { e.target.style.boxShadow = '0 0 0 2px var(--accent)'; }}
-                    onBlur={e => { e.target.style.boxShadow = 'none'; }}>
-                    <option value="S1">S1</option><option value="S2">S2</option>
-                  </select>
-                </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <input type="checkbox" checked={op.active} onChange={e => onUpdateOperator(op.id, { active: e.target.checked })} id={`active-${op.id}`}
-                    className="w-4 h-4 rounded" style={{ accentColor: 'var(--accent)' }} />
-                  <label htmlFor={`active-${op.id}`} className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Active</label>
-                </div>
-                <div className="pt-1">
-                  <label className="text-xs block mb-1.5 font-medium" style={{ color: 'var(--text-secondary)' }}>Certifications</label>
-                  <div className="space-y-1.5">
-                    {PROCESSES.map(p => (
-                      <label key={p} className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-primary)' }}>
-                        <input type="checkbox" checked={op.certifications.includes(p)}
-                          className="w-3.5 h-3.5 rounded" style={{ accentColor: 'var(--accent)' }}
+                    <div className="mb-1 text-xs font-semibold text-ink-3">{t('Certifications')}</div>
+                    <div className="flex flex-col">
+                      {PROCESSES.map(p => (
+                        <Checkbox key={p} checked={op.certifications.includes(p)}
                           onChange={e => {
                             const certs = e.target.checked ? [...op.certifications, p] : op.certifications.filter(c => c !== p);
                             onUpdateOperator(op.id, { certifications: certs });
-                          }} />
-                        {p}
-                      </label>
-                    ))}
+                          }}>
+                          {p}
+                        </Checkbox>
+                      ))}
+                    </div>
                   </div>
+                  {showMgmt && !linked && (
+                    <Button variant="danger" onClick={() => setConfirmRemove(op)}>{t('Remove operator')}</Button>
+                  )}
                 </div>
-                {showMgmt && !(op.personId && people?.some(p => p.id === op.personId)) && (
-                  <button onClick={() => { if (confirm(`Remove ${op.name}?`)) { onRemoveOperator(op.id); setEditId(null); } }}
-                    className="w-full px-3 py-2 text-xs font-semibold rounded-md transition-colors mt-2"
-                    style={{ color: 'var(--accent-alert)', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                    Remove Operator
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          );
+        })}
       </div>
+
+      {confirmRemove && (
+        <Confirm danger title={t('Remove operator?')} confirmLabel={t('Remove')}
+          body={t('{name} and their vacation blocks are removed. You can undo this.', { name: confirmRemove.name })}
+          onConfirm={() => { onRemoveOperator(confirmRemove.id); setEditId(null); setConfirmRemove(null); }}
+          onCancel={() => setConfirmRemove(null)} />
+      )}
     </div>
   );
 }

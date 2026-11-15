@@ -1,12 +1,14 @@
 import CoverageRows from './CoverageRows';
 import DemandEditor from './DemandEditor';
 import { CELL_W, CELL_H, LABEL_W, STATUS_COLORS, HOLIDAY_ABBREV } from './constants';
+import { useI18n } from '../../../../i18n';
 
 export default function WeekZoomGrid({
   ref, operators, vacationBlocks, demand, settings, weeks, holidayMap,
   groups, drag, showDemand, updateDemand,
   onCellPointerDown, onCellPointerUp, onResizePointerDown,
 }) {
+  const { t } = useI18n();
   return (
     <div ref={ref} className={`flex-1 overflow-auto select-none ${drag ? 'grid-dragging' : ''}`}>
       <div style={{ minWidth: LABEL_W + weeks.length * CELL_W }}>
@@ -14,7 +16,7 @@ export default function WeekZoomGrid({
         <div className="flex sticky top-0 z-20" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
           <div className="sticky left-0 z-10 flex items-center px-2 text-xs font-semibold"
             style={{ width: LABEL_W, minWidth: LABEL_W, background: 'var(--bg-secondary)', color: 'var(--text-secondary)', borderRight: '1px solid var(--border)' }}>
-            Operator
+            {t('Operator')}
           </div>
           {weeks.map(w => {
             const isHoliday = holidayMap[w]?.holidays?.length > 0;
@@ -24,7 +26,7 @@ export default function WeekZoomGrid({
               <div key={w} className="flex flex-col items-center justify-center text-xs font-medium"
                 style={{ width: CELL_W, minWidth: CELL_W, height: isHoliday ? CELL_H + 12 : CELL_H, color: isHoliday ? 'var(--holiday-text)' : 'var(--text-secondary)', background: isHoliday ? 'var(--holiday-pattern)' : 'transparent', borderRight: '1px solid var(--border)', lineHeight: 1.1 }}
                 title={holidayTitle}>
-                <span>v.{w}</span>
+                <span>{t('w.{n}', { n: w })}</span>
                 {isHoliday && <span className="text-[9px] italic opacity-80 truncate w-full text-center" style={{ color: 'var(--holiday-text)' }}>{holidayAbbrevs[0]}</span>}
               </div>
             );
@@ -77,7 +79,7 @@ export default function WeekZoomGrid({
                       if (isEnd) { cellStyle.borderRight = `2px solid ${borderVar}`; cellStyle.borderTopRightRadius = '6px'; cellStyle.borderBottomRightRadius = '6px'; }
                     }
                     cellStyle.boxShadow = isDrag ? '0 10px 15px -3px rgba(0,0,0,0.1)' : '0 2px 4px -1px rgba(0,0,0,0.06)';
-                    if (isDrag) { cellStyle.transform = 'scale(1.02)'; cellStyle.outline = '2px solid var(--accent)'; }
+                    if (isDrag) { cellStyle.transform = 'scale(1.02)'; cellStyle.outline = '2px solid var(--focus)'; }
                   } else if (isDrawing) {
                     cellStyle = { background: 'var(--draft-bg)', opacity: 0.5 };
                   } else if (isHoliday) {
@@ -107,16 +109,16 @@ export default function WeekZoomGrid({
                       {block && isStart && (
                         <span className="absolute inset-[2px] flex items-center justify-center text-xs font-medium truncate pointer-events-none select-none"
                           style={{ color: STATUS_COLORS[block.status]?.fg ?? 'var(--text-primary)' }}>
-                          {block.startWeek === block.endWeek ? `v.${block.startWeek}` : `v.${block.startWeek}-${block.endWeek}`}
+                          {block.startWeek === block.endWeek ? t('w.{n}', { n: block.startWeek }) : t('w.{a}-{b}', { a: block.startWeek, b: block.endWeek })}
                         </span>
                       )}
                       {hasDayOverrides && isEnd && (
                         <span className="absolute top-0 right-0.5 text-[8px] pointer-events-none"
-                          style={{ color: 'var(--accent)' }} title="Per-day overrides">●</span>
+                          style={{ color: 'var(--accent)' }} title={t('Some days have their own status')}>●</span>
                       )}
                       {block?.note && isStart && (
                         <span className="absolute top-0 left-0.5 text-[9px] pointer-events-none"
-                          title={block.note} aria-label="Has note">💬</span>
+                          title={block.note} aria-label={t('Has note')}>💬</span>
                       )}
                     </div>
                   );
@@ -125,7 +127,7 @@ export default function WeekZoomGrid({
             ))}
 
             <CoverageRows operators={operators} vacationBlocks={vacationBlocks} demand={demand}
-              weeks={weeks} shiftMode={settings.shiftMode} shiftFilter={group.shift} holidayMap={holidayMap} label={`COVERAGE (${group.label})`} />
+              weeks={weeks} shiftMode={settings.shiftMode} shiftFilter={group.shift} holidayMap={holidayMap} label={t('Coverage ({group})', { group: group.label })} />
           </div>
         ))}
 

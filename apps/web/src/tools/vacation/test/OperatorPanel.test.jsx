@@ -120,14 +120,14 @@ describe('OperatorPanel', () => {
     const props = { ...defaultProps(), showMgmt: true };
     render(<OperatorPanel {...props} />);
     fireEvent.click(screen.getByText('Anna Lindgren'));
-    expect(screen.getByText('Remove Operator')).toBeInTheDocument();
+    expect(screen.getByText('Remove operator')).toBeInTheDocument();
   });
 
   it('does not show Remove button when management is closed', () => {
     const props = defaultProps();
     render(<OperatorPanel {...props} />);
     fireEvent.click(screen.getByText('Anna Lindgren'));
-    expect(screen.queryByText('Remove Operator')).not.toBeInTheDocument();
+    expect(screen.queryByText('Remove operator')).not.toBeInTheDocument();
   });
 
   it('calls onToggleCollapse when collapse button clicked', () => {

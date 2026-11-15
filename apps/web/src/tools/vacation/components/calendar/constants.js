@@ -9,9 +9,9 @@ export const STATUS_COLORS = {
   requested: { bg: 'var(--requested-bg)', border: 'var(--requested-border)', fg: 'var(--requested-fg, inherit)' },
 };
 
-export const STATUS_LABELS = { draft: 'Utkast', pending: 'Väntande', approved: 'Godkänd', requested: 'Begärd' };
+/* English texts; shown through t() in the chosen language. */
+export const STATUS_LABELS = { draft: 'Draft', pending: 'Pending', approved: 'Approved', requested: 'Requested' };
 export const STATUSES = ['draft', 'pending', 'approved', 'requested'];
-export const SWEDISH_DAYS = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre', 'Lör', 'Sön'];
 
 export const HOLIDAY_ABBREV = {
   'Annandag påsk': 'Annandag', 'Första maj': 'Första m', 'Första Maj': 'Första m',

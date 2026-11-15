@@ -1,5 +1,6 @@
 import CoverageRows from './CoverageRows';
-import { CELL_H, LABEL_W, STATUS_COLORS, STATUS_LABELS, SWEDISH_DAYS } from './constants';
+import { CELL_H, LABEL_W, STATUS_COLORS, STATUS_LABELS } from './constants';
+import { useI18n } from '../../../../i18n';
 import { isoWeekDates, formatDateStr } from './dateUtils';
 
 const DAY_ZOOM_WEEKS = 8;
@@ -16,6 +17,7 @@ export default function DayZoomGrid({
   showDayCoverage, onToggleDayCoverage, setPopover,
   onAddBlock,
 }) {
+  const { t, fmt } = useI18n();
   const year = new Date().getFullYear();
   const visibleWeeks = weeks.slice(0, DAY_ZOOM_WEEKS);
 
@@ -53,7 +55,7 @@ export default function DayZoomGrid({
         <div className="flex sticky top-0 z-30" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
           <div className="sticky left-0 z-10 flex items-center px-2 text-xs font-semibold"
             style={{ width: LABEL_W, minWidth: LABEL_W, height: 22, background: 'var(--bg-secondary)', color: 'var(--text-secondary)', borderRight: '1px solid var(--border)' }}>
-            Operator
+            {t('Operator')}
           </div>
           {visibleWeeks.map(w => {
             const isHolWeek = !!holidayMap?.[w]?.isHoliday;
@@ -70,7 +72,7 @@ export default function DayZoomGrid({
                   color: isHolWeek ? 'var(--holiday-text)' : 'var(--text-primary)',
                   background: isHolWeek ? 'var(--holiday-pattern)' : 'transparent',
                 }}>
-                v.{w}
+                {t('w.{n}', { n: w })}
               </div>
             );
           })}
@@ -99,7 +101,7 @@ export default function DayZoomGrid({
                   color: isHoliday ? 'var(--holiday-text)' : isWeekend ? 'var(--text-secondary)' : 'var(--text-primary)',
                   background: isHoliday ? 'var(--holiday-pattern)' : 'transparent',
                 }}>
-                <span className="leading-tight">{SWEDISH_DAYS[c.dayIndex]}</span>
+                <span className="leading-tight">{fmt.date(c.dateStr, 'weekday')}</span>
                 <span className="leading-tight">{c.date.getDate()}/{c.date.getMonth() + 1}</span>
               </div>
             );
@@ -171,14 +173,14 @@ export default function DayZoomGrid({
 
                   return (
                     <div key={idx}
-                      className={`flex items-center justify-center text-[9px] relative ${bgClass}`}
+                      className={`tl-daycell flex items-center justify-center text-[9px] relative ${bgClass}`}
                       title={holidayTitle}
                       style={{ width: DAY_COL_W, minWidth: DAY_COL_W, height: CELL_H, borderRight, ...cellStyle }}
                       onClick={e => handleDayClick(e, op, block, c.dateStr, c.week)}>
                       {block && (
                         <span className="font-medium truncate pointer-events-none select-none"
                           style={{ color: STATUS_COLORS[dayStatus]?.fg ?? 'var(--text-primary)' }}>
-                          {STATUS_LABELS[dayStatus]?.slice(0, 3)}
+                          {STATUS_LABELS[dayStatus] ? t(STATUS_LABELS[dayStatus]).slice(0, 3) : ''}
                         </span>
                       )}
                       {hasOverride && (
@@ -187,7 +189,7 @@ export default function DayZoomGrid({
                       )}
                       {block?.note && isBlockStart && (
                         <span className="absolute top-0 left-0.5 text-[8px] pointer-events-none"
-                          title={block.note} aria-label="Has note">💬</span>
+                          title={block.note} aria-label={t('Has note')}>💬</span>
                       )}
                     </div>
                   );
@@ -198,16 +200,15 @@ export default function DayZoomGrid({
             {showDayCoverage && (
               <CoverageRows operators={operators} vacationBlocks={vacationBlocks} demand={demand}
                 weeks={visibleWeeks} shiftMode={settings.shiftMode} shiftFilter={group.shift}
-                holidayMap={holidayMap} label={`COVERAGE (${group.label})`}
+                holidayMap={holidayMap} label={t('Coverage ({group})', { group: group.label })}
                 cellWidth={weekCellW} />
             )}
           </div>
         ))}
 
         <div className="flex items-center px-3 py-1.5" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-          <button onClick={onToggleDayCoverage} className="text-xs px-2 py-1"
-            style={{ background: showDayCoverage ? 'var(--accent)' : 'var(--bg-primary)', color: showDayCoverage ? '#fff' : 'var(--text-primary)', border: '1px solid var(--border)', borderRadius: 'var(--border-radius)' }}>
-            {showDayCoverage ? 'Hide Coverage' : 'Show Coverage'}
+          <button type="button" onClick={onToggleDayCoverage} className="wf-chip" aria-pressed={showDayCoverage}>
+            {showDayCoverage ? t('Hide coverage') : t('Show coverage')}
           </button>
         </div>
       </div>

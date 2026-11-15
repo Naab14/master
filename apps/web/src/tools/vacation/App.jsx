@@ -14,6 +14,10 @@ import { historyReducer, initHistory } from './historyReducer';
 import { useBreakpoint } from './hooks/useBreakpoint';
 import { useWorkforce } from '../../workforce/store-context';
 import { syncOperatorsWithPeople, linkOperator } from './sharedPeople';
+import { useI18n } from '../../i18n';
+import { useToast } from '../../ui';
+import { Confirm } from '../../workforce/ui';
+import '../tools.css';
 
 import TopBar from './components/TopBar';
 import OperatorPanel from './components/OperatorPanel';
@@ -55,7 +59,9 @@ export default function App() {
   const setFn = useCallback(updater => dispatch({ type: 'SET', updater }), []);
   const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
   const redo = useCallback(() => dispatch({ type: 'REDO' }), []);
-  const [toast, setToast] = useState(initResult.wasShared ? 'Loaded shared workspace' : null);
+  const { t } = useI18n();
+  const flash = useToast();
+  const [confirmReset, setConfirmReset] = useState(false);
   const [adopted, setAdopted] = useState(false); // the saved plan has been loaded from the server
   const [showDemand, setShowDemand] = useState(false);
   const [showOperatorMgmt, setShowOperatorMgmt] = useState(false);
@@ -81,7 +87,6 @@ export default function App() {
   );
 
   const [holidayMap, setHolidayMap] = useState(() => buildHolidayMap());
-  const flash = msg => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
   // Load holidays async (date-holidays is code-split)
   useEffect(() => {
@@ -137,13 +142,11 @@ export default function App() {
   }, [adopted, people, state.operators, initResult.wasShared, canEditPlan]);
   const linkOp = useCallback((operatorId, personId) => { if (people) setFn(s => linkOperator(s, operatorId, personId, people)); }, [people, setFn]);
 
-  // Auto-dismiss initial toast (shared workspace)
+  // Say so when the page opened from a shared link
   useEffect(() => {
-    if (initResult.wasShared) {
-      const t = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [initResult.wasShared]);
+    if (initResult.wasShared) flash(t('Opened a shared copy of the plan'));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on arrival
+  }, []);
 
   // Auto-save core state
   useEffect(() => { debouncedSave(state); }, [state]);
@@ -224,8 +227,8 @@ export default function App() {
   const addOperator = useCallback((name, shift) => {
     const op = { id: uid(), name, shift, active: true, certifications: [] };
     setFn(s => ({ ...s, operators: [...s.operators, op] }));
-    flash(`${name} tillagd`);
-  }, [setFn]);
+    flash(t('{name} added', { name }));
+  }, [setFn, flash, t]);
   const removeOperator = useCallback(id => {
     setFn(s => ({
       ...s,
@@ -243,52 +246,51 @@ export default function App() {
       if (!file) return;
       const reader = new FileReader();
       reader.onload = ev => {
-        const { operators: parsed, error, warnings } = parseCSV(ev.target.result);
+        const { operators: parsed, error, warnings } = parseCSV(ev.target.result, t);
         if (error) { flash(error); return; }
         const { operators: merged, added, updated } = mergeOperators(operators, parsed);
         update({ operators: merged });
         const firstWarning = warnings && warnings.length ? ` • ${warnings[0]}` : '';
-        const more = warnings && warnings.length > 1 ? ` (+${warnings.length - 1} till)` : '';
-        flash(`${added} importerade, ${updated} uppdaterade${firstWarning}${more}`);
+        const more = warnings && warnings.length > 1 ? ` ${t('(+{n} more)', { n: warnings.length - 1 })}` : '';
+        flash(`${t('{added} imported, {updated} updated', { added, updated })}${firstWarning}${more}`);
       };
       reader.readAsText(file);
     };
     input.click();
-  }, [operators, update]);
+  }, [operators, update, flash, t]);
   const handleCSVExport = useCallback(() => {
     downloadOperatorsCSV(operators);
-    flash('Personalexport nedladdad');
-  }, [operators]);
+    flash(t('People list downloaded'));
+  }, [operators, flash, t]);
 
-  const handleSave = useCallback(() => { saveState(state); flash('State saved'); }, [state]);
-  const handleExport = useCallback(() => { exportJSON(state); flash('Exported to file'); }, [state]);
+  const handleSave = useCallback(() => { saveState(state); flash(t('Saved')); }, [state, flash, t]);
+  const handleExport = useCallback(() => { exportJSON(state); flash(t('Backup file downloaded')); }, [state, flash, t]);
   const handleImport = useCallback(async () => {
     const data = await importJSON();
-    if (data) { setFn(() => data); flash('State imported'); }
-  }, [setFn]);
+    if (data) { setFn(() => data); flash(t('Backup file imported'), { action: { label: t('Undo'), onClick: undo } }); }
+  }, [setFn, flash, t, undo]);
   const handleReset = useCallback(() => {
-    if (confirm('Reset all data to defaults? This cannot be undone.')) {
-      clearState();
-      setFn(() => ({ operators: seedOperators, vacationBlocks: seedVacationBlocks, demand: buildDefaultDemand(), settings: defaultSettings }));
-      flash('Reset to defaults');
-    }
-  }, [setFn]);
+    setConfirmReset(false);
+    clearState();
+    setFn(() => ({ operators: seedOperators, vacationBlocks: seedVacationBlocks, demand: buildDefaultDemand(), settings: defaultSettings }));
+    flash(t('Reset to the example plan'), { action: { label: t('Undo'), onClick: undo } });
+  }, [setFn, flash, t, undo]);
   const handleShare = useCallback(async () => {
     const link = buildShareLink(state);
     const ok = await copyToClipboard(link);
-    flash(ok ? 'Share link copied' : 'Could not copy link');
-  }, [state]);
+    flash(ok ? t('Link copied') : t('The link could not be copied'));
+  }, [state, flash, t]);
 
   /* ── Render ─────────────────────────────────────────────────────────────── */
   return (
-    <div className="flex flex-col h-full overflow-hidden" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+    <div className="wf-page overflow-hidden">
 
       {/* ── Top Bar ──────────────────────────────────────────────────────── */}
       <TopBar
         shiftMode={shiftMode} onShiftModeChange={setShiftMode}
         onImportCSV={handleCSVImport} onExportCSV={handleCSVExport} onSave={handleSave}
         onExportJSON={handleExport} onImportJSON={handleImport}
-        onReset={handleReset}
+        onReset={() => setConfirmReset(true)}
         onShare={handleShare}
         onUndo={undo} onRedo={redo}
         canUndo={canUndo} canRedo={canRedo}
@@ -326,21 +328,10 @@ export default function App() {
         />
       </div>
 
-      {/* Toast — Neo-Kinetic pill */}
-      {toast && (
-        <div
-          className="fixed bottom-5 right-5 z-50 px-5 py-3 text-sm font-bold"
-          style={{
-            background: 'var(--accent)',
-            color: '#fff',
-            borderRadius: '999px',
-            boxShadow: '0 8px 24px rgba(79,70,229,0.45)',
-            fontFamily: 'var(--font-body)',
-            letterSpacing: '-0.01em',
-          }}
-        >
-          {toast}
-        </div>
+      {confirmReset && (
+        <Confirm danger title={t('Reset the vacation plan?')} confirmLabel={t('Reset')}
+          body={t('Operators, vacation blocks and demand go back to the example plan. You can undo this until you leave the page.')}
+          onConfirm={handleReset} onCancel={() => setConfirmReset(false)} />
       )}
     </div>
   );

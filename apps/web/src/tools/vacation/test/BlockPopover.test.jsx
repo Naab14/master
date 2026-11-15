@@ -70,7 +70,7 @@ describe('BlockPopover — note', () => {
 
   it('still renders status buttons and delete when note is shown', () => {
     render(<BlockPopover {...defaultProps()} />);
-    expect(screen.getByText('Utkast')).toBeInTheDocument();
+    expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText('Delete')).toBeInTheDocument();
   });
 });
