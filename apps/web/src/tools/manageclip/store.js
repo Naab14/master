@@ -157,6 +157,15 @@ export function useManageclip() {
     return { ...s, tasks: exists ? s.tasks.map(t => (t.id === task.id ? task : t)) : [...s.tasks, task] };
   }), []);
 
+  /* Change some fields of a task as it is now. Unlike saveTask this never
+   * writes an older copy over newer edits, and a deleted task stays deleted,
+   * so it is safe from a callback that fires later (drag, Undo). */
+  const patchTask = useCallback((id, patch) => setState(s => (
+    s.tasks.some(t => t.id === id)
+      ? { ...s, tasks: s.tasks.map(t => (t.id === id ? { ...t, ...patch } : t)) }
+      : s
+  )), []);
+
   const deleteTask = useCallback(id =>
     setState(s => ({ ...s, tasks: s.tasks.filter(t => t.id !== id) })), []);
 
@@ -207,7 +216,7 @@ export function useManageclip() {
 
   return {
     state,
-    saveTask, deleteTask,
+    saveTask, patchTask, deleteTask,
     addLog, deleteLog,
     saveLink, deleteLink, moveLink, reorderLink,
     saveSettings, restore,

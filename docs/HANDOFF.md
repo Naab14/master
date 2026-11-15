@@ -29,10 +29,17 @@ Built on the branch, **not on production until the PR is merged**.
 | Motion | Views rise in, menus pop, board groups open by height, cards and tasks lift, a dragged item fades back while its target lights up, the landed item pulses. Instant with reduced motion (each tool's root has the `wf-page` class, which the reduced-motion rule covers) |
 | Behaviour | Shift HQ deletes are immediate with Undo; browser pop-ups replaced by the in-app dialog; kanban cards move from a menu as well as by drag; refused board saves are reported; Shift HQ shows a day list on phones |
 
-Checked for PR #8: lint clean, 231 tests pass, builds; driven in Chromium
+Checked for PR #8: lint clean, 233 tests pass, builds; driven in Chromium
 against a local server on desktop and phone size, in English and Swedish,
-in Calm and Night shift, and with reduced motion. **Not checked:** a real
-phone, the Vercel preview of the branch, and production (not deployed).
+in Calm and Night shift, and with reduced motion. The Vercel preview of the
+branch loads the three tools in Swedish without errors (read-only check).
+**Not checked:** a real phone, and production (not deployed).
+
+Codex review of PR #8 (2026-11-15), one finding, fixed: Undo after dragging
+a task saved an old copy of the task, so it could reopen a task completed
+since, or bring back one deleted since. Undo now changes only the date of
+the task as it is (`patchTask` in `manageclip/store.js`), with tests in
+`manageclip/CalendarView.test.jsx`.
 
 Known limits, also in the roadmap: Vacations keeps its own S1/S2 and
 process list; holiday names stay Swedish; dragging in these three tools

@@ -12,7 +12,7 @@ const STATUS_CLASS = {
   finished: { chip: 'bg-ok-bg text-ok-fg line-through', dot: 'bg-ok-solid' },
 };
 
-export default function CalendarView({ state, saveTask, onEdit }) {
+export default function CalendarView({ state, patchTask, onEdit }) {
   const { t, fmt } = useI18n();
   const toast = useToast();
   // Phones start in the week view, where each day is a full-width row.
@@ -73,17 +73,18 @@ export default function CalendarView({ state, saveTask, onEdit }) {
     const task = state.tasks.find(x => x.id === id);
     if (task && task.due_date !== dateStr) {
       const from = task.due_date;
-      saveTask({ ...task, due_date: dateStr });
+      patchTask(id, { due_date: dateStr });
       landed(id);
       toast(t('Moved to {date}', { date: `${fmt.date(dateStr, 'weekday')} ${fmt.date(dateStr)}` }), {
-        action: { label: t('Undo'), onClick: () => { saveTask({ ...task, due_date: from }); landed(id); } },
+        // Only the date goes back: anything done to the task since stays.
+        action: { label: t('Undo'), onClick: () => { patchTask(id, { due_date: from }); landed(id); } },
       });
     }
   };
 
   const toggleDone = task => {
     const finished = task.status !== 'finished';
-    saveTask({ ...task, status: finished ? 'finished' : 'current' });
+    patchTask(task.id, { status: finished ? 'finished' : 'current' });
     landed(task.id);
     toast(finished ? t('Task completed') : t('Task reopened'));
   };

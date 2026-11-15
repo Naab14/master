@@ -58,7 +58,7 @@ export default function ManageClipTool() {
 
         <main key={view} className="wf-view min-w-0 flex-1 overflow-y-auto p-4">
           {view === 'tasks' && (
-            <CalendarView state={state} saveTask={mc.saveTask} onEdit={setSheetTask} />
+            <CalendarView state={state} patchTask={mc.patchTask} onEdit={setSheetTask} />
           )}
           {view === 'log' && (
             <LoggerView state={state} addLog={mc.addLog} onDelete={removeLog} />

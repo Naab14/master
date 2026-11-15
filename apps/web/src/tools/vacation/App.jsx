@@ -267,14 +267,16 @@ export default function App() {
   const handleExport = useCallback(() => { exportJSON(state); flash(t('Backup file downloaded')); }, [state, flash, t]);
   const handleImport = useCallback(async () => {
     const data = await importJSON();
-    if (data) { setFn(() => data); flash(t('Backup file imported'), { action: { label: t('Undo'), onClick: undo } }); }
-  }, [setFn, flash, t, undo]);
+    // No Undo button on these two messages: it would undo whatever was changed
+    // last, which may no longer be this. Undo in the top bar says what it does.
+    if (data) { setFn(() => data); flash(t('Backup file imported')); }
+  }, [setFn, flash, t]);
   const handleReset = useCallback(() => {
     setConfirmReset(false);
     clearState();
     setFn(() => ({ operators: seedOperators, vacationBlocks: seedVacationBlocks, demand: buildDefaultDemand(), settings: defaultSettings }));
-    flash(t('Reset to the example plan'), { action: { label: t('Undo'), onClick: undo } });
-  }, [setFn, flash, t, undo]);
+    flash(t('Reset to the example plan'));
+  }, [setFn, flash, t]);
   const handleShare = useCallback(async () => {
     const link = buildShareLink(state);
     const ok = await copyToClipboard(link);
