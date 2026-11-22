@@ -197,19 +197,33 @@ describe('mergeOperators', () => {
     expect(operators[1].active).toBe(true);
   });
 
-  it('updates existing operators by case-insensitive name match', () => {
+  it('never updates an operator by name: a row without an id adds a new one', () => {
     const imported = [{ name: 'anna', shift: 'S2', certifications: ['Serialisering'] }];
+    const { operators, added, updated } = mergeOperators(existing, imported);
+    expect(added).toBe(1);
+    expect(updated).toBe(0);
+    expect(operators).toHaveLength(2);
+    expect(operators[0]).toEqual(existing[0]);
+  });
+
+  it('updates the operator whose id the row carries, whatever the name says', () => {
+    const imported = [{ id: 'op1', name: 'Someone else', shift: 'S2', certifications: ['Serialisering'] }];
     const { operators, added, updated } = mergeOperators(existing, imported);
     expect(added).toBe(0);
     expect(updated).toBe(1);
-    expect(operators).toHaveLength(1);
     expect(operators[0].shift).toBe('S2');
-    expect(operators[0].certifications).toEqual(['Serialisering']);
+    expect(operators[0].name).toBe('Anna');
+    expect(existing[0].shift).toBe('S1');
+  });
+
+  it('exports an Id column that imports back as an update', () => {
+    const parsed = parseCSV(exportOperatorsCSV(existing)).operators;
+    expect(parsed[0].id).toBe('op1');
   });
 
   it('preserves id and active status of existing operators', () => {
     const imported = [{ name: 'Anna', shift: 'S2', certifications: [] }];
-    const { operators } = mergeOperators(existing, imported);
+    const { operators } = mergeOperators(existing, [{ ...imported[0], id: 'op1' }]);
     expect(operators[0].id).toBe('op1');
   });
 });

@@ -2,8 +2,10 @@ import { PROCESSES } from '../../data';
 import { CELL_W, CELL_H, LABEL_W } from './constants';
 import { useI18n } from '../../../../i18n';
 
-export default function DemandEditor({ demand, weeks, updateDemand, processes = PROCESSES.map(p => ({ key: p, name: p })) }) {
+export default function DemandEditor({ demand, weeks, updateDemand, onCopyDemand, processes = PROCESSES.map(p => ({ key: p, name: p })) }) {
   const { t } = useI18n();
+  // Saved demand of the older process list (never matched by name: copied only when asked)
+  const oldKeys = Object.keys(demand || {}).filter(k => !k.startsWith('wf:'));
   return (
     <div style={{ borderTop: '2px solid var(--border)' }}>
       <div className="flex items-center justify-between px-2 py-1" style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
@@ -25,7 +27,15 @@ export default function DemandEditor({ demand, weeks, updateDemand, processes = 
         <div key={proc} className="flex" style={{ height: CELL_H, borderBottom: '1px solid var(--border)' }}>
           <div className="sticky left-0 z-10 flex items-center px-2 text-xs"
             style={{ width: LABEL_W, minWidth: LABEL_W, background: 'var(--bg-primary)', borderRight: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-            {name}
+            <span className="truncate">{name}</span>
+            {onCopyDemand && (
+              <select className="ml-1 w-16 text-[10px]" value="" aria-label={t('Copy the old demand of a process into {name}', { name })}
+                title={t('Copy the old demand of a process into {name}', { name })}
+                onChange={ev => ev.target.value && onCopyDemand(proc, ev.target.value)}>
+                <option value="">{t('Copy from…')}</option>
+                {oldKeys.map(k => <option key={k} value={k}>{k}</option>)}
+              </select>
+            )}
           </div>
           {weeks.map(w => (
             <div key={w} className="flex items-center justify-center"

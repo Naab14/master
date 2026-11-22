@@ -263,7 +263,7 @@ export default function CalendarGrid({
             ref={scrollRef}
             operators={operators} vacationBlocks={vacationBlocks} demand={demand}
             settings={settings} weeks={weeks} holidayMap={holidayMap}
-            groups={groups} drag={drag} showDemand={showDemand} updateDemand={updateDemand} processes={planning?.processes}
+            groups={groups} drag={drag} showDemand={showDemand} updateDemand={updateDemand} processes={planning?.processes} opsForWeek={planning?.opsForWeek} onCopyDemand={planning?.copyDemand}
             onCellPointerDown={handleCellPointerDown}
             onCellPointerUp={handleCellPointerUp}
             onResizePointerDown={handleResizePointerDown}
@@ -271,7 +271,7 @@ export default function CalendarGrid({
         ) : (
           <DayZoomGrid
             operators={operators} vacationBlocks={vacationBlocks} demand={demand}
-            settings={settings} weeks={weeks} holidayMap={holidayMap} groups={groups} processes={planning?.processes}
+            settings={settings} weeks={weeks} holidayMap={holidayMap} groups={groups} processes={planning?.processes} opsForWeek={planning?.opsForWeek} onCopyDemand={planning?.copyDemand}
             showDayCoverage={showDayCoverage} onToggleDayCoverage={() => setShowDayCoverage(c => !c)}
             setPopover={setPopover}
             onAddBlock={onAddBlock}

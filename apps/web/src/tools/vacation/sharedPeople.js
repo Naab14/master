@@ -34,19 +34,51 @@ export function syncOperatorsWithPeople(operators, people, today) {
   return changed ? next : operators;
 }
 
+/** An operator the sync created itself and nobody has used: nothing in it can be lost. */
+const isPristineTwin = (state, o) =>
+  String(o.id).startsWith('wf-') && !(o.certifications || []).length && !state.vacationBlocks.some(b => b.operatorId === o.id);
+
+const overlaps = (a, b) => a.startWeek <= b.endWeek && b.startWeek <= a.endWeek;
+
 /**
- * Link an older, unlinked operator to a profile by hand. If the profile
- * already has an operator (created by the sync), the two are merged: the
- * older one keeps its shift, certifications and vacation blocks.
+ * Would linking `operatorId` to `personId` need a decision first?
+ * - null: it goes straight through (no operator holds that profile yet, or it
+ *   holds an empty one the sync made).
+ * - { reason: 'confirm', twin }: the profile's operator has data of its own;
+ *   linking merges the two and needs the user's yes.
+ * - { reason: 'overlap', twin }: both have vacation blocks in the same weeks.
+ *   The grid shows one block per week, so merging would hide one of them.
  */
-export function linkOperator(state, operatorId, personId, people) {
+export function linkBlocked(state, operatorId, personId) {
+  const twin = state.operators.find(o => o.personId === personId);
+  if (!twin || isPristineTwin(state, twin)) return null;
+  const mine = state.vacationBlocks.filter(b => b.operatorId === operatorId);
+  const theirs = state.vacationBlocks.filter(b => b.operatorId === twin.id);
+  if (mine.some(a => theirs.some(b => overlaps(a, b)))) return { reason: 'overlap', twin };
+  return { reason: 'confirm', twin };
+}
+
+/**
+ * Link an older, unlinked operator to a profile by hand.
+ * An empty twin the sync created is replaced by the older operator. A twin
+ * with data of its own is merged only with `confirmMerge`, and never when the
+ * blocks overlap: all blocks are kept (re-pointed to the older operator) and
+ * the twin's own fields stay on the operator as `mergedFrom`, so nothing is
+ * lost. Otherwise the state is returned unchanged.
+ */
+export function linkOperator(state, operatorId, personId, people, { confirmMerge = false } = {}) {
   const op = state.operators.find(o => o.id === operatorId);
   const person = people.find(p => p.id === personId);
   if (!op || !person || op.personId) return state;
   const twin = state.operators.find(o => o.personId === personId);
+  const blocked = linkBlocked(state, operatorId, personId);
+  if (blocked && (blocked.reason === 'overlap' || !confirmMerge)) return state;
+  const kept = twin && blocked
+    ? [...(op.mergedFrom || []), { id: twin.id, name: twin.name, shift: twin.shift, active: twin.active, certifications: twin.certifications || [] }]
+    : op.mergedFrom;
   return {
     ...state,
-    operators: state.operators.filter(o => o !== twin).map(o => (o.id === operatorId ? { ...o, personId, name: person.name } : o)),
+    operators: state.operators.filter(o => o !== twin).map(o => (o.id === operatorId ? { ...o, personId, name: person.name, ...(kept ? { mergedFrom: kept } : {}) } : o)),
     vacationBlocks: twin ? state.vacationBlocks.map(b => (b.operatorId === twin.id ? { ...b, operatorId } : b)) : state.vacationBlocks,
   };
 }

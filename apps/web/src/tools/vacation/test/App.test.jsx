@@ -169,6 +169,13 @@ describe('App', () => {
     expect(storage.setServerSync).not.toHaveBeenCalledWith(true);
     first.unmount();
 
+    storage.fetchServerState.mockResolvedValueOnce({ ok: true, state: { operators: [] } });
+    const partial = renderApp();
+    await act(async () => { await vi.advanceTimersByTimeAsync(10); });
+    expect(screen.getByText('Vacations')).toBeInTheDocument(); // no crash
+    expect(storage.pushServerState).not.toHaveBeenCalled();
+    partial.unmount();
+
     storage.fetchServerState.mockResolvedValueOnce({ ok: true, state: null });
     renderApp();
     await act(async () => { await vi.advanceTimersByTimeAsync(10); });

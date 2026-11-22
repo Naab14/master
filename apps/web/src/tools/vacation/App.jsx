@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react';
-import { seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from './data';
+import { seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings, isUsablePlan } from './data';
 import {
   saveState, loadState, clearState,
   saveUI, loadUI,
@@ -13,8 +13,8 @@ import { buildHolidayMap, initHolidays } from './holidays';
 import { historyReducer, initHistory } from './historyReducer';
 import { useBreakpoint } from './hooks/useBreakpoint';
 import { useWorkforce } from '../../workforce/store-context';
-import { syncOperatorsWithPeople, linkOperator, unlinkedOperators } from './sharedPeople';
-import { buildPlanningModel, resolveOperators, planningGroups } from './planningModel';
+import { syncOperatorsWithPeople, linkOperator, linkBlocked, unlinkedOperators } from './sharedPeople';
+import { buildPlanningModel, resolveOperators, planningGroups, isoWeekMonday } from './planningModel';
 import { useI18n } from '../../i18n';
 import { useToast } from '../../ui';
 import { Confirm } from '../../workforce/ui';
@@ -29,13 +29,15 @@ let _uid = 0;
 const uid = () => `id_${++_uid}_${Date.now().toString(36)}`;
 
 function getDefaults() {
-  const shared = loadStateFromUrl();
-  if (shared) {
+  const sharedRaw = loadStateFromUrl();
+  const shared = isUsablePlan(sharedRaw) ? sharedRaw : null;
+  if (sharedRaw) {
     clearShareHash();
-    return { state: shared, wasShared: true };
+    if (shared) return { state: shared, wasShared: true };
   }
+  const saved = loadState();
   return {
-    state: loadState() || {
+    state: (isUsablePlan(saved) ? saved : null) || {
       operators: seedOperators,
       vacationBlocks: seedVacationBlocks,
       demand: buildDefaultDemand(),
@@ -107,7 +109,7 @@ export default function App() {
     if (!initResult.wasShared) {
       fetchServerState().then(({ ok, state: server }) => {
         if (cancelled || !ok) return;
-        if (server && Array.isArray(server.operators)) {
+        if (isUsablePlan(server)) {
           discardPendingSave();
           dispatch({ type: 'REPLACE', state: server });
         } else if (server == null) {
@@ -149,9 +151,21 @@ export default function App() {
   const wfDoc = planning?.wf;
   const model = useMemo(() => (planningReady ? buildPlanningModel(wfDoc, localToday) : null), [planningReady, wfDoc, localToday]);
   const gridOperators = useMemo(() => resolveOperators(state.operators, model), [state.operators, model]);
-  const planningView = useMemo(() => (model ? { processes: model.processes, groups: planningGroups(gridOperators, model, t) } : null), [model, gridOperators, t]);
+  const planningView = useMemo(() => (model ? {
+    processes: model.processes,
+    groups: planningGroups(gridOperators, model, t),
+    // Coverage for a week uses the teams on that week's dates, not today's
+    opsForWeek: week => resolveOperators(state.operators, model, isoWeekMonday(Number(localToday.slice(0, 4)), week)),
+  } : null), [model, gridOperators, state.operators, localToday, t]);
   const unlinkedActive = model ? unlinkedOperators(state.operators).filter(o => o.active).length : 0;
-  const linkOp = useCallback((operatorId, personId) => { if (people) setFn(s => linkOperator(s, operatorId, personId, people)); }, [people, setFn]);
+  const [pendingLink, setPendingLink] = useState(null);
+  const linkOp = useCallback((operatorId, personId) => {
+    if (!people) return;
+    const blocked = linkBlocked(latestState.current, operatorId, personId);
+    if (blocked?.reason === 'overlap') { flash(t('Both have vacation in the same weeks. Move or remove one of them first, then link.')); return; }
+    if (blocked) { setPendingLink({ operatorId, personId, name: people.find(p => p.id === personId)?.name || '' }); return; }
+    setFn(s => linkOperator(s, operatorId, personId, people));
+  }, [people, setFn, flash, t, setPendingLink]);
 
   // Say so when the page opened from a shared link
   useEffect(() => {
@@ -223,6 +237,8 @@ export default function App() {
     })), [setFn]);
   const updateDemand = useCallback((proc, week, val) =>
     setFn(s => ({ ...s, demand: { ...s.demand, [proc]: { ...s.demand[proc], [week]: val } } })), [setFn]);
+  const copyDemand = useCallback((key, from) =>
+    setFn(s => ({ ...s, demand: { ...s.demand, [key]: { ...(s.demand[from] || {}) } } })), [setFn]);
   const setShiftMode = useCallback(m =>
     setFn(s => ({ ...s, settings: { ...s.settings, shiftMode: m } })), [setFn]);
   const setStartWeek = useCallback(w =>
@@ -280,7 +296,8 @@ export default function App() {
     const data = await importJSON();
     // No Undo button on these two messages: it would undo whatever was changed
     // last, which may no longer be this. Undo in the top bar says what it does.
-    if (data) { setFn(() => data); flash(t('Backup file imported')); }
+    if (isUsablePlan(data)) { setFn(() => data); flash(t('Backup file imported')); }
+    else if (data) flash(t('That backup file is not a complete vacation plan'));
   }, [setFn, flash, t]);
   const handleReset = useCallback(() => {
     setConfirmReset(false);
@@ -331,7 +348,7 @@ export default function App() {
 
         {/* Center: Calendar (handles both zoom levels internally) */}
         <CalendarGrid
-          planning={planningView}
+          planning={planningView ? { ...planningView, copyDemand } : null}
           operators={gridOperators} vacationBlocks={vacationBlocks}
           demand={demand} settings={settings} weeks={weeks}
           holidayMap={holidayMap}
@@ -348,6 +365,12 @@ export default function App() {
         />
       </div>
 
+      {pendingLink && (
+        <Confirm title={t('Merge with the existing operator?')} confirmLabel={t('Merge')}
+          body={t('{name} already has an operator with vacation or competencies of its own. Merging keeps all vacation blocks and keeps the other operator\'s old values on this one. You can undo this.', { name: pendingLink.name })}
+          onConfirm={() => { const l = pendingLink; setPendingLink(null); setFn(s => linkOperator(s, l.operatorId, l.personId, people, { confirmMerge: true })); }}
+          onCancel={() => setPendingLink(null)} />
+      )}
       {confirmReset && (
         <Confirm danger title={t('Reset the vacation plan?')} confirmLabel={t('Reset')}
           body={t('Operators, vacation blocks and demand go back to the example plan. You can undo this until you leave the page.')}

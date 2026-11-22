@@ -6,9 +6,10 @@ const SWEDISH_HEADER_MAP = {
   'namn': 'name',
   'skift': 'shift',
   'certifieringar': 'certifications',
+  'id': 'id',
 };
 
-const ENGLISH_HEADERS = new Set(['name', 'shift', 'certifications']);
+const ENGLISH_HEADERS = new Set(['name', 'shift', 'certifications', 'id']);
 
 function isCommentLine(line) {
   return line.trimStart().startsWith('#');
@@ -85,6 +86,7 @@ export function parseCSV(text, t = plain) {
   const nameIdx = header.indexOf('name');
   const shiftIdx = header.indexOf('shift');
   const certIdx = header.indexOf('certifications');
+  const idIdx = header.indexOf('id');
 
   if (nameIdx === -1) {
     return { operators: [], error: t('The CSV file has no “Namn” / “Name” column'), warnings: [] };
@@ -114,22 +116,24 @@ export function parseCSV(text, t = plain) {
         );
       }
     }
-    operators.push({ name, shift: shift.toUpperCase(), certifications });
+    const id = idIdx !== -1 ? (cols[idIdx]?.trim() || '') : '';
+    operators.push({ ...(id ? { id } : {}), name, shift: shift.toUpperCase(), certifications });
   }
   return { operators, error: null, warnings };
 }
 
 /**
- * Merge imported operators with existing list. Match by name (case-insensitive).
+ * Merge imported operators with the existing list. Never matches by name:
+ * a row updates an operator only when it carries that operator's id (as in
+ * the exported file); every other row adds a new operator.
  */
 export function mergeOperators(existing, imported) {
   let added = 0, updated = 0;
   const result = [...existing];
   for (const op of imported) {
-    const match = result.find(e => e.name.toLowerCase() === op.name.toLowerCase());
-    if (match) {
-      match.shift = op.shift;
-      match.certifications = op.certifications;
+    const at = op.id ? result.findIndex(e => e.id === op.id) : -1;
+    if (at !== -1) {
+      result[at] = { ...result[at], shift: op.shift, certifications: op.certifications };
       updated++;
     } else {
       result.push({
@@ -164,7 +168,7 @@ function buildHeaderComments(title) {
   return [
     `# ${title}`,
     `# Genererad: ${todayIso()}`,
-    '# Format: Namn, Skift (S1/S2), Certifieringar (semikolon-separerade)',
+    '# Format: Namn, Skift (S1/S2), Certifieringar (semikolon-separerade), Id (lämna tomt för en ny person)',
     `# Tillgängliga certifieringar: ${PROCESSES.join('; ')}`,
     '',
   ];
@@ -178,9 +182,9 @@ function buildHeaderComments(title) {
 export function exportOperatorsCSV(operators) {
   const rows = [
     ...buildHeaderComments('Semester Planner — Personalexport'),
-    'Namn,Skift,Certifieringar',
+    'Namn,Skift,Certifieringar,Id',
     ...operators.map(op =>
-      [csvEscape(op.name), csvEscape(op.shift), csvEscape((op.certifications || []).join(';'))].join(','),
+      [csvEscape(op.name), csvEscape(op.shift), csvEscape((op.certifications || []).join(';')), csvEscape(op.id)].join(','),
     ),
   ];
   return UTF8_BOM + rows.join('\n') + '\n';

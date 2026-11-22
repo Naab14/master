@@ -13,7 +13,7 @@ function getDayStatus(block, dateStr) {
 }
 
 export default function DayZoomGrid({
-  operators, vacationBlocks, demand, settings, weeks, holidayMap, groups, processes,
+  operators, vacationBlocks, demand, settings, weeks, holidayMap, groups, processes, opsForWeek,
   showDayCoverage, onToggleDayCoverage, setPopover,
   onAddBlock,
 }) {
@@ -198,7 +198,7 @@ export default function DayZoomGrid({
             ))}
 
             {showDayCoverage && !group.noCoverage && (
-              <CoverageRows processes={processes} operators={operators} vacationBlocks={vacationBlocks} demand={demand}
+              <CoverageRows opsForWeek={opsForWeek} processes={processes} operators={operators} vacationBlocks={vacationBlocks} demand={demand}
                 weeks={visibleWeeks} shiftMode={settings.shiftMode} shiftFilter={group.shift}
                 holidayMap={holidayMap} label={t('Coverage ({group})', { group: group.label })}
                 cellWidth={weekCellW} />

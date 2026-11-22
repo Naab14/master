@@ -3,7 +3,7 @@ import { getFullState } from '../api';
 import { getAllCoverageForWeek } from '../tools/vacation/coverage';
 import { PROCESSES } from '../tools/vacation/data';
 import { useWorkforce } from '../workforce/store-context';
-import { buildPlanningModel, resolveOperators } from '../tools/vacation/planningModel';
+import { buildPlanningModel, resolveOperators, coverageTeamIds } from '../tools/vacation/planningModel';
 import PlanningCards from '../workforce/PlanningCards';
 import { useI18n } from '../i18n';
 
@@ -102,10 +102,10 @@ export default function Dashboard({ onNavigate }) {
     const { vacationBlocks = [], demand = {}, settings = {} } = vac;
     // The same teams and competencies as the Vacations screen when planning has processes
     const model = wfDoc ? buildPlanningModel(wfDoc, today) : null;
-    const operators = resolveOperators(vac.operators, model);
+    const operators = resolveOperators(vac.operators, model, today);
     const procs = model ? model.processes : PROCESSES.map(p => ({ key: p, name: p }));
     const shiftMode = settings.shiftMode || 'combined';
-    const shifts = shiftMode === 'separate' ? (model ? model.teams.map(tm => tm.id) : ['S1', 'S2']) : [null];
+    const shifts = shiftMode === 'separate' ? (model ? coverageTeamIds(operators, model, t) : ['S1', 'S2']) : [null];
     const rank = { green: 0, yellow: 1, red: 2 };
     let worst = 'green';
     const perProcess = {};
@@ -120,7 +120,7 @@ export default function Dashboard({ onNavigate }) {
     const out = operators.filter(op =>
       vacationBlocks.some(b => b.operatorId === op.id && b.status === 'approved' && week >= b.startWeek && week <= b.endWeek));
     return { worst, perProcess, out };
-  }, [vac, week, wfDoc, today]);
+  }, [vac, week, wfDoc, today, t]);
 
   const boardStats = useMemo(() => {
     if (!state?.boards) return null;

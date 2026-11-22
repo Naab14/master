@@ -271,4 +271,9 @@ export default {
   'Not linked, so it counts toward no coverage. Its old values are kept.': 'Inte kopplad, så den räknas inte i någon bemanning. De gamla värdena finns kvar.',
   'Team and competencies come from People.': 'Lag och kompetenser kommer från Personal.',
   '{n} operators are not linked to a profile in People. They keep their old S1/S2 and processes, but count toward no coverage until you link them (Operators list, open a name).': '{n} operatörer är inte kopplade till en profil under Personal. De behåller sina gamla S1/S2 och processer men räknas inte i någon bemanning förrän du kopplar dem (Operatörslistan, öppna ett namn).',
+  'That backup file is not a complete vacation plan': 'Säkerhetskopian är inte en komplett semesterplan',
+  'Both have vacation in the same weeks. Move or remove one of them first, then link.': 'Båda har semester samma veckor. Flytta eller ta bort den ena först och koppla sedan.',
+  'Merge with the existing operator?': 'Slå ihop med den befintliga operatören?', 'Merge': 'Slå ihop',
+  '{name} already has an operator with vacation or competencies of its own. Merging keeps all vacation blocks and keeps the other operator\'s old values on this one. You can undo this.': '{name} har redan en operatör med egen semester eller egna kompetenser. Sammanslagningen behåller alla semesterblock och sparar den andra operatörens gamla värden på den här. Du kan ångra det.',
+  'Copy the old demand of a process into {name}': 'Kopiera det gamla behovet från en process till {name}', 'Copy from…': 'Kopiera från…',
 };

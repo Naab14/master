@@ -49,20 +49,33 @@ export function buildPlanningModel(wf, today) {
     const team = teamOf(idx, p.id, today);
     byPerson.set(p.id, { teamId: team && teamIds.has(team) ? team : NO_TEAM, certifications: [...certs] });
   }
-  return { processes, teams, byPerson };
+  // Who is on which team on a given date (a move planned for next week counts next week)
+  const teamAt = (personId, date) => {
+    const tm = teamOf(idx, personId, date);
+    return tm && teamIds.has(tm) ? tm : NO_TEAM;
+  };
+  return { processes, teams, byPerson, teamAt, certsOf: personId => byPerson.get(personId)?.certifications };
+}
+
+/** Monday of ISO week `week` in `year`, as 'YYYY-MM-DD'. */
+export function isoWeekMonday(year, week) {
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const monday = new Date(jan4.getTime() - ((jan4.getUTCDay() || 7) - 1) * 86400000 + (week - 1) * 7 * 86400000);
+  return monday.toISOString().slice(0, 10);
 }
 
 /**
  * The operators as coverage sees them. `shift` holds the team id (or one of
- * the two markers above) and `certifications` the process keys. The saved
+ * the two markers above) — today's, or the team on `date` when one is given —
+ * and `certifications` the process keys. The saved
  * operators are never modified.
  */
-export function resolveOperators(operators, model) {
+export function resolveOperators(operators, model, date = null) {
   if (!model) return operators;
   return operators.map(op => {
     const info = op.personId ? model.byPerson.get(op.personId) : null;
     if (!info) return { ...op, shift: UNLINKED, certifications: [] };
-    return { ...op, shift: info.teamId, certifications: info.certifications };
+    return { ...op, shift: date ? model.teamAt(op.personId, date) : info.teamId, certifications: info.certifications };
   });
 }
 
@@ -79,3 +92,6 @@ export function planningGroups(resolved, model, t) {
   if (unlinked.length) groups.push({ label: t('Not linked'), ops: unlinked, shift: UNLINKED, noCoverage: true });
   return groups;
 }
+
+/** The team ids that get coverage rows (shared by the grid and the Dashboard). */
+export const coverageTeamIds = (resolved, model, t) => planningGroups(resolved, model, t).filter(g => !g.noCoverage).map(g => g.shift);

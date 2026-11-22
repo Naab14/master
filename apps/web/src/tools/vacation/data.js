@@ -58,3 +58,14 @@ export const defaultSettings = {
   startWeek: 15,
 };
 
+
+// ── Is this a whole, usable plan? ────────────────────────────────────────────
+// Checked before a saved plan (server, cache, backup file or shared link) is
+// adopted, so a partial or damaged one can't crash the screen or be written back.
+export function isUsablePlan(s) {
+  const obj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  return obj(s) && Array.isArray(s.operators) && Array.isArray(s.vacationBlocks) && obj(s.demand) && obj(s.settings)
+    && Number.isFinite(s.settings.visibleWeeks) && Number.isFinite(s.settings.startWeek)
+    && s.operators.every(o => obj(o) && typeof o.id === 'string' && typeof o.name === 'string' && Array.isArray(o.certifications || []))
+    && s.vacationBlocks.every(b => obj(b) && typeof b.operatorId === 'string' && Number.isFinite(b.startWeek) && Number.isFinite(b.endWeek));
+}

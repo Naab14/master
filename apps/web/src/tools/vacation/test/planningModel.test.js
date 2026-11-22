@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { buildPlanningModel, resolveOperators, planningGroups, UNLINKED, NO_TEAM } from '../planningModel';
+import { buildPlanningModel, resolveOperators, planningGroups, coverageTeamIds, isoWeekMonday, UNLINKED, NO_TEAM } from '../planningModel';
+import { isUsablePlan, seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from '../data';
 import { getAllCoverageForWeek } from '../coverage';
 import { buildSample } from '../../../workforce/logic/sample';
 
@@ -87,5 +88,43 @@ describe('planning model for Vacations', () => {
     const r = getAllCoverageForWeek([op('a')], [], {}, 10, 'combined', null, {});
     expect(r.Avsyning.covered).toBe(1);
     expect(Object.keys(r)).not.toContain('wf:insp');
+  });
+
+  it('uses the team on the evaluated date, so a move planned for later counts later', () => {
+    const doc = structuredClone(wf);
+    doc.memberships.ms_p01 = { ...doc.memberships.ms_p01, to: '2026-11-08' };
+    doc.memberships.ms_p01_new = { id: 'ms_p01_new', personId: 'p01', teamId: 'blue', from: '2026-11-09', to: null, status: 'confirmed' };
+    const m = buildPlanningModel(doc, '2026-11-04');
+    const saved = [op('a', { personId: 'p01' })];
+    expect(resolveOperators(saved, m)[0].shift).toBe('red');
+    expect(resolveOperators(saved, m, '2026-11-04')[0].shift).toBe('red');
+    expect(resolveOperators(saved, m, '2026-11-09')[0].shift).toBe('blue');
+  });
+
+  it('finds the Monday of an ISO week', () => {
+    expect(isoWeekMonday(2026, 1)).toBe('2025-12-29');
+    expect(isoWeekMonday(2026, 46)).toBe('2026-11-09');
+  });
+
+  it('gives coverage only to teams with people, the same list for the grid and the Dashboard', () => {
+    const doc = structuredClone(wf);
+    doc.teams.empty = { id: 'empty', name: 'Empty team' };
+    const m = buildPlanningModel(doc, TODAY);
+    const resolved = resolveOperators([op('a', { personId: 'p01' }), op('old')], m);
+    expect(coverageTeamIds(resolved, m, t)).toEqual(['red']);
+  });
+});
+
+describe('is this a usable saved plan', () => {
+  const plan = { operators: seedOperators, vacationBlocks: seedVacationBlocks, demand: buildDefaultDemand(), settings: defaultSettings };
+  it('accepts a whole plan, including one with zero demand and linked operators', () => {
+    expect(isUsablePlan(plan)).toBe(true);
+    expect(isUsablePlan({ ...plan, demand: { Avsyning: { 3: 0 } } })).toBe(true);
+  });
+  it('rejects partial or damaged ones', () => {
+    for (const bad of [null, 'x', [], { operators: [] }, { ...plan, settings: null }, { ...plan, operators: [{ name: 'no id' }] },
+      { ...plan, vacationBlocks: [{ operatorId: 'a', startWeek: 'x', endWeek: 2 }] }, { ...plan, demand: [] }]) {
+      expect(isUsablePlan(bad)).toBe(false);
+    }
   });
 });

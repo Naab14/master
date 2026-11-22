@@ -123,7 +123,7 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
                 style={{ opacity: op.active ? 1 : 0.45 }}
                 role="button" tabIndex={0} aria-expanded={open}
                 onClick={() => setEditId(open ? null : op.id)}
-                onKeyDown={e => { if (e.key === 'Enter' && e.target === e.currentTarget) setEditId(open ? null : op.id); }}>
+                onKeyDown={e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); setEditId(open ? null : op.id); } }}>
                 <span className="flex-1 truncate font-medium">{op.name}</span>
                 {people && !op.personId && <span className="text-[10px] font-semibold text-ink-3" title={t('Not linked to a profile in People')}>{t('unlinked')}</span>}
                 <Pill>{model && op.personId ? (teamName(infoOf(op)?.teamId) || t('No team')) : op.shift}</Pill>

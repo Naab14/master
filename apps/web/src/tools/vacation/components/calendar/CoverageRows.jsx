@@ -32,7 +32,7 @@ function CoverageTooltip({ coverageData, week, process, holidayMap, style }) {
 
 const colorMap = { green: 'var(--coverage-green)', yellow: 'var(--coverage-yellow)', red: 'var(--coverage-red)' };
 
-export default function CoverageRows({ operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, label, cellWidth, processes = PROCESSES.map(p => ({ key: p, name: p })) }) {
+export default function CoverageRows({ operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, label, cellWidth, opsForWeek, processes = PROCESSES.map(p => ({ key: p, name: p })) }) {
   const { t } = useI18n();
   const [tooltip, setTooltip] = useState(null);
   const w = cellWidth ?? CELL_W;
@@ -40,10 +40,10 @@ export default function CoverageRows({ operators, vacationBlocks, demand, weeks,
   const coverageByWeek = useMemo(() => {
     const map = {};
     for (const w of weeks) {
-      map[w] = getAllCoverageForWeek(operators, vacationBlocks, demand, w, shiftMode, shiftFilter, holidayMap, processes.map(p => p.key));
+      map[w] = getAllCoverageForWeek(opsForWeek ? opsForWeek(w) : operators, vacationBlocks, demand, w, shiftMode, shiftFilter, holidayMap, processes.map(p => p.key));
     }
     return map;
-  }, [operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, processes]);
+  }, [operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, processes, opsForWeek]);
 
   return (
     <>

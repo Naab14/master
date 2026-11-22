@@ -232,3 +232,14 @@ describe('OperatorPanel on the planning model', () => {
     expect(p.onUpdateOperator).not.toHaveBeenCalled();
   });
 });
+
+describe('OperatorPanel keyboard', () => {
+  it('opens an operator with Space as well as Enter, without scrolling the page', () => {
+    render(<OperatorPanel {...defaultProps()} />);
+    const row = screen.getByText('Anna Lindgren').closest('[role="button"]');
+    expect(fireEvent.keyDown(row, { key: ' ' })).toBe(false); // default prevented
+    expect(row).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(row).toHaveAttribute('aria-expanded', 'false');
+  });
+});
