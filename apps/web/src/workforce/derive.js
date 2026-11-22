@@ -4,14 +4,33 @@ import { getFullState } from '../api';
 import { useWorkforce } from './store-context';
 import { absencesFromEntries } from './logic/attendance';
 import { reasonsOf } from './logic/model';
-import { addDays, dateRange, isoWeekStart, todayIn } from './logic/time';
+import { addDays, dateRange, isoWeekStart, isoWeekYear, todayIn } from './logic/time';
 
 /**
  * Approved (and pending) leave from the Vacations tool, as dated absences.
  * An operator there carries the id of its People profile (`personId`), so
  * this never matches by name; unlinked operators are left out. Vacation
- * blocks are stored by ISO week, so they are read for the current year.
+ * blocks are stored by ISO week number, read in the ISO year of today.
  */
+export function vacationAbsences(vacation, people, today) {
+  if (!vacation?.operators) return [];
+  const year = isoWeekYear(today); // the same year the Vacations tool uses for its week numbers
+  const out = [];
+  for (const b of vacation.vacationBlocks || []) {
+    const op = vacation.operators.find(o => o.id === b.operatorId);
+    const personId = op?.personId;
+    if (!personId || !people[personId] || b.status === 'draft') continue;
+    const from = isoWeekStart(year, b.startWeek);
+    const to = addDays(isoWeekStart(year, b.endWeek), 6);
+    for (const date of dateRange(from, to)) {
+      const status = b.dayStatuses?.[date] || b.status;
+      if (status === 'draft') continue;
+      out.push({ personId, date, fullDay: true, hours: null, reasonId: 'vacation', category: 'vacation', tentative: status !== 'approved', source: 'vacations' });
+    }
+  }
+  return out;
+}
+
 export function useVacationToolAbsences() {
   const { wf, offline } = useWorkforce();
   const [vacation, setVacation] = useState(null);
@@ -21,24 +40,7 @@ export function useVacationToolAbsences() {
     getFullState().then(s => { if (live) setVacation(s.vacation || null); }).catch(() => {});
     return () => { live = false; };
   }, [offline]);
-  return useMemo(() => {
-    if (!vacation?.operators) return [];
-    const year = Number(todayIn().slice(0, 4));
-    const out = [];
-    for (const b of vacation.vacationBlocks || []) {
-      const op = vacation.operators.find(o => o.id === b.operatorId);
-      const personId = op?.personId;
-      if (!personId || !wf.people[personId] || b.status === 'draft') continue;
-      const from = isoWeekStart(year, b.startWeek);
-      const to = addDays(isoWeekStart(year, b.endWeek), 6);
-      for (const date of dateRange(from, to)) {
-        const status = b.dayStatuses?.[date] || b.status;
-        if (status === 'draft') continue;
-        out.push({ personId, date, fullDay: true, hours: null, reasonId: 'vacation', category: 'vacation', tentative: status !== 'approved', source: 'vacations' });
-      }
-    }
-    return out;
-  }, [vacation, wf.people]);
+  return useMemo(() => vacationAbsences(vacation, wf.people, todayIn()), [vacation, wf.people]);
 }
 
 /** Every absence that affects availability, plus a lookup by person and date. */

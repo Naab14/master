@@ -16,6 +16,7 @@
  */
 import { buildIndex, teamOf } from '../../workforce/logic/schedule';
 import { getAllCoverageForWeek } from './coverage';
+import { isoWeekStart } from '../../workforce/logic/time';
 import { list, levelsOf } from '../../workforce/logic/model';
 
 export const UNLINKED = '__unlinked';
@@ -58,12 +59,9 @@ export function buildPlanningModel(wf, today) {
   return { processes, teams, byPerson, teamAt, certsOf: personId => byPerson.get(personId)?.certifications };
 }
 
-/** Monday of ISO week `week` in `year`, as 'YYYY-MM-DD'. */
-export function isoWeekMonday(year, week) {
-  const jan4 = new Date(Date.UTC(year, 0, 4));
-  const monday = new Date(jan4.getTime() - ((jan4.getUTCDay() || 7) - 1) * 86400000 + (week - 1) * 7 * 86400000);
-  return monday.toISOString().slice(0, 10);
-}
+/* One ISO week/year rule for every place that turns a Vacations week number into
+ * dates (grid, Day view, Dashboard, Schedule absences): the one in workforce/logic/time. */
+export { isoWeekStart as isoWeekMonday, isoWeekYear as isoYearOf } from '../../workforce/logic/time';
 
 /**
  * The operators as coverage sees them. `shift` holds the team id (or one of
@@ -103,13 +101,6 @@ export function planningGroups(resolved, model, t, dates = []) {
 /** The team ids that get coverage rows (shared by the grid and the Dashboard). */
 export const coverageTeamIds = (resolved, model, t, dates) => planningGroups(resolved, model, t, dates).filter(g => !g.noCoverage).map(g => g.shift);
 
-/** The ISO year a date belongs to (the year of its week's Thursday). */
-export function isoYearOf(dateStr) {
-  const d = new Date(`${dateStr}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-  return d.getUTCFullYear();
-}
-
 /**
  * One week's coverage by team (or for everyone when not separate), the way the
  * Vacations grid computes it: the team and competencies of the week's Monday,
@@ -119,7 +110,7 @@ export function isoYearOf(dateStr) {
  */
 export function planningWeekCoverage(plan, model, week, year, t) {
   const { vacationBlocks = [], demand = {}, settings = {} } = plan;
-  const monday = isoWeekMonday(year, week);
+  const monday = isoWeekStart(year, week);
   const operators = resolveOperators(plan.operators, model, monday);
   const shiftMode = settings.shiftMode || 'combined';
   const keys = model.processes.map(p => p.key);
