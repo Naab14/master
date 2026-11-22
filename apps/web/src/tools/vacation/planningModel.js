@@ -104,16 +104,17 @@ export const coverageTeamIds = (resolved, model, t, dates) => planningGroups(res
 /**
  * One week's coverage by team (or for everyone when not separate), the way the
  * Vacations grid computes it: the team and competencies of the week's Monday,
- * rows for the teams that have people that day. The Dashboard uses this too, so
- * the two never disagree about the same week.
+ * and the same rule for which teams get a row: those with people today or on
+ * the week's Monday (the grid adds every shown Monday to that). The Dashboard
+ * uses this too, so the two never disagree about the same week.
  * @returns {{ operators: object[], results: { shift: string|null, cov: object }[] }}
  */
-export function planningWeekCoverage(plan, model, week, year, t) {
+export function planningWeekCoverage(plan, model, week, year, t, today) {
   const { vacationBlocks = [], demand = {}, settings = {} } = plan;
   const monday = isoWeekStart(year, week);
   const operators = resolveOperators(plan.operators, model, monday);
   const shiftMode = settings.shiftMode || 'combined';
   const keys = model.processes.map(p => p.key);
-  const shifts = shiftMode === 'separate' ? coverageTeamIds(operators, model, t, [monday]) : [null];
+  const shifts = shiftMode === 'separate' ? coverageTeamIds(resolveOperators(plan.operators, model, today || null), model, t, [monday]) : [null];
   return { operators, results: shifts.map(shift => ({ shift, cov: getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shift, null, keys) })) };
 }

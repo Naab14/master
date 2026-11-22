@@ -279,4 +279,6 @@ export default {
   'Replace saved demand?': 'Ersätta sparat behov?', 'Replace': 'Ersätt',
   '{n} weeks already have a demand of their own. The empty weeks were filled. Replace those {n} with the old values too?': '{n} veckor har redan ett eget behov. De tomma veckorna fylldes i. Ersätta dessa {n} med de gamla värdena också?',
   'Coverage cannot be evaluated yet': 'Bemanningen kan inte bedömas än',
+  'Copy old demand': 'Kopiera gammalt behov', 'Into process…': 'Till process…',
+  'Copy': 'Kopiera',
 };

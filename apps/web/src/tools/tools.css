@@ -104,3 +104,10 @@
 
 /* A row of tools that drops in under a toolbar */
 .tl-drop-in { animation: wf-drop var(--motion) var(--ease-out); }
+
+/* Vacations on a phone: the top bar and the calendar toolbar wrap, so every control is reachable */
+@media (max-width: 640px) {
+  .wf-pagehead.tl-topbar { flex-wrap: wrap; }
+  .wf-pagehead.tl-topbar > div { flex-wrap: wrap; overflow: visible; flex-basis: 100%; order: 3; min-width: 0; }
+  .wf-toolbar.tl-toolbar-wrap { flex-wrap: wrap; overflow: visible; }
+}

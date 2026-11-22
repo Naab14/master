@@ -219,7 +219,7 @@ export default function CalendarGrid({
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* Toolbar */}
-      <div className="wf-toolbar bg-ground">
+      <div className="wf-toolbar tl-toolbar-wrap bg-ground">
         <input type="range" className="time-slider" style={{ width: 180 }}
           aria-label={t('First week shown')}
           value={startWeek} min={1} max={sliderMax}
@@ -247,7 +247,7 @@ export default function CalendarGrid({
 
       {/* Legend and the demand switch */}
       {showTools && (
-        <div className="wf-toolbar tl-drop-in bg-ground">
+        <div className="wf-toolbar tl-toolbar-wrap tl-drop-in bg-ground">
           <Legend />
           <span className="flex-1" />
           <button type="button" className="wf-chip" aria-pressed={showDemand} onClick={onToggleDemand}>

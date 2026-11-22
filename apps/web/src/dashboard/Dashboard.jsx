@@ -111,7 +111,7 @@ export default function Dashboard({ onNavigate }) {
     let procs;
     if (model) {
       // Same dates and rules as the Vacations grid
-      const wk = planningWeekCoverage(vac, model, week, isoYearOf(today), t);
+      const wk = planningWeekCoverage(vac, model, week, isoYearOf(today), t, today);
       operators = wk.operators; results = wk.results; procs = model.processes;
     } else {
       procs = PROCESSES.map(p => ({ key: p, name: p }));

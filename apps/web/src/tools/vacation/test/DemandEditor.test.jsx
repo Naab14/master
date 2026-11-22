@@ -8,7 +8,11 @@ describe('DemandEditor on the planning model', () => {
     const onCopyDemand = vi.fn();
     render(<DemandEditor processes={processes} weeks={[15]} demand={{ Avsyning: { 15: 0 } }} updateDemand={vi.fn()} onCopyDemand={onCopyDemand} />);
     expect(screen.getByLabelText('Inspection w.15')).toHaveValue(2);
-    fireEvent.change(screen.getByLabelText('Copy the old demand of a process into Inspection'), { target: { value: 'Avsyning' } });
+    const copy = screen.getByRole('button', { name: 'Copy' });
+    expect(copy).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Copy from…'), { target: { value: 'Avsyning' } });
+    fireEvent.change(screen.getByLabelText('Into process…'), { target: { value: 'wf:insp' } });
+    fireEvent.click(copy);
     expect(onCopyDemand).toHaveBeenCalledWith('wf:insp', 'Avsyning');
   });
   it('offers no copy in the older mode', () => {

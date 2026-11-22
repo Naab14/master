@@ -49,7 +49,7 @@ export default function CoverageRows({ operators, vacationBlocks, demand, weeks,
     <>
       <div className="flex items-center text-xs font-semibold uppercase tracking-wider px-2"
         style={{ height: 24, background: 'var(--bg-secondary)', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ width: LABEL_W, minWidth: LABEL_W }}>{label}</div>
+        <div className="truncate whitespace-nowrap" style={{ width: LABEL_W, minWidth: LABEL_W }} title={label} aria-label={label}>{label}</div>
       </div>
       {processes.map(({ key: proc, name }) => (
         <div key={proc} className="flex" style={{ height: CELL_H, borderBottom: '1px solid var(--border)' }}>

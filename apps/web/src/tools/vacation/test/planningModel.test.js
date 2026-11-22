@@ -189,7 +189,8 @@ describe('review round 3', () => {
     };
     // Week 46 starts Monday 2026-11-09: on that date p01 is still on red.
     const { results } = planningWeekCoverage(plan, m, 46, isoYearOf('2026-11-11'), t);
-    expect(results.map(r => r.shift)).toEqual(['red']);
+    // Coverage is by the Monday's team (red); a team someone is on today (blue) also gets its row, as in the grid
+    expect(results.map(r => r.shift)).toEqual(['blue', 'red']);
     // Week 47 (from 2026-11-16): on blue.
     expect(planningWeekCoverage(plan, m, 47, 2026, t).results.map(r => r.shift)).toEqual(['blue']);
     expect(isoYearOf('2027-01-01')).toBe(2026);
@@ -216,5 +217,22 @@ describe('review round 4', () => {
   it('uses one ISO year for week numbers, also in the last days of December', () => {
     expect(isoYearOf('2025-12-29')).toBe(2026);
     expect(isoWeekMonday(isoYearOf('2025-12-29'), 1)).toBe('2025-12-29');
+  });
+});
+
+describe('review: one rule for a week\'s teams', () => {
+  it('a team whose member joined after the week\'s Monday gets a row on the Dashboard as in the grid', () => {
+    const doc = structuredClone(buildSample());
+    doc.teams.south = { id: 'south', name: 'South' };
+    doc.memberships.ms_p01 = { ...doc.memberships.ms_p01, to: '2026-11-21' };
+    doc.memberships.ms_new = { id: 'ms_new', personId: 'p01', teamId: 'south', from: '2026-11-22', to: null, status: 'confirmed' };
+    const today = '2026-11-23';
+    const m = buildPlanningModel(doc, today);
+    const plan = { operators: [op('a', { personId: 'p01' })], vacationBlocks: [], demand: {}, settings: { ...defaultSettings, shiftMode: 'separate' } };
+    // Week 47 starts 2026-11-16, before the move: the person is still on red, but South has someone today
+    const dash = planningWeekCoverage(plan, m, 47, 2026, t, today).results.map(r => r.shift);
+    const grid = planningGroups(resolveOperators(plan.operators, m), m, t, ['2026-11-16']).filter(g => !g.noCoverage).map(g => g.shift);
+    expect(dash).toEqual(grid);
+    expect(dash).toContain('south');
   });
 });

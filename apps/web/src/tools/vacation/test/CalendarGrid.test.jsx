@@ -324,6 +324,13 @@ describe('CalendarGrid on the planning model', () => {
     for (const n of ['Red', 'Blue', 'Not linked']) expect(screen.getAllByText(n).length).toBeGreaterThan(0);
     expect(screen.queryByText('S1')).toBeNull();
   });
+
+  it('shows the Not linked header even when it is the only group', () => {
+    const only = [{ id: '3', name: 'Old Op', active: true, shift: '__unlinked', certifications: [] }];
+    const p = { ...props('week'), operators: only, planning: { ...planning, groups: [planning.groups[2]] } };
+    render(<CalendarGrid {...p} />);
+    expect(screen.getByText('Not linked')).toBeInTheDocument();
+  });
 });
 
 describe('Day view dates and the plan year', () => {

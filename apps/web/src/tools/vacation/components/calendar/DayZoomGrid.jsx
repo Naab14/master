@@ -110,7 +110,7 @@ export default function DayZoomGrid({
         {/* Row groups */}
         {groups.map(group => (
           <div key={group.label}>
-            {groups.length > 1 && (
+            {(groups.length > 1 || group.noCoverage) && (
               <div className="flex items-center text-xs font-semibold uppercase tracking-wider px-2"
                 style={{ height: 24, background: 'var(--bg-secondary)', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
                 {group.label}

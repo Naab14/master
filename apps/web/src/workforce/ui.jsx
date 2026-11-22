@@ -78,7 +78,12 @@ export function Confirm({ title, body, confirmLabel, onConfirm, onCancel, danger
   const [closing, cancel] = useAnimatedClose(onCancel, 160);
   const ref = useRef(null);
   const dialogRef = useRef(null);
-  useEffect(() => { ref.current?.focus(); }, []);
+  useEffect(() => {
+    // Take focus, and give it back to whatever opened the dialog when it closes
+    const opener = document.activeElement;
+    ref.current?.focus();
+    return () => { if (opener && opener !== document.body && document.contains(opener)) opener.focus?.(); };
+  }, []);
   useEffect(() => {
     // Escape closes; Tab stays inside the dialog (it is modal), also when focus was outside it
     const onKey = e => {

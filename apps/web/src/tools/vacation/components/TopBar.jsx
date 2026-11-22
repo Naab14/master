@@ -35,7 +35,7 @@ export default function TopBar({
   ].filter(item => item.action);
 
   return (
-    <div className="wf-pagehead relative z-30">
+    <div className="wf-pagehead tl-topbar relative z-30">
       <h1 className="wf-pagehead__title">{t('Vacations')}</h1>
 
       <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
