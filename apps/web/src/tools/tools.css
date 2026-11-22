@@ -110,4 +110,7 @@
   .wf-pagehead.tl-topbar { flex-wrap: wrap; }
   .wf-pagehead.tl-topbar > div { flex-wrap: wrap; overflow: visible; flex-basis: 100%; order: 3; min-width: 0; }
   .wf-toolbar.tl-toolbar-wrap { flex-wrap: wrap; overflow: visible; }
+  .wf-toolbar.tl-toolbar-wrap > * { flex: 0 1 auto; min-width: 0; } /* the legend may shrink and wrap */
+  .wf-pagehead.tl-topbar .wf-pagehead__title { flex: 1; } /* keeps the ⋮ menu button at the right edge */
+  .tl-pop--right { max-width: calc(100vw - 16px); }
 }
