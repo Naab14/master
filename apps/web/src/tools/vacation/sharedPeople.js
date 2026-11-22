@@ -34,9 +34,10 @@ export function syncOperatorsWithPeople(operators, people, today) {
   return changed ? next : operators;
 }
 
-/** An operator the sync created itself and nobody has used: nothing in it can be lost. */
+/** An operator the sync created itself and nobody has changed: nothing in it can be lost. */
 const isPristineTwin = (state, o) =>
-  String(o.id).startsWith('wf-') && !(o.certifications || []).length && !state.vacationBlocks.some(b => b.operatorId === o.id);
+  String(o.id).startsWith('wf-') && !(o.certifications || []).length && o.active !== false && !o.mergedFrom?.length
+    && !state.vacationBlocks.some(b => b.operatorId === o.id);
 
 const overlaps = (a, b) => a.startWeek <= b.endWeek && b.startWeek <= a.endWeek;
 
@@ -63,7 +64,7 @@ export function linkBlocked(state, operatorId, personId) {
  * An empty twin the sync created is replaced by the older operator. A twin
  * with data of its own is merged only with `confirmMerge`, and never when the
  * blocks overlap: all blocks are kept (re-pointed to the older operator) and
- * the twin's own fields stay on the operator as `mergedFrom`, so nothing is
+ * the twin's whole record stays on the operator as `mergedFrom`, so nothing is
  * lost. Otherwise the state is returned unchanged.
  */
 export function linkOperator(state, operatorId, personId, people, { confirmMerge = false } = {}) {
@@ -74,7 +75,7 @@ export function linkOperator(state, operatorId, personId, people, { confirmMerge
   const blocked = linkBlocked(state, operatorId, personId);
   if (blocked && (blocked.reason === 'overlap' || !confirmMerge)) return state;
   const kept = twin && blocked
-    ? [...(op.mergedFrom || []), { id: twin.id, name: twin.name, shift: twin.shift, active: twin.active, certifications: twin.certifications || [] }]
+    ? [...(op.mergedFrom || []), { ...twin }]
     : op.mergedFrom;
   return {
     ...state,

@@ -34,7 +34,7 @@ describe('shared operator identity', () => {
     const out = linkOperator(state, 'op1', 'p1', people, { confirmMerge: true });
     expect(out.operators).toHaveLength(1);
     expect(out.operators[0]).toMatchObject({ id: 'op1', personId: 'p1', name: 'Alva Almkvist', shift: 'S2', certifications: ['Avsyning'] });
-    expect(out.operators[0].mergedFrom).toEqual([{ id: 'wf-p1', name: 'Alva Almkvist', shift: 'S1', active: true, certifications: [] }]);
+    expect(out.operators[0].mergedFrom).toEqual([{ id: 'wf-p1', personId: 'p1', name: 'Alva Almkvist', shift: 'S1', active: true, certifications: [] }]);
     expect(out.vacationBlocks.map(b => b.operatorId)).toEqual(['op1', 'op1']);
     expect(linkOperator(out, 'op1', 'p2', people)).toBe(out); // already linked
   });
@@ -60,5 +60,13 @@ describe('shared operator identity', () => {
     };
     expect(linkBlocked(state, 'op1', 'p1')).toMatchObject({ reason: 'overlap' });
     expect(linkOperator(state, 'op1', 'p1', people, { confirmMerge: true })).toBe(state);
+  });
+
+  it('asks before merging a twin whose active state was changed, and keeps its whole record', () => {
+    const twin = { id: 'wf-p1', personId: 'p1', name: 'Alva', shift: 'S1', active: false, certifications: [] };
+    const state = { operators: [{ id: 'op1', name: 'A', shift: 'S2', active: true, certifications: [] }, twin], vacationBlocks: [] };
+    expect(linkBlocked(state, 'op1', 'p1')).toMatchObject({ reason: 'confirm' });
+    expect(linkOperator(state, 'op1', 'p1', people)).toBe(state);
+    expect(linkOperator(state, 'op1', 'p1', people, { confirmMerge: true }).operators[0].mergedFrom).toEqual([twin]);
   });
 });

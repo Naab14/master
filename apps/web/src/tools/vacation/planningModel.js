@@ -80,11 +80,17 @@ export function resolveOperators(operators, model, date = null) {
 }
 
 /** Row groups for the grid: one per team, then people without a team, then unlinked ones. */
-export function planningGroups(resolved, model, t) {
+export function planningGroups(resolved, model, t, dates = []) {
+  // A team also gets coverage rows when someone is on it on one of the dates shown
+  const onDates = new Set();
+  for (const o of resolved) {
+    if (!o.personId || !model.byPerson.has(o.personId)) continue;
+    for (const d of dates) onDates.add(model.teamAt(o.personId, d));
+  }
   const groups = [];
   for (const tm of model.teams) {
     const ops = resolved.filter(o => o.shift === tm.id);
-    if (ops.length) groups.push({ label: tm.name, ops, shift: tm.id });
+    if (ops.length || onDates.has(tm.id)) groups.push({ label: tm.name, ops, shift: tm.id });
   }
   const none = resolved.filter(o => o.shift === NO_TEAM);
   if (none.length) groups.push({ label: t('No team'), ops: none, shift: NO_TEAM, noCoverage: true });
@@ -94,4 +100,4 @@ export function planningGroups(resolved, model, t) {
 }
 
 /** The team ids that get coverage rows (shared by the grid and the Dashboard). */
-export const coverageTeamIds = (resolved, model, t) => planningGroups(resolved, model, t).filter(g => !g.noCoverage).map(g => g.shift);
+export const coverageTeamIds = (resolved, model, t, dates) => planningGroups(resolved, model, t, dates).filter(g => !g.noCoverage).map(g => g.shift);

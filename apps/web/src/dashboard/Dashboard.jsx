@@ -105,7 +105,7 @@ export default function Dashboard({ onNavigate }) {
     const operators = resolveOperators(vac.operators, model, today);
     const procs = model ? model.processes : PROCESSES.map(p => ({ key: p, name: p }));
     const shiftMode = settings.shiftMode || 'combined';
-    const shifts = shiftMode === 'separate' ? (model ? coverageTeamIds(operators, model, t) : ['S1', 'S2']) : [null];
+    const shifts = shiftMode === 'separate' ? (model ? coverageTeamIds(operators, model, t, [today]) : ['S1', 'S2']) : [null];
     const rank = { green: 0, yellow: 1, red: 2 };
     let worst = 'green';
     const perProcess = {};
@@ -119,7 +119,8 @@ export default function Dashboard({ onNavigate }) {
     }
     const out = operators.filter(op =>
       vacationBlocks.some(b => b.operatorId === op.id && b.status === 'approved' && week >= b.startWeek && week <= b.endWeek));
-    return { worst, perProcess, out };
+    const unknown = !!model && (!shifts.length || !operators.some(o => o.personId && model.byPerson.has(o.personId)));
+    return { worst, perProcess, out, unknown };
   }, [vac, week, wfDoc, today, t]);
 
   const boardStats = useMemo(() => {
@@ -190,11 +191,11 @@ export default function Dashboard({ onNavigate }) {
             {vacStats ? (
               <>
                 <div className="flex items-center gap-2 text-sm font-bold">
-                  <span className="inline-block h-3 w-3 rounded-full" style={{ background: LEVEL_COLORS[vacStats.worst] }} />
-                  {vacStats.worst === 'green' ? t('All processes covered') : vacStats.worst === 'yellow' ? t('Coverage tight') : t('Coverage gap')}
+                  <span className="inline-block h-3 w-3 rounded-full" style={{ background: vacStats.unknown ? 'var(--text-secondary)' : LEVEL_COLORS[vacStats.worst] }} />
+                  {vacStats.unknown ? t('Coverage cannot be evaluated yet') : vacStats.worst === 'green' ? t('All processes covered') : vacStats.worst === 'yellow' ? t('Coverage tight') : t('Coverage gap')}
                 </div>
                 <div className="flex flex-wrap gap-1">
-                  {Object.entries(vacStats.perProcess).map(([proc, level]) => (
+                  {!vacStats.unknown && Object.entries(vacStats.perProcess).map(([proc, level]) => (
                     <span key={proc} className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: LEVEL_COLORS[level] }}>
                       {proc}
                     </span>

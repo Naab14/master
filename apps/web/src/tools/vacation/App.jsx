@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useReducer, useRef } from 'react';
-import { seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings, isUsablePlan } from './data';
+import { seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings, adoptPlan } from './data';
 import {
-  saveState, loadState, clearState,
+  saveState, loadState, clearState, keepRejectedState,
   saveUI, loadUI,
   exportJSON, importJSON, debouncedSave,
   buildShareLink, loadStateFromUrl, clearShareHash, copyToClipboard,
@@ -14,6 +14,7 @@ import { historyReducer, initHistory } from './historyReducer';
 import { useBreakpoint } from './hooks/useBreakpoint';
 import { useWorkforce } from '../../workforce/store-context';
 import { syncOperatorsWithPeople, linkOperator, linkBlocked, unlinkedOperators } from './sharedPeople';
+import { mergeDemandSeries } from './demandSeries';
 import { buildPlanningModel, resolveOperators, planningGroups, isoWeekMonday } from './planningModel';
 import { useI18n } from '../../i18n';
 import { useToast } from '../../ui';
@@ -30,14 +31,20 @@ const uid = () => `id_${++_uid}_${Date.now().toString(36)}`;
 
 function getDefaults() {
   const sharedRaw = loadStateFromUrl();
-  const shared = isUsablePlan(sharedRaw) ? sharedRaw : null;
+  const shared = adoptPlan(sharedRaw);
   if (sharedRaw) {
     clearShareHash();
     if (shared) return { state: shared, wasShared: true };
   }
   const saved = loadState();
+  const usable = adoptPlan(saved);
+  // A saved plan that can't be used is set aside, and nothing is saved over it
+  // until a valid plan is loaded or the user starts a new one (import, reset).
+  const rejected = !!saved && !usable;
+  if (rejected) keepRejectedState(saved);
   return {
-    state: (isUsablePlan(saved) ? saved : null) || {
+    rejected,
+    state: usable || {
       operators: seedOperators,
       vacationBlocks: seedVacationBlocks,
       demand: buildDefaultDemand(),
@@ -65,6 +72,7 @@ export default function App() {
   const { t } = useI18n();
   const flash = useToast();
   const [confirmReset, setConfirmReset] = useState(false);
+  const [autosave, setAutosave] = useState(!initResult.rejected);
   const [adopted, setAdopted] = useState(false); // the saved plan has been loaded from the server
   const [showDemand, setShowDemand] = useState(false);
   const [showOperatorMgmt, setShowOperatorMgmt] = useState(false);
@@ -109,10 +117,13 @@ export default function App() {
     if (!initResult.wasShared) {
       fetchServerState().then(({ ok, state: server }) => {
         if (cancelled || !ok) return;
-        if (isUsablePlan(server)) {
+        const usableServer = adoptPlan(server);
+        if (usableServer) {
           discardPendingSave();
-          dispatch({ type: 'REPLACE', state: server });
+          dispatch({ type: 'REPLACE', state: usableServer });
+          setAutosave(true);
         } else if (server == null) {
+          if (initResult.rejected) return; // the local plan was unreadable: don't seed the server with the example
           pushServerState(latestState.current); // a workspace the server has never stored
         } else {
           return; // unreadable server copy: keep what is local and never overwrite it
@@ -153,10 +164,10 @@ export default function App() {
   const gridOperators = useMemo(() => resolveOperators(state.operators, model), [state.operators, model]);
   const planningView = useMemo(() => (model ? {
     processes: model.processes,
-    groups: planningGroups(gridOperators, model, t),
+    groups: planningGroups(gridOperators, model, t, weeks.map(w => isoWeekMonday(Number(localToday.slice(0, 4)), w))),
     // Coverage for a week uses the teams on that week's dates, not today's
     opsForWeek: week => resolveOperators(state.operators, model, isoWeekMonday(Number(localToday.slice(0, 4)), week)),
-  } : null), [model, gridOperators, state.operators, localToday, t]);
+  } : null), [model, gridOperators, state.operators, localToday, weeks, t]);
   const unlinkedActive = model ? unlinkedOperators(state.operators).filter(o => o.active).length : 0;
   const [pendingLink, setPendingLink] = useState(null);
   const linkOp = useCallback((operatorId, personId) => {
@@ -174,7 +185,7 @@ export default function App() {
   }, []);
 
   // Auto-save core state
-  useEffect(() => { debouncedSave(state); }, [state]);
+  useEffect(() => { if (autosave) debouncedSave(state); }, [state, autosave]);
 
   // Persist UI preferences (zoom + sidebar)
   useEffect(() => {
@@ -237,8 +248,16 @@ export default function App() {
     })), [setFn]);
   const updateDemand = useCallback((proc, week, val) =>
     setFn(s => ({ ...s, demand: { ...s.demand, [proc]: { ...s.demand[proc], [week]: val } } })), [setFn]);
-  const copyDemand = useCallback((key, from) =>
-    setFn(s => ({ ...s, demand: { ...s.demand, [key]: { ...(s.demand[from] || {}) } } })), [setFn]);
+  // Copy an old process's demand into a planning process: only weeks without a
+  // value are filled; weeks that already have one are replaced only on a yes.
+  const [pendingDemand, setPendingDemand] = useState(null);
+  const copyDemand = useCallback((key, from) => {
+    const cur = latestState.current.demand;
+    const { conflicts } = mergeDemandSeries(cur[key], cur[from], false);
+    const apply = replace => setFn(s => ({ ...s, demand: { ...s.demand, [key]: mergeDemandSeries(s.demand[key], s.demand[from], replace).series } }));
+    apply(false);
+    if (conflicts) setPendingDemand({ n: conflicts, apply: () => apply(true) });
+  }, [setFn, setPendingDemand]);
   const setShiftMode = useCallback(m =>
     setFn(s => ({ ...s, settings: { ...s.settings, shiftMode: m } })), [setFn]);
   const setStartWeek = useCallback(w =>
@@ -296,12 +315,14 @@ export default function App() {
     const data = await importJSON();
     // No Undo button on these two messages: it would undo whatever was changed
     // last, which may no longer be this. Undo in the top bar says what it does.
-    if (isUsablePlan(data)) { setFn(() => data); flash(t('Backup file imported')); }
+    const plan = adoptPlan(data);
+    if (plan) { setFn(() => plan); setAutosave(true); flash(t('Backup file imported')); }
     else if (data) flash(t('That backup file is not a complete vacation plan'));
   }, [setFn, flash, t]);
   const handleReset = useCallback(() => {
     setConfirmReset(false);
     clearState();
+    setAutosave(true);
     setFn(() => ({ operators: seedOperators, vacationBlocks: seedVacationBlocks, demand: buildDefaultDemand(), settings: defaultSettings }));
     flash(t('Reset to the example plan'));
   }, [setFn, flash, t]);
@@ -370,6 +391,12 @@ export default function App() {
           body={t('{name} already has an operator with vacation or competencies of its own. Merging keeps all vacation blocks and keeps the other operator\'s old values on this one. You can undo this.', { name: pendingLink.name })}
           onConfirm={() => { const l = pendingLink; setPendingLink(null); setFn(s => linkOperator(s, l.operatorId, l.personId, people, { confirmMerge: true })); }}
           onCancel={() => setPendingLink(null)} />
+      )}
+      {pendingDemand && (
+        <Confirm title={t('Replace saved demand?')} confirmLabel={t('Replace')}
+          body={t('{n} weeks already have a demand of their own. The empty weeks were filled. Replace those {n} with the old values too?', { n: pendingDemand.n })}
+          onConfirm={() => { pendingDemand.apply(); setPendingDemand(null); }}
+          onCancel={() => setPendingDemand(null)} />
       )}
       {confirmReset && (
         <Confirm danger title={t('Reset the vacation plan?')} confirmLabel={t('Reset')}

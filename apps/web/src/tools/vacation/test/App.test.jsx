@@ -24,6 +24,7 @@ vi.mock('../storage', async (importOriginal) => {
     importJSON: vi.fn(() => Promise.resolve(null)),
     buildShareLink: vi.fn(() => 'http://localhost/#share=test'),
     copyToClipboard: vi.fn(() => Promise.resolve(true)),
+    keepRejectedState: vi.fn(),
     fetchServerState: vi.fn(() => Promise.resolve({ ok: false })),
     pushServerState: vi.fn(() => Promise.resolve()),
     setServerSync: vi.fn(),
@@ -180,5 +181,16 @@ describe('App', () => {
     renderApp();
     await act(async () => { await vi.advanceTimersByTimeAsync(10); });
     expect(storage.pushServerState).toHaveBeenCalledTimes(1);
+  });
+
+  it('sets an unusable saved plan aside and never saves the example plan over it', async () => {
+    const broken = { operators: [{ id: 'a', name: 'Real Person' }], vacationBlocks: [], demand: {} }; // no settings
+    storage.loadState.mockReturnValueOnce(broken);
+    storage.fetchServerState.mockResolvedValueOnce({ ok: true, state: null });
+    renderApp();
+    await act(async () => { await vi.advanceTimersByTimeAsync(600); });
+    expect(storage.keepRejectedState).toHaveBeenCalledWith(broken);
+    expect(storage.debouncedSave).not.toHaveBeenCalled();
+    expect(storage.pushServerState).not.toHaveBeenCalled();
   });
 });

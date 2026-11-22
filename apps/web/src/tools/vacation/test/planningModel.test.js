@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildPlanningModel, resolveOperators, planningGroups, coverageTeamIds, isoWeekMonday, UNLINKED, NO_TEAM } from '../planningModel';
-import { isUsablePlan, seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from '../data';
+import { mergeDemandSeries } from '../demandSeries';
+import { isUsablePlan, adoptPlan, seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from '../data';
 import { getAllCoverageForWeek } from '../coverage';
 import { buildSample } from '../../../workforce/logic/sample';
 
@@ -126,5 +127,43 @@ describe('is this a usable saved plan', () => {
       { ...plan, vacationBlocks: [{ operatorId: 'a', startWeek: 'x', endWeek: 2 }] }, { ...plan, demand: [] }]) {
       expect(isUsablePlan(bad)).toBe(false);
     }
+  });
+});
+
+describe('review round 2', () => {
+  const wf = buildSample();
+  const plan = { operators: seedOperators, vacationBlocks: seedVacationBlocks, demand: buildDefaultDemand(), settings: defaultSettings };
+
+  it('gives coverage rows to a team someone moves to on a date shown, even if it is empty today', () => {
+    const doc = structuredClone(wf);
+    doc.teams.solo = { id: 'solo', name: 'Solo' };
+    doc.memberships.ms_p01 = { ...doc.memberships.ms_p01, to: '2026-11-08' };
+    doc.memberships.ms_p01_new = { id: 'ms_p01_new', personId: 'p01', teamId: 'solo', from: '2026-11-09', to: null, status: 'confirmed' };
+    const m = buildPlanningModel(doc, '2026-11-04');
+    const resolved = resolveOperators([{ id: 'a', name: 'A', active: true, personId: 'p01', shift: 'S1', certifications: [] }], m);
+    expect(planningGroups(resolved, m, t, ['2026-11-04']).map(g => g.shift)).toEqual(['red']);
+    const shown = planningGroups(resolved, m, t, ['2026-11-04', '2026-11-09']);
+    expect(shown.map(g => g.shift)).toEqual(['red', 'solo']);
+    expect(shown[1].ops).toEqual([]);
+    expect(coverageTeamIds(resolved, m, t, ['2026-11-09'])).toContain('solo');
+  });
+
+  it('rejects a backup with a bad block status or day override and fills missing operator fields', () => {
+    expect(isUsablePlan({ ...plan, vacationBlocks: [{ id: 'b', operatorId: 'op1', startWeek: 1, endWeek: 2 }] })).toBe(false);
+    expect(isUsablePlan({ ...plan, vacationBlocks: [{ id: 'b', operatorId: 'op1', startWeek: 1, endWeek: 2, status: 'draft', dayStatuses: { '2026-01-01': 'nope' } }] })).toBe(false);
+    const sparse = adoptPlan({ ...plan, operators: [{ id: 'x', name: 'X' }] });
+    expect(sparse.operators[0]).toMatchObject({ certifications: [], active: true, shift: 'S1' });
+    expect(plan.operators).toBe(seedOperators); // input untouched
+    expect(adoptPlan({ operators: [] })).toBeNull();
+  });
+
+  it('fills only empty weeks when copying demand, and replaces saved weeks only when told to', () => {
+    const target = { 1: 3, 2: 0 };
+    const source = { 1: 5, 2: 0, 3: 0, 4: 1 };
+    const fill = mergeDemandSeries(target, source, false);
+    expect(fill.series).toEqual({ 1: 3, 2: 0, 3: 0, 4: 1 });
+    expect(fill.conflicts).toBe(1);
+    expect(mergeDemandSeries(target, source, true).series).toEqual({ 1: 5, 2: 0, 3: 0, 4: 1 });
+    expect(target).toEqual({ 1: 3, 2: 0 });
   });
 });

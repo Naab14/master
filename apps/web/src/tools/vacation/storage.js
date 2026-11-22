@@ -16,6 +16,12 @@ export function loadState() {
   } catch (e) { console.warn('Failed to load state:', e); return null; }
 }
 
+/* A saved plan that can't be used is set aside, never overwritten, so it can be recovered. */
+export function keepRejectedState(raw) {
+  try { localStorage.setItem(`${STATE_KEY}-rejected`, JSON.stringify(raw)); }
+  catch (e) { console.warn('Failed to keep the rejected plan:', e); }
+}
+
 export function clearState() { localStorage.removeItem(STATE_KEY); }
 
 export function saveUI(ui) {

@@ -62,10 +62,24 @@ export const defaultSettings = {
 // ── Is this a whole, usable plan? ────────────────────────────────────────────
 // Checked before a saved plan (server, cache, backup file or shared link) is
 // adopted, so a partial or damaged one can't crash the screen or be written back.
+const STATUSES = ['draft', 'pending', 'approved', 'requested'];
+const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
 export function isUsablePlan(s) {
-  const obj = v => !!v && typeof v === 'object' && !Array.isArray(v);
-  return obj(s) && Array.isArray(s.operators) && Array.isArray(s.vacationBlocks) && obj(s.demand) && obj(s.settings)
+  return isObj(s) && Array.isArray(s.operators) && Array.isArray(s.vacationBlocks) && isObj(s.demand) && isObj(s.settings)
     && Number.isFinite(s.settings.visibleWeeks) && Number.isFinite(s.settings.startWeek)
-    && s.operators.every(o => obj(o) && typeof o.id === 'string' && typeof o.name === 'string' && Array.isArray(o.certifications || []))
-    && s.vacationBlocks.every(b => obj(b) && typeof b.operatorId === 'string' && Number.isFinite(b.startWeek) && Number.isFinite(b.endWeek));
+    && s.operators.every(o => isObj(o) && typeof o.id === 'string' && typeof o.name === 'string'
+      && (o.certifications === undefined || Array.isArray(o.certifications)))
+    && s.vacationBlocks.every(b => isObj(b) && typeof b.operatorId === 'string' && Number.isFinite(b.startWeek) && Number.isFinite(b.endWeek)
+      && STATUSES.includes(b.status)
+      && (b.dayStatuses === undefined || (isObj(b.dayStatuses) && Object.values(b.dayStatuses).every(v => STATUSES.includes(v)))));
+}
+
+/** A usable plan with the optional operator fields filled in, or null. The input is not modified. */
+export function adoptPlan(s) {
+  if (!isUsablePlan(s)) return null;
+  return {
+    ...s,
+    operators: s.operators.map(o => (Array.isArray(o.certifications) && typeof o.active === 'boolean' && typeof o.shift === 'string'
+      ? o : { ...o, certifications: o.certifications || [], active: o.active !== false, shift: typeof o.shift === 'string' ? o.shift : 'S1' })),
+  };
 }

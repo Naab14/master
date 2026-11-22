@@ -276,4 +276,7 @@ export default {
   'Merge with the existing operator?': 'Slå ihop med den befintliga operatören?', 'Merge': 'Slå ihop',
   '{name} already has an operator with vacation or competencies of its own. Merging keeps all vacation blocks and keeps the other operator\'s old values on this one. You can undo this.': '{name} har redan en operatör med egen semester eller egna kompetenser. Sammanslagningen behåller alla semesterblock och sparar den andra operatörens gamla värden på den här. Du kan ångra det.',
   'Copy the old demand of a process into {name}': 'Kopiera det gamla behovet från en process till {name}', 'Copy from…': 'Kopiera från…',
+  'Replace saved demand?': 'Ersätta sparat behov?', 'Replace': 'Ersätt',
+  '{n} weeks already have a demand of their own. The empty weeks were filled. Replace those {n} with the old values too?': '{n} veckor har redan ett eget behov. De tomma veckorna fylldes i. Ersätta dessa {n} med de gamla värdena också?',
+  'Coverage cannot be evaluated yet': 'Bemanningen kan inte bedömas än',
 };
