@@ -24,6 +24,9 @@ vi.mock('../storage', async (importOriginal) => {
     importJSON: vi.fn(() => Promise.resolve(null)),
     buildShareLink: vi.fn(() => 'http://localhost/#share=test'),
     copyToClipboard: vi.fn(() => Promise.resolve(true)),
+    fetchServerState: vi.fn(() => Promise.resolve({ ok: false })),
+    pushServerState: vi.fn(() => Promise.resolve()),
+    setServerSync: vi.fn(),
   };
 });
 
@@ -156,5 +159,19 @@ describe('App', () => {
     fireEvent.keyDown(document, { key: 'z', ctrlKey: true });
     expect(screen.queryByText('Coverage (All operators)')).not.toBeInTheDocument();
     expect(screen.getByText('Coverage (S1)')).toBeInTheDocument();
+  });
+
+  it('seeds the server only when it has never stored a plan, not when its copy is unreadable', async () => {
+    storage.fetchServerState.mockResolvedValueOnce({ ok: true, state: { operators: 'broken' } });
+    const first = renderApp();
+    await act(async () => { await vi.advanceTimersByTimeAsync(10); });
+    expect(storage.pushServerState).not.toHaveBeenCalled();
+    expect(storage.setServerSync).not.toHaveBeenCalledWith(true);
+    first.unmount();
+
+    storage.fetchServerState.mockResolvedValueOnce({ ok: true, state: null });
+    renderApp();
+    await act(async () => { await vi.advanceTimersByTimeAsync(10); });
+    expect(storage.pushServerState).toHaveBeenCalledTimes(1);
   });
 });

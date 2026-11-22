@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { getFullState } from '../api';
 import { getAllCoverageForWeek } from '../tools/vacation/coverage';
 import { PROCESSES } from '../tools/vacation/data';
+import { useWorkforce } from '../workforce/store-context';
+import { buildPlanningModel, resolveOperators } from '../tools/vacation/planningModel';
 import PlanningCards from '../workforce/PlanningCards';
 import { useI18n } from '../i18n';
 
@@ -93,18 +95,24 @@ export default function Dashboard({ onNavigate }) {
   }, [mc, today]);
 
   const vac = state?.vacation;
+  const planning = useWorkforce();
+  const wfDoc = planning?.phase === 'ready' && !planning?.offline ? planning.wf : null;
   const vacStats = useMemo(() => {
     if (!vac || !Array.isArray(vac.operators)) return null;
-    const { operators, vacationBlocks = [], demand = {}, settings = {} } = vac;
+    const { vacationBlocks = [], demand = {}, settings = {} } = vac;
+    // The same teams and competencies as the Vacations screen when planning has processes
+    const model = wfDoc ? buildPlanningModel(wfDoc, today) : null;
+    const operators = resolveOperators(vac.operators, model);
+    const procs = model ? model.processes : PROCESSES.map(p => ({ key: p, name: p }));
     const shiftMode = settings.shiftMode || 'combined';
-    const shifts = shiftMode === 'separate' ? ['S1', 'S2'] : [null];
+    const shifts = shiftMode === 'separate' ? (model ? model.teams.map(tm => tm.id) : ['S1', 'S2']) : [null];
     const rank = { green: 0, yellow: 1, red: 2 };
     let worst = 'green';
     const perProcess = {};
     for (const shift of shifts) {
-      const cov = getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shift, null);
-      for (const proc of PROCESSES) {
-        const level = cov[proc]?.level || 'green';
+      const cov = getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shift, null, procs.map(p => p.key));
+      for (const { key, name: proc } of procs) {
+        const level = cov[key]?.level || 'green';
         if (rank[level] > rank[worst]) worst = level;
         if (!perProcess[proc] || rank[level] > rank[perProcess[proc]]) perProcess[proc] = level;
       }
@@ -112,7 +120,7 @@ export default function Dashboard({ onNavigate }) {
     const out = operators.filter(op =>
       vacationBlocks.some(b => b.operatorId === op.id && b.status === 'approved' && week >= b.startWeek && week <= b.endWeek));
     return { worst, perProcess, out };
-  }, [vac, week]);
+  }, [vac, week, wfDoc, today]);
 
   const boardStats = useMemo(() => {
     if (!state?.boards) return null;

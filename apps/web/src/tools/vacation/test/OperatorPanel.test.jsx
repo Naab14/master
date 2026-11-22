@@ -194,3 +194,41 @@ describe('OperatorPanel', () => {
     expect(screen.queryByLabelText('Clear search')).not.toBeInTheDocument();
   });
 });
+
+describe('OperatorPanel on the planning model', () => {
+  const model = {
+    teams: [{ id: 'red', name: 'Red' }],
+    processes: [{ key: 'wf:insp', name: 'Inspection' }],
+    byPerson: new Map([['p1', { teamId: 'red', certifications: ['wf:insp'] }]]),
+  };
+  const props = () => ({
+    ...defaultProps(),
+    model,
+    onDownloadTemplate: undefined,
+    people: [{ id: 'p1', name: 'Anna Lindgren' }],
+    onLinkOperator: vi.fn(),
+    operators: [{ ...makeOp('1', 'Anna Lindgren'), personId: 'p1' }, makeOp('2', 'Erik Holm', 'S2', true, ['Avsyning'])],
+  });
+
+  it('shows the profile\'s team, and the old shift only for the unlinked operator', () => {
+    render(<OperatorPanel {...props()} />);
+    expect(screen.getByText('Red')).toBeInTheDocument();
+    expect(screen.getByText('S2')).toBeInTheDocument();
+  });
+
+  it('shows team and competencies read-only for a linked operator', () => {
+    render(<OperatorPanel {...props()} />);
+    fireEvent.click(screen.getByText('Anna Lindgren'));
+    expect(screen.getByText('Inspection')).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Shift' })).toBeNull();
+  });
+
+  it('keeps an unlinked operator\'s old values visible but not editable', () => {
+    const p = props();
+    render(<OperatorPanel {...p} />);
+    fireEvent.click(screen.getByText('Erik Holm'));
+    expect(screen.getByText('Avsyning')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Avsyning')).toBeNull();
+    expect(p.onUpdateOperator).not.toHaveBeenCalled();
+  });
+});

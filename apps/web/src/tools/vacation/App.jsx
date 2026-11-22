@@ -13,7 +13,8 @@ import { buildHolidayMap, initHolidays } from './holidays';
 import { historyReducer, initHistory } from './historyReducer';
 import { useBreakpoint } from './hooks/useBreakpoint';
 import { useWorkforce } from '../../workforce/store-context';
-import { syncOperatorsWithPeople, linkOperator } from './sharedPeople';
+import { syncOperatorsWithPeople, linkOperator, unlinkedOperators } from './sharedPeople';
+import { buildPlanningModel, resolveOperators, planningGroups } from './planningModel';
 import { useI18n } from '../../i18n';
 import { useToast } from '../../ui';
 import { Confirm } from '../../workforce/ui';
@@ -109,8 +110,10 @@ export default function App() {
         if (server && Array.isArray(server.operators)) {
           discardPendingSave();
           dispatch({ type: 'REPLACE', state: server });
+        } else if (server == null) {
+          pushServerState(latestState.current); // a workspace the server has never stored
         } else {
-          pushServerState(latestState.current);
+          return; // unreadable server copy: keep what is local and never overwrite it
         }
         setServerSync(true);
         setAdopted(true);
@@ -140,6 +143,14 @@ export default function App() {
     const next = syncOperatorsWithPeople(state.operators, people, today);
     if (next !== state.operators) dispatch({ type: 'SYNC', updater: s => ({ ...s, operators: syncOperatorsWithPeople(s.operators, people, today) }) });
   }, [adopted, people, state.operators, initResult.wasShared, canEditPlan]);
+  // Teams and competencies come from planning when it has processes; until
+  // then (offline, or a new plant) Vacations keeps its own S1/S2 and processes.
+  const [localToday] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
+  const wfDoc = planning?.wf;
+  const model = useMemo(() => (planningReady ? buildPlanningModel(wfDoc, localToday) : null), [planningReady, wfDoc, localToday]);
+  const gridOperators = useMemo(() => resolveOperators(state.operators, model), [state.operators, model]);
+  const planningView = useMemo(() => (model ? { processes: model.processes, groups: planningGroups(gridOperators, model, t) } : null), [model, gridOperators, t]);
+  const unlinkedActive = model ? unlinkedOperators(state.operators).filter(o => o.active).length : 0;
   const linkOp = useCallback((operatorId, personId) => { if (people) setFn(s => linkOperator(s, operatorId, personId, people)); }, [people, setFn]);
 
   // Say so when the page opened from a shared link
@@ -289,14 +300,20 @@ export default function App() {
 
       {/* ── Top Bar ──────────────────────────────────────────────────────── */}
       <TopBar
-        shiftMode={shiftMode} onShiftModeChange={setShiftMode}
-        onImportCSV={handleCSVImport} onExportCSV={handleCSVExport} onSave={handleSave}
+        shiftMode={shiftMode} onShiftModeChange={setShiftMode} byTeam={!!model}
+        onImportCSV={model ? undefined : handleCSVImport} onExportCSV={handleCSVExport} onSave={handleSave}
         onExportJSON={handleExport} onImportJSON={handleImport}
         onReset={() => setConfirmReset(true)}
         onShare={handleShare}
         onUndo={undo} onRedo={redo}
         canUndo={canUndo} canRedo={canRedo}
       />
+
+      {unlinkedActive > 0 && (
+        <p role="status" className="border-b border-line bg-soft px-4 py-2 text-xs text-ink-2">
+          {t('{n} operators are not linked to a profile in People. They keep their old S1/S2 and processes, but count toward no coverage until you link them (Operators list, open a name).', { n: unlinkedActive })}
+        </p>
+      )}
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
@@ -306,15 +323,16 @@ export default function App() {
           showMgmt={showOperatorMgmt}
           onToggleMgmt={() => setShowOperatorMgmt(p => !p)}
           onAddOperator={addOperator} onRemoveOperator={removeOperator}
-          people={people} onLinkOperator={linkOp}
-          onDownloadTemplate={downloadCSVTemplate}
+          people={people} onLinkOperator={linkOp} model={model}
+          onDownloadTemplate={model ? undefined : downloadCSVTemplate}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed(p => !p)}
         />
 
         {/* Center: Calendar (handles both zoom levels internally) */}
         <CalendarGrid
-          operators={operators} vacationBlocks={vacationBlocks}
+          planning={planningView}
+          operators={gridOperators} vacationBlocks={vacationBlocks}
           demand={demand} settings={settings} weeks={weeks}
           holidayMap={holidayMap}
           onAddBlock={addBlock} onUpdateBlock={updateBlock}

@@ -293,3 +293,35 @@ describe('CalendarGrid — scroll zoom & keyboard', () => {
     expect(props.onZoomChange).not.toHaveBeenCalled();
   });
 });
+
+describe('CalendarGrid on the planning model', () => {
+  const resolved = [
+    { id: '1', name: 'Anna', active: true, shift: 'red', certifications: ['wf:insp'] },
+    { id: '2', name: 'Bo', active: true, shift: 'blue', certifications: [] },
+    { id: '3', name: 'Old Op', active: true, shift: '__unlinked', certifications: [] },
+  ];
+  const planning = {
+    processes: [{ key: 'wf:insp', name: 'Inspection' }],
+    groups: [
+      { label: 'Red', ops: [resolved[0]], shift: 'red' },
+      { label: 'Blue', ops: [resolved[1]], shift: 'blue' },
+      { label: 'Not linked', ops: [resolved[2]], shift: '__unlinked', noCoverage: true },
+    ],
+  };
+  const props = zoom => ({ ...defaultProps(), operators: resolved, planning, zoom, settings: { ...defaultSettings, shiftMode: 'separate' }, showDemand: true, demand: {} });
+
+  it('shows one group per team and planning processes in the week view', () => {
+    render(<CalendarGrid {...props('week')} />);
+    for (const n of ['Red', 'Blue', 'Not linked']) expect(screen.getAllByText(n).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Inspection').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Avsyning')).toBeNull();
+    expect(screen.getByText('Coverage (Red)')).toBeInTheDocument();
+    expect(screen.queryByText('Coverage (Not linked)')).toBeNull();
+  });
+
+  it('shows the same groups in the day view', () => {
+    render(<CalendarGrid {...props('day')} />);
+    for (const n of ['Red', 'Blue', 'Not linked']) expect(screen.getAllByText(n).length).toBeGreaterThan(0);
+    expect(screen.queryByText('S1')).toBeNull();
+  });
+});

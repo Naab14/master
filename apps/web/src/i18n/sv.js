@@ -264,4 +264,11 @@ export default {
   'The CSV file has no “Namn” / “Name” column': 'CSV-filen saknar kolumnen ”Namn” / ”Name”',
   'Row {row}: unknown certification “{name}”. Did you mean “{suggestion}”?': 'Rad {row}: okänd certifiering ”{name}”. Menade du ”{suggestion}”?',
   'Row {row}: unknown certification “{name}”': 'Rad {row}: okänd certifiering ”{name}”',
+  // Vacations on the planning model
+  'Manage': 'Hantera', 'Not linked': 'Inte kopplade', 'Manage operators': 'Hantera operatörer',
+  'Old shift': 'Gammalt skift', 'Old certifications': 'Gamla certifieringar',
+  'People are added in People and appear here by themselves. Only an old operator that is not linked can be removed here.': 'Personer läggs till under Personal och dyker upp här av sig själva. Här kan bara en gammal operatör som inte är kopplad tas bort.',
+  'Not linked, so it counts toward no coverage. Its old values are kept.': 'Inte kopplad, så den räknas inte i någon bemanning. De gamla värdena finns kvar.',
+  'Team and competencies come from People.': 'Lag och kompetenser kommer från Personal.',
+  '{n} operators are not linked to a profile in People. They keep their old S1/S2 and processes, but count toward no coverage until you link them (Operators list, open a name).': '{n} operatörer är inte kopplade till en profil under Personal. De behåller sina gamla S1/S2 och processer men räknas inte i någon bemanning förrän du kopplar dem (Operatörslistan, öppna ett namn).',
 };

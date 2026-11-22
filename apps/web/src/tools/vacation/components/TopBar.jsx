@@ -3,7 +3,7 @@ import { useI18n } from '../../../i18n';
 import { Button, Segmented } from '../../../ui';
 
 export default function TopBar({
-  shiftMode, onShiftModeChange,
+  shiftMode, onShiftModeChange, byTeam = false,
   onImportCSV, onExportCSV, onSave, onExportJSON, onImportJSON, onReset, onShare,
   onUndo, onRedo, canUndo, canRedo,
 }) {
@@ -46,7 +46,7 @@ export default function TopBar({
         </div>
 
         {/* How the shifts are shown */}
-        <Segmented label={t('Shifts')} options={modes} value={shiftMode} onChange={onShiftModeChange} />
+        <Segmented label={byTeam ? t('Teams') : t('Shifts')} options={modes} value={shiftMode} onChange={onShiftModeChange} />
 
         <Button variant="primary" onClick={onShare} title={t('Copy a link to this plan')}>{t('Share')}</Button>
       </div>

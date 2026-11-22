@@ -5,7 +5,7 @@ import { useI18n } from '../../../../i18n';
 
 export default function WeekZoomGrid({
   ref, operators, vacationBlocks, demand, settings, weeks, holidayMap,
-  groups, drag, showDemand, updateDemand,
+  groups, drag, showDemand, updateDemand, processes,
   onCellPointerDown, onCellPointerUp, onResizePointerDown,
 }) {
   const { t } = useI18n();
@@ -126,12 +126,12 @@ export default function WeekZoomGrid({
               </div>
             ))}
 
-            <CoverageRows operators={operators} vacationBlocks={vacationBlocks} demand={demand}
-              weeks={weeks} shiftMode={settings.shiftMode} shiftFilter={group.shift} holidayMap={holidayMap} label={t('Coverage ({group})', { group: group.label })} />
+            {!group.noCoverage && <CoverageRows processes={processes} operators={operators} vacationBlocks={vacationBlocks} demand={demand}
+              weeks={weeks} shiftMode={settings.shiftMode} shiftFilter={group.shift} holidayMap={holidayMap} label={t('Coverage ({group})', { group: group.label })} />}
           </div>
         ))}
 
-        {showDemand && <DemandEditor demand={demand} weeks={weeks} updateDemand={updateDemand} />}
+        {showDemand && <DemandEditor processes={processes} demand={demand} weeks={weeks} updateDemand={updateDemand} />}
       </div>
     </div>
   );

@@ -15,7 +15,7 @@ export default function CalendarGrid({
   onAddBlock, onUpdateBlock, onDeleteBlock, onSetBlockStatus,
   onSetBlockDayStatus, onClearBlockDayStatus, onSetBlockNote,
   setStartWeek, showDemand, onToggleDemand, updateDemand,
-  zoom, onZoomChange,
+  zoom, onZoomChange, planning = null,
 }) {
   const { t } = useI18n();
   const { shiftMode, startWeek, visibleWeeks } = settings;
@@ -207,7 +207,9 @@ export default function CalendarGrid({
     setDrag({ type: 'resizing', blockId, edge, origStart: block.startWeek, origEnd: block.endWeek });
   };
 
-  const groups = shiftMode === 'separate'
+  const groups = planning && shiftMode === 'separate'
+    ? planning.groups
+    : shiftMode === 'separate'
     ? [{ label: 'S1', ops: operators.filter(o => o.shift === 'S1'), shift: 'S1' },
        { label: 'S2', ops: operators.filter(o => o.shift === 'S2'), shift: 'S2' }]
     : [{ label: shiftMode === 'summer' ? t('Summer schedule') : t('All operators'), ops: operators, shift: null }];
@@ -261,7 +263,7 @@ export default function CalendarGrid({
             ref={scrollRef}
             operators={operators} vacationBlocks={vacationBlocks} demand={demand}
             settings={settings} weeks={weeks} holidayMap={holidayMap}
-            groups={groups} drag={drag} showDemand={showDemand} updateDemand={updateDemand}
+            groups={groups} drag={drag} showDemand={showDemand} updateDemand={updateDemand} processes={planning?.processes}
             onCellPointerDown={handleCellPointerDown}
             onCellPointerUp={handleCellPointerUp}
             onResizePointerDown={handleResizePointerDown}
@@ -269,7 +271,7 @@ export default function CalendarGrid({
         ) : (
           <DayZoomGrid
             operators={operators} vacationBlocks={vacationBlocks} demand={demand}
-            settings={settings} weeks={weeks} holidayMap={holidayMap} groups={groups}
+            settings={settings} weeks={weeks} holidayMap={holidayMap} groups={groups} processes={planning?.processes}
             showDayCoverage={showDayCoverage} onToggleDayCoverage={() => setShowDayCoverage(c => !c)}
             setPopover={setPopover}
             onAddBlock={onAddBlock}

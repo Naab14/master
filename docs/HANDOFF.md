@@ -18,6 +18,19 @@ Any further work starts from the latest `main` and opens a new PR. While
 PR #8 is open, keep work on those three tools in it instead of opening
 another.
 
+## Vacations on the planning model (branch `claude/vacations-planning-model`)
+
+Built on top of `main`, pushed, **not merged, no PR yet**. Vacations' rows are
+the planning teams; its coverage rows are the planning processes; a linked
+operator counts toward the processes its profile holds at a level that counts
+on its own. Unlinked operators stay in the saved data with their old S1/S2 and
+processes, are shown in a "Not linked" group and count toward nothing until
+linked by hand. Logic: `tools/vacation/planningModel.js` (tests beside it);
+the Dashboard uses the same model. CSV import and template are hidden in this
+mode. Not changed (flagged for later): the whole-plan save still has no
+conflict detection, a shared link still autosaves into the local cache, week
+numbers have no year, demand is per process and week only.
+
 ## PR #8: the three older tools (roadmap item 3)
 
 Built on the branch, **not on production until the PR is merged**.

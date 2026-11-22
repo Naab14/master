@@ -4,7 +4,35 @@ import { useI18n } from '../../../i18n';
 import { Button, Checkbox, Pill } from '../../../ui';
 import { Confirm, Field, Input, Select } from '../../../workforce/ui';
 
-export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, onToggleMgmt, onAddOperator, onRemoveOperator, onDownloadTemplate, collapsed, onToggleCollapse, people = null, onLinkOperator }) {
+/* In the planning model the team and the competencies belong to the profile
+ * in People and are only shown here. An unlinked operator's old S1/S2 and
+ * process list stay in the saved data, shown read-only until it is linked. */
+function PlanningFacts({ op, info, teamName, procName, t }) {
+  const facts = (label, value) => (
+    <div>
+      <div className="mb-1 text-xs font-semibold text-ink-3">{label}</div>
+      <div className="text-sm">{value}</div>
+    </div>
+  );
+  if (!info) {
+    return (
+      <>
+        <p className="text-xs text-ink-3">{t('Not linked, so it counts toward no coverage. Its old values are kept.')}</p>
+        {facts(t('Old shift'), op.shift)}
+        {facts(t('Old certifications'), (op.certifications || []).join(', ') || '—')}
+      </>
+    );
+  }
+  return (
+    <>
+      {facts(t('Team'), teamName(info.teamId) || t('No team'))}
+      {facts(t('Competencies'), info.certifications.map(procName).join(', ') || '—')}
+      <p className="text-xs text-ink-3">{t('Team and competencies come from People.')}</p>
+    </>
+  );
+}
+
+export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, onToggleMgmt, onAddOperator, onRemoveOperator, onDownloadTemplate, collapsed, onToggleCollapse, people = null, onLinkOperator, model = null }) {
   const { t } = useI18n();
   const [editId, setEditId] = useState(null);
   const [newName, setNewName] = useState('');
@@ -17,6 +45,10 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
     onAddOperator(newName.trim(), newShift);
     setNewName('');
   };
+
+  const teamName = id => model?.teams.find(tm => tm.id === id)?.name;
+  const procName = key => model?.processes.find(p => p.key === key)?.name || key;
+  const infoOf = op => (model && op.personId ? model.byPerson.get(op.personId) : null);
 
   const q = search.trim().toLowerCase();
   const filteredOperators = q
@@ -36,9 +68,9 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
         </button>
         <span className="sidebar-full-only tl-heading min-w-0 flex-1 truncate">{t('Operators')}</span>
         <div className="sidebar-full-only flex gap-1">
-          <Button onClick={onDownloadTemplate} title={t('Download a CSV template')} className="!min-h-[30px] whitespace-nowrap !px-2 text-xs">CSV</Button>
+          {onDownloadTemplate && <Button onClick={onDownloadTemplate} title={t('Download a CSV template')} className="!min-h-[30px] whitespace-nowrap !px-2 text-xs">CSV</Button>}
           {!showMgmt && (
-            <Button variant="primary" onClick={onToggleMgmt} className="!min-h-[30px] whitespace-nowrap !px-2 text-xs">+ {t('Add')}</Button>
+            <Button variant="primary" onClick={onToggleMgmt} className="!min-h-[30px] whitespace-nowrap !px-2 text-xs">{model ? t('Manage') : `+ ${t('Add')}`}</Button>
           )}
         </div>
       </div>
@@ -46,16 +78,17 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
       {/* Add operator */}
       {showMgmt && (
         <div className="sidebar-full-only wf-view !h-auto flex flex-col gap-2 border-b border-line bg-soft p-3">
-          <div className="tl-heading">{t('Add operator')}</div>
-          <Input type="text" placeholder={t('Name')} aria-label={t('Name')} value={newName} onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAdd()} />
-          <div className="flex gap-2">
+          <div className="tl-heading">{model ? t('Manage operators') : t('Add operator')}</div>
+          {model && <p className="text-xs text-ink-3">{t('People are added in People and appear here by themselves. Only an old operator that is not linked can be removed here.')}</p>}
+          {!model && <Input type="text" placeholder={t('Name')} aria-label={t('Name')} value={newName} onChange={e => setNewName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAdd()} />}
+          {!model && <div className="flex gap-2">
             <Select value={newShift} aria-label={t('Shift')} onChange={e => setNewShift(e.target.value)} className="flex-1">
               <option value="S1">S1</option><option value="S2">S2</option>
             </Select>
             <Button variant="primary" onClick={handleAdd}>{t('Add')}</Button>
-          </div>
-          <Button onClick={onDownloadTemplate} className="text-xs">↓ {t('Download a CSV template')}</Button>
+          </div>}
+          {onDownloadTemplate && <Button onClick={onDownloadTemplate} className="text-xs">↓ {t('Download a CSV template')}</Button>}
           <Button onClick={onToggleMgmt}>{t('Done')}</Button>
         </div>
       )}
@@ -93,7 +126,7 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
                 onKeyDown={e => { if (e.key === 'Enter' && e.target === e.currentTarget) setEditId(open ? null : op.id); }}>
                 <span className="flex-1 truncate font-medium">{op.name}</span>
                 {people && !op.personId && <span className="text-[10px] font-semibold text-ink-3" title={t('Not linked to a profile in People')}>{t('unlinked')}</span>}
-                <Pill>{op.shift}</Pill>
+                <Pill>{model && op.personId ? (teamName(infoOf(op)?.teamId) || t('No team')) : op.shift}</Pill>
               </div>
 
               {open && (
@@ -116,26 +149,32 @@ export default function OperatorPanel({ operators, onUpdateOperator, showMgmt, o
                       </Select>
                     </Field>
                   )}
-                  <Field label={t('Shift')}>
-                    <Select value={op.shift} onChange={e => onUpdateOperator(op.id, { shift: e.target.value })}>
-                      <option value="S1">S1</option><option value="S2">S2</option>
-                    </Select>
-                  </Field>
+                  {model ? (
+                    <PlanningFacts op={op} info={infoOf(op)} teamName={teamName} procName={procName} t={t} />
+                  ) : (
+                    <>
+                      <Field label={t('Shift')}>
+                        <Select value={op.shift} onChange={e => onUpdateOperator(op.id, { shift: e.target.value })}>
+                          <option value="S1">S1</option><option value="S2">S2</option>
+                        </Select>
+                      </Field>
+                      <div>
+                        <div className="mb-1 text-xs font-semibold text-ink-3">{t('Certifications')}</div>
+                        <div className="flex flex-col">
+                          {PROCESSES.map(p => (
+                            <Checkbox key={p} checked={op.certifications.includes(p)}
+                              onChange={e => {
+                                const certs = e.target.checked ? [...op.certifications, p] : op.certifications.filter(c => c !== p);
+                                onUpdateOperator(op.id, { certifications: certs });
+                              }}>
+                              {p}
+                            </Checkbox>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <Checkbox checked={op.active} onChange={e => onUpdateOperator(op.id, { active: e.target.checked })}>{t('Active')}</Checkbox>
-                  <div>
-                    <div className="mb-1 text-xs font-semibold text-ink-3">{t('Certifications')}</div>
-                    <div className="flex flex-col">
-                      {PROCESSES.map(p => (
-                        <Checkbox key={p} checked={op.certifications.includes(p)}
-                          onChange={e => {
-                            const certs = e.target.checked ? [...op.certifications, p] : op.certifications.filter(c => c !== p);
-                            onUpdateOperator(op.id, { certifications: certs });
-                          }}>
-                          {p}
-                        </Checkbox>
-                      ))}
-                    </div>
-                  </div>
                   {showMgmt && !linked && (
                     <Button variant="danger" onClick={() => setConfirmRemove(op)}>{t('Remove operator')}</Button>
                   )}

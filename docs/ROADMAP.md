@@ -8,6 +8,7 @@ the bottom with a date.
 
 | What | Where | Status |
 | --- | --- | --- |
+| Vacations on the planning model (Next item 3) | Branch `claude/vacations-planning-model` (thread: build) | Built; lint, tests and build pass. Pushed, not merged, no PR yet |
 | Shift HQ, Vacations and Boards: Swedish, the shared look and the planning motion (Next item 3) | PR #8 (Features thread), branch `claude/naab14-shift-management-qmu4s9` | Built and checked in a browser; lint, tests and build pass. **Not merged, so not on production yet** |
 | Workforce planning build (brief of 2026-11-09, corrections of 2026-11-10) | PR #6, merged; docs follow-up PR #7, merged 2026-11-15 | **Live on production** (code from commit `b472699`; `main` is at `7731f71`). Google sign-in is active, the owner's Google address is the admin, and **the owner signed in on production and confirmed it works (2026-11-15)** |
 | Design foundation (PR #4), Strategy docs (PR #5) | Included in PR #6 | Their commits are part of PR #6; the two PRs were left untouched |
@@ -66,8 +67,11 @@ In order.
 1. **Owner: review and merge PR #8** (Shift HQ, Vacations and Boards in
    Swedish, with the shared look and motion). Merging deploys it.
 2. **Owner: supply the OB rules.**
-3. **Vacations on the planning model**: replace its S1/S2 and process list
-   with teams, shifts and competencies from planning.
+3. **Vacations on the planning model** (in progress, branch
+   `claude/vacations-planning-model`): its rows follow planning teams and its
+   coverage follows planning processes and competencies. Left for later: demand
+   per shift or workday, a year for the week numbers, conflict detection on the
+   whole-plan save (see the decision of 2026-11-22).
 4. **Digital assignments** (optional toggle).
 5. **Operator screens**: own schedule, training, competencies, leave requests.
 6. **Live Excalidraw collaboration** over Supabase Realtime.
@@ -157,3 +161,6 @@ In order.
 | 2026-11-15 | In Shift HQ a delete happens at once and is undone from the message; the app's own dialog is used only where Undo is not possible (deleting a board or a group with items) or the change is large (reset, remove operator) | Everyday work must not be slowed by questions (D3); browser pop-ups were untranslated and unstyled |
 | 2026-11-15 | Shift HQ's weekly-review PDF download is kept and translated | It existed before the brief and is a file download, not the print workflow that was removed |
 | 2026-11-15 | Text stored as data (task and log categories, leave statuses) stays English in the saved data and is translated when shown | No data migration; old data keeps working in both languages |
+| 2026-11-22 | Vacations rows follow planning teams; coverage follows planning processes and the competencies a profile holds at a level that counts on its own (not trainees). Only linked operators count; unlinked ones sit in a "Not linked" group with no coverage and keep their old S1/S2 and process list in the saved data. Nothing is matched by name and no saved Vacations data is rewritten (the conversion happens when showing, so it is repeatable). Without planning processes (or offline) Vacations works as before | Owner's requirement to keep existing data intact; a Yes/No certification has no level to map to |
+| 2026-11-22 | Planning processes get their own demand keys (`wf:<id>`) next to the old ones, so old demand is kept; a week without a saved value shows the same default of 2 as before | No data migration; per-shift demand is a later step |
+| 2026-11-22 | An unreadable (non-null, malformed) server copy of Vacations no longer makes the app write its local copy over it | Found in the risk review |

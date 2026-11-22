@@ -2,14 +2,15 @@ import { PROCESSES } from './data';
 
 /**
  * Calculate weekly coverage across all processes intelligently.
- * Operators with one cert get assigned first.
+ * `processes` are the keys to cover (the older process names by default, or
+ * planning process keys). Operators with one cert get assigned first.
  * Multi-certified operators get assigned dynamically to the process with the highest need.
  */
-export function getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shiftFilter, holidayMap) {
+export function getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shiftFilter, holidayMap, processes = PROCESSES) {
   const coverageMap = {};
   
   // Initialize map
-  PROCESSES.forEach(proc => {
+  processes.forEach(proc => {
     coverageMap[proc] = {
       required: demand[proc]?.[week] ?? 2,
       covered: 0,
@@ -79,7 +80,7 @@ export function getAllCoverageForWeek(operators, vacationBlocks, demand, week, s
   });
 
   // Finalize levels
-  PROCESSES.forEach(proc => {
+  processes.forEach(proc => {
     const covInfo = coverageMap[proc];
     if (covInfo.covered >= covInfo.required) covInfo.level = 'green';
     else if (covInfo.covered >= covInfo.required - 1) covInfo.level = 'yellow';
@@ -93,7 +94,7 @@ export function getAllCoverageForWeek(operators, vacationBlocks, demand, week, s
  * Fallback backward compatibility for individual cell lookups.
  * It's cleaner to precompute globally but this maintains existing API signature.
  */
-export function getCoverage(operators, vacationBlocks, demand, process, week, shiftMode, shiftFilter, holidayMap) {
-  const globalCoverage = getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shiftFilter, holidayMap);
+export function getCoverage(operators, vacationBlocks, demand, process, week, shiftMode, shiftFilter, holidayMap, processes = PROCESSES) {
+  const globalCoverage = getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shiftFilter, holidayMap, processes);
   return globalCoverage[process];
 }

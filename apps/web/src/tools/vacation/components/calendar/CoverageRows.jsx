@@ -32,7 +32,7 @@ function CoverageTooltip({ coverageData, week, process, holidayMap, style }) {
 
 const colorMap = { green: 'var(--coverage-green)', yellow: 'var(--coverage-yellow)', red: 'var(--coverage-red)' };
 
-export default function CoverageRows({ operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, label, cellWidth }) {
+export default function CoverageRows({ operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, label, cellWidth, processes = PROCESSES.map(p => ({ key: p, name: p })) }) {
   const { t } = useI18n();
   const [tooltip, setTooltip] = useState(null);
   const w = cellWidth ?? CELL_W;
@@ -40,10 +40,10 @@ export default function CoverageRows({ operators, vacationBlocks, demand, weeks,
   const coverageByWeek = useMemo(() => {
     const map = {};
     for (const w of weeks) {
-      map[w] = getAllCoverageForWeek(operators, vacationBlocks, demand, w, shiftMode, shiftFilter, holidayMap);
+      map[w] = getAllCoverageForWeek(operators, vacationBlocks, demand, w, shiftMode, shiftFilter, holidayMap, processes.map(p => p.key));
     }
     return map;
-  }, [operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap]);
+  }, [operators, vacationBlocks, demand, weeks, shiftMode, shiftFilter, holidayMap, processes]);
 
   return (
     <>
@@ -51,11 +51,11 @@ export default function CoverageRows({ operators, vacationBlocks, demand, weeks,
         style={{ height: 24, background: 'var(--bg-secondary)', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>
         <div style={{ width: LABEL_W, minWidth: LABEL_W }}>{label}</div>
       </div>
-      {PROCESSES.map(proc => (
+      {processes.map(({ key: proc, name }) => (
         <div key={proc} className="flex" style={{ height: CELL_H, borderBottom: '1px solid var(--border)' }}>
           <div className="sticky left-0 z-10 flex items-center px-2 text-xs truncate"
             style={{ width: LABEL_W, minWidth: LABEL_W, background: 'var(--bg-primary)', borderRight: '1px solid var(--border)', color: 'var(--text-secondary)' }}>
-            {proc}
+            {name}
           </div>
           {weeks.map(wk => {
             const cov = coverageByWeek[wk]?.[proc];
@@ -65,17 +65,17 @@ export default function CoverageRows({ operators, vacationBlocks, demand, weeks,
                 className="flex items-center justify-center text-xs font-medium relative"
                 style={{ width: w, minWidth: w, height: CELL_H, borderRight: '1px solid var(--border)', color: colorMap[cov.level], cursor: 'help' }}
                 tabIndex={0} role="button"
-                aria-label={`${proc} ${t('w.{n}', { n: wk })}: ${cov.covered}/${cov.required}`}
+                aria-label={`${name} ${t('w.{n}', { n: wk })}: ${cov.covered}/${cov.required}`}
                 onPointerEnter={e => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   const x = rect.right + 4 > window.innerWidth ? rect.left - 220 : rect.right + 4;
                   const y = Math.min(rect.top, window.innerHeight - 200);
-                  setTooltip({ proc, week: wk, cov, x, y });
+                  setTooltip({ proc: name, week: wk, cov, x, y });
                 }}
                 onPointerLeave={() => setTooltip(null)}
                 onFocus={e => {
                   const rect = e.currentTarget.getBoundingClientRect();
-                  setTooltip({ proc, week: wk, cov, x: rect.right + 4, y: rect.top });
+                  setTooltip({ proc: name, week: wk, cov, x: rect.right + 4, y: rect.top });
                 }}
                 onBlur={() => setTooltip(null)}>
                 {cov.covered}/{cov.required}
