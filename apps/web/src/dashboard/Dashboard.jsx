@@ -3,7 +3,7 @@ import { getFullState } from '../api';
 import { getAllCoverageForWeek } from '../tools/vacation/coverage';
 import { PROCESSES } from '../tools/vacation/data';
 import { useWorkforce } from '../workforce/store-context';
-import { buildPlanningModel, resolveOperators, coverageTeamIds } from '../tools/vacation/planningModel';
+import { buildPlanningModel, planningWeekCoverage, isoYearOf } from '../tools/vacation/planningModel';
 import PlanningCards from '../workforce/PlanningCards';
 import { useI18n } from '../i18n';
 
@@ -102,15 +102,23 @@ export default function Dashboard({ onNavigate }) {
     const { vacationBlocks = [], demand = {}, settings = {} } = vac;
     // The same teams and competencies as the Vacations screen when planning has processes
     const model = wfDoc ? buildPlanningModel(wfDoc, today) : null;
-    const operators = resolveOperators(vac.operators, model, today);
-    const procs = model ? model.processes : PROCESSES.map(p => ({ key: p, name: p }));
     const shiftMode = settings.shiftMode || 'combined';
-    const shifts = shiftMode === 'separate' ? (model ? coverageTeamIds(operators, model, t, [today]) : ['S1', 'S2']) : [null];
     const rank = { green: 0, yellow: 1, red: 2 };
     let worst = 'green';
     const perProcess = {};
-    for (const shift of shifts) {
-      const cov = getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shift, null, procs.map(p => p.key));
+    let operators = vac.operators;
+    let results;
+    let procs;
+    if (model) {
+      // Same dates and rules as the Vacations grid
+      const wk = planningWeekCoverage(vac, model, week, isoYearOf(today), t);
+      operators = wk.operators; results = wk.results; procs = model.processes;
+    } else {
+      procs = PROCESSES.map(p => ({ key: p, name: p }));
+      const shifts = shiftMode === 'separate' ? ['S1', 'S2'] : [null];
+      results = shifts.map(shift => ({ shift, cov: getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shift, null) }));
+    }
+    for (const { cov } of results) {
       for (const { key, name: proc } of procs) {
         const level = cov[key]?.level || 'green';
         if (rank[level] > rank[worst]) worst = level;
@@ -119,7 +127,7 @@ export default function Dashboard({ onNavigate }) {
     }
     const out = operators.filter(op =>
       vacationBlocks.some(b => b.operatorId === op.id && b.status === 'approved' && week >= b.startWeek && week <= b.endWeek));
-    const unknown = !!model && (!shifts.length || !operators.some(o => o.personId && model.byPerson.has(o.personId)));
+    const unknown = !!model && (!results.length || !operators.some(o => o.personId && model.byPerson.has(o.personId)));
     return { worst, perProcess, out, unknown };
   }, [vac, week, wfDoc, today, t]);
 

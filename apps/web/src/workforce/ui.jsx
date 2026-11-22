@@ -77,15 +77,27 @@ export function Confirm({ title, body, confirmLabel, onConfirm, onCancel, danger
   const { t } = useI18n();
   const [closing, cancel] = useAnimatedClose(onCancel, 160);
   const ref = useRef(null);
+  const dialogRef = useRef(null);
   useEffect(() => { ref.current?.focus(); }, []);
   useEffect(() => {
-    const onKey = e => { if (e.key === 'Escape') cancel(); };
+    // Escape closes; Tab stays inside the dialog (it is modal), also when focus was outside it
+    const onKey = e => {
+      if (e.key === 'Escape') { cancel(); return; }
+      if (e.key !== 'Tab') return;
+      const items = [...(dialogRef.current?.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])') || [])];
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1], at = document.activeElement;
+      if (!dialogRef.current.contains(at) || (e.shiftKey && at === first) || (!e.shiftKey && at === last)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+    };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [cancel]);
   return createPortal(
     <div className="wf-sheet-backdrop wf-sheet-backdrop--center" data-state={closing ? 'closing' : 'open'} onMouseDown={e => { if (e.target === e.currentTarget) cancel(); }}>
-      <div role="alertdialog" aria-modal="true" aria-label={title} className="wf-dialog">
+      <div ref={dialogRef} role="alertdialog" aria-modal="true" aria-label={title} className="wf-dialog">
         <h2 className="t-section">{title}</h2>
         <div className="mt-2 text-sm text-ink-2">{body}</div>
         <div className="mt-4 flex justify-end gap-2">

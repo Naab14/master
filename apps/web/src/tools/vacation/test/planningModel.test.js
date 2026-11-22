@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildPlanningModel, resolveOperators, planningGroups, coverageTeamIds, isoWeekMonday, UNLINKED, NO_TEAM } from '../planningModel';
+import { planningWeekCoverage, isoYearOf, buildPlanningModel, resolveOperators, planningGroups, coverageTeamIds, isoWeekMonday, UNLINKED, NO_TEAM } from '../planningModel';
 import { mergeDemandSeries } from '../demandSeries';
 import { isUsablePlan, adoptPlan, seedOperators, seedVacationBlocks, buildDefaultDemand, defaultSettings } from '../data';
 import { getAllCoverageForWeek } from '../coverage';
@@ -165,5 +165,33 @@ describe('review round 2', () => {
     expect(fill.conflicts).toBe(1);
     expect(mergeDemandSeries(target, source, true).series).toEqual({ 1: 5, 2: 0, 3: 0, 4: 1 });
     expect(target).toEqual({ 1: 3, 2: 0 });
+  });
+});
+
+describe('review round 3', () => {
+  it('treats a null demand series as empty, in copying and when adopting a plan', () => {
+    expect(mergeDemandSeries(null, { 1: 2 }).series).toEqual({ 1: 2 });
+    expect(mergeDemandSeries({ 1: 2 }, null).series).toEqual({ 1: 2 });
+    const plan = { operators: seedOperators, vacationBlocks: [], demand: { Avsyning: null, Kapselresaren: { 3: 0 } }, settings: defaultSettings };
+    expect(adoptPlan(plan).demand).toEqual({ Avsyning: {}, Kapselresaren: { 3: 0 } });
+  });
+
+  it('the Dashboard and the grid share one week calculation: a Wednesday move counts from its own Monday', () => {
+    const wf = buildSample();
+    // Blue is the team 'blue'; p02 is on it. Move the only red operator (p01) to blue on Wednesday 2026-11-11.
+    const doc = structuredClone(wf);
+    doc.memberships.ms_p01 = { ...doc.memberships.ms_p01, to: '2026-11-10' };
+    doc.memberships.ms_p01_new = { id: 'n', personId: 'p01', teamId: 'blue', from: '2026-11-11', to: null, status: 'confirmed' };
+    const m = buildPlanningModel(doc, '2026-11-11'); // "today" is already after the move
+    const plan = {
+      operators: [op('a', { personId: 'p01' })], vacationBlocks: [], demand: {},
+      settings: { ...defaultSettings, shiftMode: 'separate' },
+    };
+    // Week 46 starts Monday 2026-11-09: on that date p01 is still on red.
+    const { results } = planningWeekCoverage(plan, m, 46, isoYearOf('2026-11-11'), t);
+    expect(results.map(r => r.shift)).toEqual(['red']);
+    // Week 47 (from 2026-11-16): on blue.
+    expect(planningWeekCoverage(plan, m, 47, 2026, t).results.map(r => r.shift)).toEqual(['blue']);
+    expect(isoYearOf('2027-01-01')).toBe(2026);
   });
 });

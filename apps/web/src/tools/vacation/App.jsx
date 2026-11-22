@@ -254,9 +254,8 @@ export default function App() {
   const copyDemand = useCallback((key, from) => {
     const cur = latestState.current.demand;
     const { conflicts } = mergeDemandSeries(cur[key], cur[from], false);
-    const apply = replace => setFn(s => ({ ...s, demand: { ...s.demand, [key]: mergeDemandSeries(s.demand[key], s.demand[from], replace).series } }));
-    apply(false);
-    if (conflicts) setPendingDemand({ n: conflicts, apply: () => apply(true) });
+    setFn(s => ({ ...s, demand: { ...s.demand, [key]: mergeDemandSeries(s.demand[key], s.demand[from], false).series } }));
+    if (conflicts) setPendingDemand({ key, from, n: conflicts });
   }, [setFn, setPendingDemand]);
   const setShiftMode = useCallback(m =>
     setFn(s => ({ ...s, settings: { ...s.settings, shiftMode: m } })), [setFn]);
@@ -395,7 +394,15 @@ export default function App() {
       {pendingDemand && (
         <Confirm title={t('Replace saved demand?')} confirmLabel={t('Replace')}
           body={t('{n} weeks already have a demand of their own. The empty weeks were filled. Replace those {n} with the old values too?', { n: pendingDemand.n })}
-          onConfirm={() => { pendingDemand.apply(); setPendingDemand(null); }}
+          onConfirm={() => {
+            // Count again now: if the saved weeks changed meanwhile, ask again with the new number
+            const cur = latestState.current.demand;
+            const { conflicts } = mergeDemandSeries(cur[pendingDemand.key], cur[pendingDemand.from], false);
+            if (conflicts === pendingDemand.n) {
+              setFn(s => ({ ...s, demand: { ...s.demand, [pendingDemand.key]: mergeDemandSeries(s.demand[pendingDemand.key], s.demand[pendingDemand.from], true).series } }));
+              setPendingDemand(null);
+            } else setPendingDemand(conflicts ? { ...pendingDemand, n: conflicts } : null);
+          }}
           onCancel={() => setPendingDemand(null)} />
       )}
       {confirmReset && (

@@ -35,8 +35,10 @@ export function syncOperatorsWithPeople(operators, people, today) {
 }
 
 /** An operator the sync created itself and nobody has changed: nothing in it can be lost. */
+const SYNC_FIELDS = ['id', 'personId', 'name', 'shift', 'active', 'certifications'];
 const isPristineTwin = (state, o) =>
-  String(o.id).startsWith('wf-') && !(o.certifications || []).length && o.active !== false && !o.mergedFrom?.length
+  String(o.id).startsWith('wf-') && o.shift === 'S1' && o.active !== false && !(o.certifications || []).length
+    && Object.keys(o).every(k => SYNC_FIELDS.includes(k)) // any field of its own makes it non-pristine
     && !state.vacationBlocks.some(b => b.operatorId === o.id);
 
 const overlaps = (a, b) => a.startWeek <= b.endWeek && b.startWeek <= a.endWeek;

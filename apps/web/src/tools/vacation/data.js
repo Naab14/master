@@ -79,6 +79,8 @@ export function adoptPlan(s) {
   if (!isUsablePlan(s)) return null;
   return {
     ...s,
+    // a null or non-object series (old or imported files) is an empty one
+    demand: Object.fromEntries(Object.entries(s.demand).map(([k, v]) => [k, isObj(v) ? v : {}])),
     operators: s.operators.map(o => (Array.isArray(o.certifications) && typeof o.active === 'boolean' && typeof o.shift === 'string'
       ? o : { ...o, certifications: o.certifications || [], active: o.active !== false, shift: typeof o.shift === 'string' ? o.shift : 'S1' })),
   };

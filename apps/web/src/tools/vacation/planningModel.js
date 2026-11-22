@@ -15,6 +15,7 @@
  * process names that may still sit in the saved demand.
  */
 import { buildIndex, teamOf } from '../../workforce/logic/schedule';
+import { getAllCoverageForWeek } from './coverage';
 import { list, levelsOf } from '../../workforce/logic/model';
 
 export const UNLINKED = '__unlinked';
@@ -101,3 +102,27 @@ export function planningGroups(resolved, model, t, dates = []) {
 
 /** The team ids that get coverage rows (shared by the grid and the Dashboard). */
 export const coverageTeamIds = (resolved, model, t, dates) => planningGroups(resolved, model, t, dates).filter(g => !g.noCoverage).map(g => g.shift);
+
+/** The ISO year a date belongs to (the year of its week's Thursday). */
+export function isoYearOf(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  return d.getUTCFullYear();
+}
+
+/**
+ * One week's coverage by team (or for everyone when not separate), the way the
+ * Vacations grid computes it: the team and competencies of the week's Monday,
+ * rows for the teams that have people that day. The Dashboard uses this too, so
+ * the two never disagree about the same week.
+ * @returns {{ operators: object[], results: { shift: string|null, cov: object }[] }}
+ */
+export function planningWeekCoverage(plan, model, week, year, t) {
+  const { vacationBlocks = [], demand = {}, settings = {} } = plan;
+  const monday = isoWeekMonday(year, week);
+  const operators = resolveOperators(plan.operators, model, monday);
+  const shiftMode = settings.shiftMode || 'combined';
+  const keys = model.processes.map(p => p.key);
+  const shifts = shiftMode === 'separate' ? coverageTeamIds(operators, model, t, [monday]) : [null];
+  return { operators, results: shifts.map(shift => ({ shift, cov: getAllCoverageForWeek(operators, vacationBlocks, demand, week, shiftMode, shift, null, keys) })) };
+}

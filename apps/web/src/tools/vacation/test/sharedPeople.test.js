@@ -69,4 +69,13 @@ describe('shared operator identity', () => {
     expect(linkOperator(state, 'op1', 'p1', people)).toBe(state);
     expect(linkOperator(state, 'op1', 'p1', people, { confirmMerge: true }).operators[0].mergedFrom).toEqual([twin]);
   });
+
+  it('a synthesized twin whose shift was changed is not pristine and is archived on merge', () => {
+    const twin = { id: 'wf-p1', personId: 'p1', name: 'Alva', shift: 'S2', active: true, certifications: [] };
+    const state = { operators: [{ id: 'op1', name: 'A', shift: 'S1', active: true, certifications: [] }, twin], vacationBlocks: [] };
+    expect(linkBlocked(state, 'op1', 'p1')).toMatchObject({ reason: 'confirm' });
+    expect(linkOperator(state, 'op1', 'p1', people, { confirmMerge: true }).operators[0].mergedFrom).toEqual([twin]);
+    const extra = { ...twin, shift: 'S1', note: 'x' };
+    expect(linkBlocked({ ...state, operators: [state.operators[0], extra] }, 'op1', 'p1')).toMatchObject({ reason: 'confirm' });
+  });
 });
