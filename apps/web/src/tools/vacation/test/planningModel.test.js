@@ -195,3 +195,26 @@ describe('review round 3', () => {
     expect(isoYearOf('2027-01-01')).toBe(2026);
   });
 });
+
+describe('review round 4', () => {
+  it('keeps array-backed demand exactly as the old code read it (index = week), zeros included', () => {
+    const plan = { operators: seedOperators, vacationBlocks: [], demand: { Avsyning: [null, 0, 7] }, settings: defaultSettings };
+    const d = adoptPlan(plan).demand.Avsyning;
+    expect(d[1]).toBe(0);
+    expect(d[2]).toBe(7);
+    expect(d[0]).toBeUndefined();
+    expect(plan.demand.Avsyning).toEqual([null, 0, 7]);
+  });
+
+  it('tells apart two sets of conflicts that have the same size', () => {
+    const a = mergeDemandSeries({ 1: 3, 2: 4 }, { 1: 5, 2: 4 }).signature;
+    const b = mergeDemandSeries({ 1: 3, 2: 4 }, { 1: 3, 2: 5 }).signature;
+    expect(a).not.toBe(b);
+    expect(mergeDemandSeries({ 1: 3 }, { 1: 5 }).signature).toBe(mergeDemandSeries({ 1: 3 }, { 1: 5 }).signature);
+  });
+
+  it('uses one ISO year for week numbers, also in the last days of December', () => {
+    expect(isoYearOf('2025-12-29')).toBe(2026);
+    expect(isoWeekMonday(isoYearOf('2025-12-29'), 1)).toBe('2025-12-29');
+  });
+});

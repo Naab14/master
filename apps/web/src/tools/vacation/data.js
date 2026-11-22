@@ -79,8 +79,12 @@ export function adoptPlan(s) {
   if (!isUsablePlan(s)) return null;
   return {
     ...s,
-    // a null or non-object series (old or imported files) is an empty one
-    demand: Object.fromEntries(Object.entries(s.demand).map(([k, v]) => [k, isObj(v) ? v : {}])),
+    // A series is { week: count }. An array (old file) was read by index as the week
+    // number, so index n becomes week n; holes are dropped and zeros kept. Anything
+    // else that is not a series is an empty one.
+    demand: Object.fromEntries(Object.entries(s.demand).map(([k, v]) => [k, Array.isArray(v)
+      ? Object.fromEntries(v.map((x, i) => [i, x]).filter(([, x]) => x !== null && x !== undefined))
+      : isObj(v) ? v : {}])),
     operators: s.operators.map(o => (Array.isArray(o.certifications) && typeof o.active === 'boolean' && typeof o.shift === 'string'
       ? o : { ...o, certifications: o.certifications || [], active: o.active !== false, shift: typeof o.shift === 'string' ? o.shift : 'S1' })),
   };

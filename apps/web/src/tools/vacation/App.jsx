@@ -15,7 +15,7 @@ import { useBreakpoint } from './hooks/useBreakpoint';
 import { useWorkforce } from '../../workforce/store-context';
 import { syncOperatorsWithPeople, linkOperator, linkBlocked, unlinkedOperators } from './sharedPeople';
 import { mergeDemandSeries } from './demandSeries';
-import { buildPlanningModel, resolveOperators, planningGroups, isoWeekMonday } from './planningModel';
+import { buildPlanningModel, resolveOperators, planningGroups, isoWeekMonday, isoYearOf } from './planningModel';
 import { useI18n } from '../../i18n';
 import { useToast } from '../../ui';
 import { Confirm } from '../../workforce/ui';
@@ -164,9 +164,9 @@ export default function App() {
   const gridOperators = useMemo(() => resolveOperators(state.operators, model), [state.operators, model]);
   const planningView = useMemo(() => (model ? {
     processes: model.processes,
-    groups: planningGroups(gridOperators, model, t, weeks.map(w => isoWeekMonday(Number(localToday.slice(0, 4)), w))),
+    groups: planningGroups(gridOperators, model, t, weeks.map(w => isoWeekMonday(isoYearOf(localToday), w))),
     // Coverage for a week uses the teams on that week's dates, not today's
-    opsForWeek: week => resolveOperators(state.operators, model, isoWeekMonday(Number(localToday.slice(0, 4)), week)),
+    opsForWeek: week => resolveOperators(state.operators, model, isoWeekMonday(isoYearOf(localToday), week)),
   } : null), [model, gridOperators, state.operators, localToday, weeks, t]);
   const unlinkedActive = model ? unlinkedOperators(state.operators).filter(o => o.active).length : 0;
   const [pendingLink, setPendingLink] = useState(null);
@@ -253,9 +253,9 @@ export default function App() {
   const [pendingDemand, setPendingDemand] = useState(null);
   const copyDemand = useCallback((key, from) => {
     const cur = latestState.current.demand;
-    const { conflicts } = mergeDemandSeries(cur[key], cur[from], false);
+    const { conflicts, signature } = mergeDemandSeries(cur[key], cur[from], false);
     setFn(s => ({ ...s, demand: { ...s.demand, [key]: mergeDemandSeries(s.demand[key], s.demand[from], false).series } }));
-    if (conflicts) setPendingDemand({ key, from, n: conflicts });
+    if (conflicts) setPendingDemand({ key, from, n: conflicts, signature });
   }, [setFn, setPendingDemand]);
   const setShiftMode = useCallback(m =>
     setFn(s => ({ ...s, settings: { ...s.settings, shiftMode: m } })), [setFn]);
@@ -397,11 +397,11 @@ export default function App() {
           onConfirm={() => {
             // Count again now: if the saved weeks changed meanwhile, ask again with the new number
             const cur = latestState.current.demand;
-            const { conflicts } = mergeDemandSeries(cur[pendingDemand.key], cur[pendingDemand.from], false);
-            if (conflicts === pendingDemand.n) {
+            const { conflicts, signature } = mergeDemandSeries(cur[pendingDemand.key], cur[pendingDemand.from], false);
+            if (signature === pendingDemand.signature) {
               setFn(s => ({ ...s, demand: { ...s.demand, [pendingDemand.key]: mergeDemandSeries(s.demand[pendingDemand.key], s.demand[pendingDemand.from], true).series } }));
               setPendingDemand(null);
-            } else setPendingDemand(conflicts ? { ...pendingDemand, n: conflicts } : null);
+            } else setPendingDemand(conflicts ? { ...pendingDemand, n: conflicts, signature } : null);
           }}
           onCancel={() => setPendingDemand(null)} />
       )}
