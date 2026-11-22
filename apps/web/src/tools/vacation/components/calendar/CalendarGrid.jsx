@@ -15,7 +15,7 @@ export default function CalendarGrid({
   onAddBlock, onUpdateBlock, onDeleteBlock, onSetBlockStatus,
   onSetBlockDayStatus, onClearBlockDayStatus, onSetBlockNote,
   setStartWeek, showDemand, onToggleDemand, updateDemand,
-  zoom, onZoomChange, planning = null,
+  zoom, onZoomChange, planning = null, year,
 }) {
   const { t } = useI18n();
   const { shiftMode, startWeek, visibleWeeks } = settings;
@@ -274,7 +274,7 @@ export default function CalendarGrid({
             settings={settings} weeks={weeks} holidayMap={holidayMap} groups={groups} processes={planning?.processes} opsForWeek={planning?.opsForWeek} onCopyDemand={planning?.copyDemand}
             showDayCoverage={showDayCoverage} onToggleDayCoverage={() => setShowDayCoverage(c => !c)}
             setPopover={setPopover}
-            onAddBlock={onAddBlock}
+            onAddBlock={onAddBlock} year={year}
           />
         )}
         {zoomTransition && (

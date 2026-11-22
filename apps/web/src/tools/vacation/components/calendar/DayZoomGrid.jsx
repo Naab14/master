@@ -15,10 +15,9 @@ function getDayStatus(block, dateStr) {
 export default function DayZoomGrid({
   operators, vacationBlocks, demand, settings, weeks, holidayMap, groups, processes, opsForWeek,
   showDayCoverage, onToggleDayCoverage, setPopover,
-  onAddBlock,
+  onAddBlock, year = new Date().getFullYear(),
 }) {
   const { t, fmt } = useI18n();
-  const year = new Date().getFullYear();
   const visibleWeeks = weeks.slice(0, DAY_ZOOM_WEEKS);
 
   const cells = [];

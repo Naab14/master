@@ -97,12 +97,15 @@ export default function App() {
     [startWeek, visibleWeeks],
   );
 
-  const [holidayMap, setHolidayMap] = useState(() => buildHolidayMap());
+  // One year for every week number: coverage, day cells and holidays all use it
+  const [localToday] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
+  const planYear = isoYearOf(localToday);
+  const [holidayMap, setHolidayMap] = useState(() => buildHolidayMap(planYear));
 
   // Load holidays async (date-holidays is code-split)
   useEffect(() => {
-    initHolidays().then(map => setHolidayMap(map));
-  }, []);
+    initHolidays(planYear).then(map => setHolidayMap(map));
+  }, [planYear]);
 
   // Adopt the server copy of the workspace on mount (Master backend), and only
   // then let saves reach the server. If the server has never stored a
@@ -158,16 +161,15 @@ export default function App() {
   }, [adopted, people, state.operators, initResult.wasShared, canEditPlan]);
   // Teams and competencies come from planning when it has processes; until
   // then (offline, or a new plant) Vacations keeps its own S1/S2 and processes.
-  const [localToday] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; });
   const wfDoc = planning?.wf;
   const model = useMemo(() => (planningReady ? buildPlanningModel(wfDoc, localToday) : null), [planningReady, wfDoc, localToday]);
   const gridOperators = useMemo(() => resolveOperators(state.operators, model), [state.operators, model]);
   const planningView = useMemo(() => (model ? {
     processes: model.processes,
-    groups: planningGroups(gridOperators, model, t, weeks.map(w => isoWeekMonday(isoYearOf(localToday), w))),
+    groups: planningGroups(gridOperators, model, t, weeks.map(w => isoWeekMonday(planYear, w))),
     // Coverage for a week uses the teams on that week's dates, not today's
-    opsForWeek: week => resolveOperators(state.operators, model, isoWeekMonday(isoYearOf(localToday), week)),
-  } : null), [model, gridOperators, state.operators, localToday, weeks, t]);
+    opsForWeek: week => resolveOperators(state.operators, model, isoWeekMonday(planYear, week)),
+  } : null), [model, gridOperators, state.operators, planYear, weeks, t]);
   const unlinkedActive = model ? unlinkedOperators(state.operators).filter(o => o.active).length : 0;
   const [pendingLink, setPendingLink] = useState(null);
   const linkOp = useCallback((operatorId, personId) => {
@@ -368,6 +370,7 @@ export default function App() {
 
         {/* Center: Calendar (handles both zoom levels internally) */}
         <CalendarGrid
+          year={planYear}
           planning={planningView ? { ...planningView, copyDemand } : null}
           operators={gridOperators} vacationBlocks={vacationBlocks}
           demand={demand} settings={settings} weeks={weeks}

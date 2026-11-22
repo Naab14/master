@@ -325,3 +325,26 @@ describe('CalendarGrid on the planning model', () => {
     expect(screen.queryByText('S1')).toBeNull();
   });
 });
+
+describe('Day view dates and the plan year', () => {
+  const dayProps = (year, dayStatuses) => ({
+    ...defaultProps(), zoom: 'day', year, weeks: [1, 2, 3, 4, 5, 6, 7, 8],
+    vacationBlocks: [{ id: 'b', operatorId: '1', startWeek: 1, endWeek: 1, status: 'draft', dayStatuses }],
+  });
+  const overrideDots = () => [...document.querySelectorAll('span')].filter(s => s.textContent === '●').length;
+
+  it('puts week 1 of 2026 on 2025-12-29, so an override saved there shows', () => {
+    render(<CalendarGrid {...dayProps(2026, { '2025-12-29': 'approved' })} />);
+    expect(overrideDots()).toBe(1);
+  });
+
+  it('does not show it when the grid is on the previous ISO year (week 1 = 2024-12-30)', () => {
+    render(<CalendarGrid {...dayProps(2025, { '2025-12-29': 'approved' })} />);
+    expect(overrideDots()).toBe(0);
+  });
+
+  it('leaves normal mid-year weeks unchanged: week 20 of 2026 is Monday 2026-05-11', async () => {
+    const { isoWeekDates, formatDateStr } = await import('../components/calendar/dateUtils');
+    expect(formatDateStr(isoWeekDates(2026, 20)[0])).toBe('2026-05-11');
+  });
+});
