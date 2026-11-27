@@ -8,6 +8,7 @@ the bottom with a date.
 
 | What | Where | Status |
 | --- | --- | --- |
+| Design system and design workshop (`#/design`): tokens, type, spacing, shared controls and a working example page; published as the "Master Design System" artifact | Design thread, branch `claude/sweet-curie-pqtr18` | Built and checked in a browser; lint, tests and build pass. **Not merged** |
 | Shift HQ, Vacations and Boards: Swedish, the shared look and the planning motion (Next item 3) | PR #8 (Features thread), branch `claude/naab14-shift-management-qmu4s9` | Built and checked in a browser; lint, tests and build pass. **Not merged, so not on production yet** |
 | Workforce planning build (brief of 2026-11-09, corrections of 2026-11-10) | PR #6, merged; docs follow-up PR #7, merged 2026-11-15 | **Live on production** (code from commit `b472699`; `main` is at `7731f71`). Google sign-in is active, the owner's Google address is the admin, and **the owner signed in on production and confirmed it works (2026-11-15)** |
 | Design foundation (PR #4), Strategy docs (PR #5) | Included in PR #6 | Their commits are part of PR #6; the two PRs were left untouched |
@@ -109,6 +110,7 @@ In order.
 
 | Date | Decision | Why |
 | --- | --- | --- |
+| 2026-11-27 | `tokens.css` and `src/ui` are the design system's source; the workshop (`#/design`) reads `tokens.css` directly and a test keeps every text pair at 4.5:1 in all three themes. Panel, StatTile and PageHeader join `src/ui` | One source, so the artifact, the workshop and the app can't drift apart |
 | 2026-07 | Native SwiftUI for iOS, plus a web app | Best haptics and iOS feel; the web keeps desktop use |
 | 2026-07 | Dashboard + separate tools, not one merged workflow | Keeps each tool's depth while giving one overview |
 | 2026-10-25 | Host on Vercel with data in Supabase (one `app_state` table, one row per section) | Owner's choice. One JSON document per section keeps the original data models intact |
