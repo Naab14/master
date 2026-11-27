@@ -8,3 +8,6 @@ export { default as Checkbox } from './Checkbox.jsx';
 export { default as Toggle } from './Toggle.jsx';
 export { default as ToastProvider } from './Toast.jsx';
 export { useToast } from './toast-context.js';
+export { default as Panel } from './Panel.jsx';
+export { default as StatTile } from './StatTile.jsx';
+export { default as PageHeader } from './PageHeader.jsx';

@@ -17,6 +17,7 @@ const VacationTool = lazy(() => import('./tools/vacation/App.jsx'));
 const ManageClipTool = lazy(() => import('./tools/manageclip/ManageClipTool.jsx'));
 const BoardsTool = lazy(() => import('./tools/boards/BoardsTool.jsx'));
 const UiPreview = lazy(() => import('./ui/UiPreview.jsx'));
+const DesignWorkshop = lazy(() => import('./design/DesignWorkshop.jsx'));
 const ScheduleView = lazy(() => import('./workforce/ScheduleView.jsx'));
 const PeopleView = lazy(() => import('./workforce/PeopleView.jsx'));
 const AttendanceView = lazy(() => import('./workforce/AttendanceView.jsx'));
@@ -47,8 +48,8 @@ function sectionFromHash() {
   // snapshot from the hash itself.
   if (hash.startsWith('#share=')) return 'vacation';
   const id = hash.replace(/^#\/?/, '').split('/')[0];
-  // #/ui is the base-controls review page; it isn't in the menu.
-  return SECTIONS.some(s => s.id === id) || id === 'ui' ? id : 'dashboard';
+  // #/ui (base controls) and #/design (design workshop) aren't in the menu.
+  return SECTIONS.some(s => s.id === id) || id === 'ui' || id === 'design' ? id : 'dashboard';
 }
 
 function navigate(id) {
@@ -264,6 +265,7 @@ function Workspace({ email, onSignOut, needCode }) {
           {section === 'vacation' && <VacationTool />}
           {section === 'boards' && <BoardsTool />}
           {section === 'ui' && <UiPreview />}
+          {section === 'design' && <DesignWorkshop />}
           {section === 'schedule' && <ScheduleView />}
           {section === 'people' && <PeopleView />}
           {section === 'attendance' && <AttendanceView />}

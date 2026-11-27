@@ -74,6 +74,7 @@ apps/web/           React 19 + Vite + Tailwind 3 (plain JS, no TypeScript)
   src/workforce/      planning screens; logic/ holds the pure, tested rules
   src/i18n/           English and Swedish (sv.js); t('English text')
   src/ui/, src/theme/ shared controls and the three themes
+  src/design/         design workshop (#/design): tokens, type, controls, example page
   src/api.js, access.js, auth.js   API client, credentials, Supabase login
   public/             icon and service worker (keeps the app shell loadable offline; not installable)
 apps/ios/           SwiftUI app with haptics (Xcode 16+, can't be built on Linux)
@@ -113,7 +114,7 @@ Every color, font, radius and status shade is a token in
 `apps/web/src/theme/tokens.css`; use tokens (or their Tailwind names like
 `bg-panel`, `text-ink-3`) rather than hard-coded colors. Old variable names
 (`--bg-primary`, `--accent` …) still work and point at the tokens. Base
-controls live in `src/ui/` (review page: `#/ui`).
+controls live in `src/ui/` (review page: `#/ui`; design workshop: `#/design`).
 
 ## Deployment
 
@@ -148,7 +149,7 @@ controls live in `src/ui/` (review page: `#/ui`).
 
 ```sh
 npm --prefix apps/web install
-npm --prefix apps/web run test:ci   # vitest (233 tests)
+npm --prefix apps/web run test:ci   # vitest (238 tests)
 npm --prefix apps/web run lint
 npm --prefix apps/web run build
 node backend/server.js              # self-hosted API + built web app on :3000

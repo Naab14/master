@@ -230,3 +230,24 @@
 
 /* Small segmented control (nav rail) */
 .ui-seg--small button { min-height: 28px; padding: 0 8px; font-size: var(--text-label); }
+
+/* Panel, stat tile and page header (also in the Master design system artifact) */
+/* Panel: a card on the page. Border, no shadow (shadows are for floating things). */
+.ui-panel { background: var(--surface-panel); border: 1px solid var(--line); border-radius: var(--radius-panel); padding: var(--space-6); display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.ui-panel__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+@media (max-width: 767px) { .ui-panel { padding: var(--space-4); } }
+
+/* Stat tile: one number with its meaning. The tone colours the number and the bar. */
+.ui-stat { background: var(--surface-panel); border: 1px solid var(--line); border-radius: var(--radius-panel); padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.ui-stat__value { font-family: var(--font-display); font-weight: var(--display-weight); letter-spacing: var(--display-tracking); font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--ink); }
+.ui-stat__bar { height: 6px; border-radius: 999px; background: var(--surface-soft); overflow: hidden; }
+.ui-stat__bar > span { display: block; height: 100%; border-radius: inherit; background: var(--idle-fg); transition: width var(--motion) var(--ease); }
+.ui-stat--ok .ui-stat__value { color: var(--ok-fg); }   .ui-stat--ok .ui-stat__bar > span { background: var(--ok-solid); }
+.ui-stat--warn .ui-stat__value { color: var(--warn-fg); } .ui-stat--warn .ui-stat__bar > span { background: var(--warn-solid); }
+.ui-stat--bad .ui-stat__value { color: var(--bad-fg); }  .ui-stat--bad .ui-stat__bar > span { background: var(--bad-solid); }
+
+/* Page header: title left, actions right; wraps on phones. */
+.ui-pagehead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.ui-pagehead__actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.ui-toasts--inline { position: static; transform: none; width: 100%; max-width: 420px; }
+@media (prefers-reduced-motion: reduce) { .ui-stat__bar > span { transition: none; } }
